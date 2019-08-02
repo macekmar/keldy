@@ -1,10 +1,7 @@
 # See ../triqs/packaging for other options
 FROM flatironinstitute/triqs:master-ubuntu-clang
+
 ARG APPNAME
-
-COPY requirements.txt /src/$APPNAME/requirements.txt
-RUN pip install -r /src/$APPNAME/requirements.txt
-
 COPY . $SRC/$APPNAME
 WORKDIR $BUILD/$APPNAME
 RUN chown build .

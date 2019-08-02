@@ -7,7 +7,7 @@ set     version     @KELDY_VERSION@
 set     root        @CMAKE_INSTALL_PREFIX@
 set     git_hash    @PROJECT_GIT_HASH@
 
-set     url         "https://github.com/TRIQS/keldy"
+# set     url         "https://github.com/TRIQS/keldy"
 set     description "An example application using cpp2py and triqs."
 
 module-whatis   "$description"

@@ -5,8 +5,8 @@ def documentationPlatform = "ubuntu-clang"
 /* depend on triqs upstream branch/project */
 def triqsBranch = env.CHANGE_TARGET ?: env.BRANCH_NAME
 def triqsProject = '/TRIQS/triqs/' + triqsBranch.replaceAll('/', '%2F')
-/* whether to keep and publish the results */
-def keepInstall = !env.BRANCH_NAME.startsWith("PR-")
+/* whether to publish the results (disabled for template project) */
+def publish = false
 
 properties([
   disableConcurrentBuilds(),
@@ -38,7 +38,8 @@ for (int i = 0; i < dockerPlatforms.size(); i++) {
       """
       /* build and tag */
       def img = docker.build("flatironinstitute/${projectName}:${env.BRANCH_NAME}-${env.STAGE_NAME}", "--build-arg APPNAME=${projectName} --build-arg BUILD_DOC=${platform==documentationPlatform} .")
-      if (!keepInstall) {
+      if (!publish || platform != documentationPlatform) {
+        /* but we don't need the tag so clean it up (except for documentation) */
         sh "docker rmi --no-prune ${img.imageName()}"
       }
     } }
@@ -58,7 +59,7 @@ for (int i = 0; i < osxPlatforms.size(); i++) {
       def srcDir = pwd()
       def tmpDir = pwd(tmp:true)
       def buildDir = "$tmpDir/build"
-      def installDir = keepInstall ? "${env.HOME}/install/${projectName}/${env.BRANCH_NAME}/${platform}" : "$tmpDir/install"
+      def installDir = "$tmpDir/install"
       def triqsDir = "${env.HOME}/install/triqs/${triqsBranch}/${platform}"
       dir(installDir) {
         deleteDir()
@@ -71,8 +72,6 @@ for (int i = 0; i < osxPlatforms.size(); i++) {
         "LIBRARY_PATH=$triqsDir/lib:${env.BREW}/lib",
         "CMAKE_PREFIX_PATH=$triqsDir/lib/cmake/triqs"]) {
         deleteDir()
-        /* note: this is installing into the parent (triqs) venv (install dir), which is thus shared among apps and so not be completely safe */
-        sh "pip install -r $srcDir/requirements.txt"
         sh "cmake $srcDir -DCMAKE_INSTALL_PREFIX=$installDir -DTRIQS_ROOT=$triqsDir"
         sh "make -j3"
         try {
@@ -90,7 +89,7 @@ for (int i = 0; i < osxPlatforms.size(); i++) {
 /****************** wrap-up */
 try {
   parallel platforms
-  if (keepInstall) { node("docker") {
+  if (publish) { node("docker") {
     /* Publish results */
     stage("publish") { timeout(time: 1, unit: 'HOURS') {
       def commit = sh(returnStdout: true, script: "git rev-parse HEAD").trim()
@@ -147,7 +146,7 @@ Changes:
 End of build log:
 \${BUILD_LOG,maxLines=60}
     """,
-    to: 'nwentzell@flatironinstitute.org',
+    to: 'pdumitrescu@flatironinstitute.org',
     recipientProviders: [
       [$class: 'DevelopersRecipientProvider'],
     ],

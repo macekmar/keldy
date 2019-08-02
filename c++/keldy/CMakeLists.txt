@@ -2,13 +2,13 @@ file(GLOB_RECURSE sources *.cpp)
 add_library(keldy_c ${sources})
 
 # Link against dependencies
-target_link_libraries(keldy_c PUBLIC triqs PRIVATE project_warnings)
+target_link_libraries(keldy_c PUBLIC triqs PRIVATE project_warnings GSL::gsl)
 
 # Configure compilation
 target_compile_options(keldy_c PUBLIC -fPIC)
 target_include_directories(keldy_c PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/c++>)
 target_compile_definitions(keldy_c PUBLIC
-				KELDY_GIT_HASH=${PROJECT_GIT_HASH}
+				KELDY_GIT_HASH=${KELDY_GIT_HASH}
 				TRIQS_GIT_HASH=${TRIQS_GIT_HASH}
 				$<$<CONFIG:Debug>:KELDY_DEBUG>
 				$<$<CONFIG:Debug>:TRIQS_DEBUG>

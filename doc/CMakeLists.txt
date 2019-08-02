@@ -49,7 +49,7 @@ macro(generate_docs header_file)
   )
 endmacro(generate_docs)
 
-generate_docs(${PROJECT_SOURCE_DIR}/c++/keldy/toto.hpp)
+# generate_docs(${PROJECT_SOURCE_DIR}/c++/keldy/toto.hpp)
 
 # ---------------------------------
 # Install

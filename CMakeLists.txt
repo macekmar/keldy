@@ -1,8 +1,9 @@
-# ##############################################################################
+################################################################################
 #
-# keldy - An example application using triqs and cpp2py
+# keldy
 #
-# Copyright (C) ...
+# Copyright (C) 2019, The Simons Foundation
+# authors: Philipp Dumitrescu
 #
 # keldy is free software: you can redistribute it and/or modify it under the
 # terms of the GNU General Public License as published by the Free Software
@@ -10,24 +11,24 @@
 # version.
 #
 # keldy is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+# details.
 #
 # You should have received a copy of the GNU General Public License along with
-# keldy (in the file COPYING.txt in this directory). If not, see
-# <http://www.gnu.org/licenses/>.
+# keldy. If not, see <http://www.gnu.org/licenses/>.
 #
-# ##############################################################################
+################################################################################
 
-cmake_minimum_required(VERSION 3.0.2 FATAL_ERROR)
-if(POLICY CMP0074)
-  cmake_policy(SET CMP0074 NEW)
-endif()
+cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
-# ############
-# Define Project
+project(KELDY VERSION 2.2.0 LANGUAGES C CXX)
 
-project(KELDY VERSION 2.2.0 LANGUAGES CXX)
+#############
+# C++ Language Features
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 # ############
 # Load TRIQS and CPP2PY
@@ -86,6 +87,7 @@ target_compile_options(project_warnings
 
 # #############
 # Load non-TRIQS Dependencies
+find_package(GSL REQUIRED)
 
 
 # #############
@@ -101,7 +103,9 @@ if(Build_Tests)
   add_subdirectory(test)
 endif()
 
-if(TRIQS_WITH_PYTHON_SUPPORT)
+option(Build_Python "Build python" ON)
+
+if(TRIQS_WITH_PYTHON_SUPPORT AND Build_Python)
   # Python interface
   add_subdirectory(python/keldy)
 
@@ -121,23 +125,4 @@ endif()
 
 # Additional configuration files
 add_subdirectory(share)
-
-# #############
-# Debian Package
-
-option(BUILD_DEBIAN_PACKAGE "Build a deb package" OFF)
-if(BUILD_DEBIAN_PACKAGE)
-  if(NOT CMAKE_INSTALL_PREFIX STREQUAL "/usr")
-    message(FATAL_ERROR "CMAKE_INSTALL_PREFIX must be /usr for packaging")
-  endif()
-  set(CPACK_PACKAGE_NAME keldy)
-  set(CPACK_GENERATOR "DEB")
-  set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
-  set(CPACK_PACKAGE_CONTACT "https://github.com/TRIQS/keldy")
-  execute_process(COMMAND dpkg --print-architecture OUTPUT_VARIABLE CMAKE_DEBIAN_PACKAGE_ARCHITECTURE OUTPUT_STRIP_TRAILING_WHITESPACE)
-  set(CPACK_DEBIAN_PACKAGE_DEPENDS "triqs (>= 2.2)")
-  set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
-  set(CPACK_DEBIAN_PACKAGE_GENERATE_SHLIBS ON)
-  include(CPack)
-endif()
 

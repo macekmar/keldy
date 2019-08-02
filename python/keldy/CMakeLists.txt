@@ -1,6 +1,8 @@
 # Build the python module
-add_cpp2py_module(toto_module)
-target_link_libraries(toto_module keldy_c)
+
+add_cpp2py_module(impurity_oneband_module)
+target_link_libraries(impurity_oneband_module keldy_c)
+
 
 # Configure the version
 configure_file(version.py.in version.py)
@@ -15,5 +17,6 @@ endforeach()
 
 # Install python module to proper location
 set(PYTHON_LIB_DEST ${TRIQS_PYTHON_LIB_DEST_ROOT}/keldy)
-install(TARGETS toto_module DESTINATION ${PYTHON_LIB_DEST})
+install(TARGETS impurity_oneband_module DESTINATION ${PYTHON_LIB_DEST})
+
 install(FILES ${python_sources} ${CMAKE_CURRENT_BINARY_DIR}/version.py DESTINATION ${PYTHON_LIB_DEST})

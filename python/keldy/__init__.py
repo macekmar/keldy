@@ -25,6 +25,7 @@ r"""
 DOC
 
 """
-from toto_module import Toto, chain
+import impurity_oneband_module as impurity_oneband
+# from warper_module import *
 
-__all__ = ['Toto', 'chain']
+# __all__ = ['Model', 'WarperPlasmaSimpleT']
