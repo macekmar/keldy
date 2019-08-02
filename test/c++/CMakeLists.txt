@@ -13,7 +13,7 @@ foreach(test ${all_tests})
   get_filename_component(test_dir ${test} DIRECTORY)
   add_executable(${test_name} ${test})
   set_property(TARGET ${test_name} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${test_dir})
-  target_link_libraries(${test_name} app4triqs_c triqs::gtest project_warnings)
+  target_link_libraries(${test_name} keldy_c triqs::gtest project_warnings)
   add_test(${test_name} ${test_name})
   # Run clang-tidy if found
   if(CLANG_TIDY_EXECUTABLE)

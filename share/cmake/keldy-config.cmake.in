@@ -1,0 +1,24 @@
+# This file allows other CMake Projects to find us
+# We provide general project information
+# and reestablish the exported CMake Targets
+
+# Multiple inclusion guard
+if(NOT KELDY_FOUND)
+set(KELDY_FOUND True)
+
+# version
+set(KELDY_VERSION @PROJECT_VERSION@)
+set(KELDY_GIT_HASH @PROJECT_GIT_HASH@)
+
+# Root of the installation
+set(KELDY_ROOT  @CMAKE_INSTALL_PREFIX@)
+
+# Include the exported targets of this project
+include(@CMAKE_INSTALL_PREFIX@/lib/cmake/keldy/keldy-targets.cmake)
+
+message(STATUS "Found keldy-config.cmake with version @PROJECT_VERSION@, hash = @PROJECT_GIT_HASH@")
+
+# Was the Project built with Documentation?
+set(KELDY_WITH_DOCUMENTATION @Build_Documentation@)
+
+endif()

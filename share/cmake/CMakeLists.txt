@@ -1,10 +1,10 @@
-configure_file(app4triqs-config.cmake.in app4triqs-config.cmake @ONLY)
-configure_file(app4triqs-config-version.cmake.in app4triqs-config-version.cmake @ONLY)
+configure_file(keldy-config.cmake.in keldy-config.cmake @ONLY)
+configure_file(keldy-config-version.cmake.in keldy-config-version.cmake @ONLY)
 install(
   FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/app4triqs-config.cmake
-    ${CMAKE_CURRENT_BINARY_DIR}/app4triqs-config-version.cmake
-  DESTINATION lib/cmake/app4triqs
+    ${CMAKE_CURRENT_BINARY_DIR}/keldy-config.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/keldy-config-version.cmake
+  DESTINATION lib/cmake/keldy
 )
 
-install(EXPORT app4triqs-targets DESTINATION lib/cmake/app4triqs)
+install(EXPORT keldy-targets DESTINATION lib/cmake/keldy)

@@ -2,7 +2,7 @@
 
 import unittest
 
-from app4triqs import chain
+from keldy import chain
 
 class test_chain(unittest.TestCase):
 

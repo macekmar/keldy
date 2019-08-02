@@ -27,17 +27,17 @@ C++ reference manual
 .. toctree::
    :maxdepth: 5
 
-   cpp2rst_generated/app4triqs/toto
-   cpp2rst_generated/app4triqs/chain
+   cpp2rst_generated/keldy/toto
+   cpp2rst_generated/keldy/chain
 
 Python reference manual
 -----------------------
 
-.. automodule:: app4triqs 
+.. automodule:: keldy 
    :members:
 
-.. autoclass:: app4triqs.toto_module.Toto
+.. autoclass:: keldy.toto_module.Toto
    :members:
 
-.. autofunction:: app4triqs.toto_module.chain
+.. autofunction:: keldy.toto_module.chain
       
