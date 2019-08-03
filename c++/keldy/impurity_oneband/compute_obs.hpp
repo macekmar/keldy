@@ -49,7 +49,7 @@ class compute_charge_Q {
 
     auto f = integrand_g_t1t2_direct{g0_keldysh_contour_t{g0_model}, a, b};
 
-    auto f1 = [f](double t) { return std::abs(f(std::vector<double>{t})); };
+    auto f1 = [f](double t) { return std::abs(f(std::vector<double>{t})) + 1e-12; };
     warper_plasma_simple_t warper{f1, params.time_max, nr_sample_points_ansatz};
 
     auto f2 = [&result = this->result, f](std::vector<double> const &ui_vec, double jac) { result += jac * f(ui_vec); };

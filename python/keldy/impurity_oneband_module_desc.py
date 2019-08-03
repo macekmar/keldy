@@ -15,6 +15,7 @@ module.add_include("keldy/impurity_oneband/compute_obs.hpp")
 module.add_preamble("""
 #include <cpp2py/converters/complex.hpp>
 #include <cpp2py/converters/function.hpp>
+#include <cpp2py/converters/string.hpp>
 #include <cpp2py/converters/vector.hpp>
 #include <triqs/cpp2py_converters/gf.hpp>
 
@@ -81,22 +82,30 @@ c.add_constructor("""(**keldy::impurity_oneband::model_param_t)""", doc = r"""
 
 
 
-+-------------------+--------+---------+---------------+
-| Parameter Name    | Type   | Default | Documentation |
-+===================+========+=========+===============+
-| beta              | double | 1.0     |               |
-+-------------------+--------+---------+---------------+
-| bias_V            | double | 0.0     |               |
-+-------------------+--------+---------+---------------+
-| eps_d             | double | 0.0     |               |
-+-------------------+--------+---------+---------------+
-| Gamma             | double | 1.0     |               |
-+-------------------+--------+---------+---------------+
-| time_max          | double | +100.0  |               |
-+-------------------+--------+---------+---------------+
-| nr_time_points_gf | int    | 1000    |               |
-+-------------------+--------+---------+---------------+
++-------------------+-------------+-------------------------+---------------+
+| Parameter Name    | Type        | Default                 | Documentation |
++===================+=============+=========================+===============+
+| beta              | double      | 1.0                     |               |
++-------------------+-------------+-------------------------+---------------+
+| bias_V            | double      | 0.0                     |               |
++-------------------+-------------+-------------------------+---------------+
+| eps_d             | double      | 0.0                     |               |
++-------------------+-------------+-------------------------+---------------+
+| Gamma             | double      | 1.0                     |               |
++-------------------+-------------+-------------------------+---------------+
+| time_max          | double      | +100.0                  |               |
++-------------------+-------------+-------------------------+---------------+
+| nr_time_points_gf | int         | 1000                    |               |
++-------------------+-------------+-------------------------+---------------+
+| bath_type         | std::string | std::string{"flatband"} |               |
++-------------------+-------------+-------------------------+---------------+
 """)
+
+c.add_method("""void make_semicircular_model ()""",
+             doc = r"""""")
+
+c.add_method("""void make_flat_band ()""",
+             doc = r"""""")
 
 module.add_class(c)
 
@@ -256,6 +265,11 @@ c.add_member(c_name = "time_max",
 c.add_member(c_name = "nr_time_points_gf",
              c_type = "int",
              initializer = """ 1000 """,
+             doc = r"""""")
+
+c.add_member(c_name = "bath_type",
+             c_type = "std::string",
+             initializer = """ std::string{"flatband"} """,
              doc = r"""""")
 
 module.add_converter(c)

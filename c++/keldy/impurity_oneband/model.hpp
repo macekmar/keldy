@@ -33,13 +33,15 @@ using namespace triqs::gfs;
 
 namespace keldy::impurity_oneband {
 
-struct CPP2PY_IGNORE model_param_t {
+class CPP2PY_IGNORE model_param_t {
+  public:
   double beta = 1.0;
   double bias_V = 0.0;
   double eps_d = 0.0;
   double Gamma = 1.0;
   double time_max = +100.0; // (time_limit_min = - time_limit_max)
   int nr_time_points_gf = 1000;
+  std::string bath_type = std::string{"flatband"};
 };
 
 /// Point of the Contour Keldysh Green Function (time, spin, keldysh_idx)
@@ -64,6 +66,9 @@ class g0_model {
 
   CPP2PY_ARG_AS_DICT
   explicit g0_model(model_param_t const &parameters);
+
+  void make_semicircular_model();
+  void make_flat_band();
 
   model_param_t param_; // TODO: Never used again. Save for retrival?
 };

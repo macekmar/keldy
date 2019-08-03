@@ -6,6 +6,7 @@ using namespace keldy::impurity_oneband;
 
 TEST(ComputeObs, Initialize1) { // NOLINT
   model_param_t params;
+  TRIQS_PRINT(params.bath_type);
   compute_charge_Q computer(1, 5.0, params, 100);
   // tests
 
@@ -21,6 +22,7 @@ TEST(ComputeObs, Initialize1) { // NOLINT
 
 TEST(ComputeObs, Initialize2) { // NOLINT
   model_param_t params;
+  TRIQS_PRINT(params.bath_type);
   compute_charge_Q computer(2, 5.0, params, 100);
   // tests
 
