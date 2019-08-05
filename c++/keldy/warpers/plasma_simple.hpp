@@ -68,6 +68,7 @@ using gf_t = triqs::gfs::gf<retime, scalar_real_valued>;
 class warper_plasma_simple_t {
  private:
   double t_max;
+  double f1_integrate_norm;
   gf_t f1_integrated;
   gf_t f1_integrated_inverse;
 
@@ -95,8 +96,8 @@ class warper_plasma_simple_t {
     data(0) = 0.0;
 
     std::partial_sum(data.begin(), data.end(), data.begin());
-    double norm = data(data.size() - 1);
-    data /= norm; // normalize
+    f1_integrate_norm = data(data.size() - 1);
+    data /= f1_integrate_norm; // normalize
 
     // Inverse Function via interpolation
     triqs::arrays::array<double, 1> mesh_time(nr_function_sample_points);
@@ -131,7 +132,7 @@ class warper_plasma_simple_t {
   double jacobian(std::vector<double> const &li_vec) {
     double result = 1.0;
     for (auto li : li_vec) {
-      result /= f1(f1_integrated_inverse(li));
+      result *= f1_integrate_norm / f1(f1_integrated_inverse(li));
     }
     return result;
   }

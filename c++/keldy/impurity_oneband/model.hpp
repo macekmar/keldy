@@ -41,7 +41,7 @@ class CPP2PY_IGNORE model_param_t {
   double Gamma = 1.0;
   double time_max = +100.0; // (time_limit_min = - time_limit_max)
   int nr_time_points_gf = 1000;
-  std::string bath_type = std::string{"flatband"};
+  std::string bath_type = "flatband";
 };
 
 /// Point of the Contour Keldysh Green Function (time, spin, keldysh_idx)

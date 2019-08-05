@@ -34,8 +34,10 @@
 namespace keldy::impurity_oneband {
 
 class compute_charge_Q {
+  
  private:
   dcomplex result = 0.0;
+  std::function<dcomplex(std::vector<double> const &)> integrand; // for viz purposes
   integrator_t<warper_plasma_simple_t> integrator;
   mpi::communicator comm;
 
@@ -48,11 +50,25 @@ class compute_charge_Q {
     gf_index_t b(time, up, forward);
 
     auto f = integrand_g_t1t2_direct{g0_keldysh_contour_t{g0_model}, a, b};
+    integrand = f;
 
-    auto f1 = [f](double t) { return std::abs(f(std::vector<double>{t})) + 1e-12; };
-    warper_plasma_simple_t warper{f1, params.time_max, nr_sample_points_ansatz};
+    auto f1 = [time, f](double t) { return std::abs(f(std::vector<double>{time - t})) + 1e-12; };
+    warper_plasma_simple_t warper{f1, time, nr_sample_points_ansatz};
 
-    auto f2 = [&result = this->result, f](std::vector<double> const &ui_vec, double jac) { result += jac * f(ui_vec); };
+    TRIQS_PRINT(f({0.5, 1.0}));
+
+    auto f2 = [&result = this->result, f](std::vector<double> const &ui_vec, double jac) {
+      // for(auto ui: ui_vec){
+      //   std::cout << "ui ... " << ui << std::endl;
+      // }
+      //  TRIQS_PRINT(f({0.5, 1.0}));
+
+      // TRIQS_PRINT(f(ui_vec));
+      // TRIQS_PRINT(jac);
+      // TRIQS_PRINT(jac * f(ui_vec));
+      result += jac * f(ui_vec);
+      // TRIQS_PRINT(result);
+    };
 
     integrator = integrator_t{f2, warper, order, "sobol", comm};
   }
@@ -65,7 +81,7 @@ class compute_charge_Q {
   // FIXME
   // warper_t get_warper() {return integrator.warper}
 
-  // get_integrand (return std::function)
+  // std::function<dcomplex(std::vector<double> const &)> get_integrand() const { return integrand; };
 };
 
 } // namespace keldy::impurity_oneband

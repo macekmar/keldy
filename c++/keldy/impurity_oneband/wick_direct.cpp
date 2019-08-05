@@ -82,6 +82,10 @@ dcomplex integrand_g_t1t2_direct::operator()(std::vector<double> const &times) c
     }
   }
 
+  // std::cout << "*****" << std::endl;
+  // TRIQS_PRINT(wick_matrix_s1);
+  // TRIQS_PRINT(wick_matrix_s2);
+
   dcomplex integrand_result = determinant(wick_matrix_s1) * determinant(wick_matrix_s2);
   // TRIQS_PRINT(integrand_result);
 
@@ -112,17 +116,22 @@ dcomplex integrand_g_t1t2_direct::operator()(std::vector<double> const &times) c
     for (int i = 0; i < order_n; i++) {
       if (i > nlc) {
         use_lesser_on_eq = false;
-      }      // nb double overwrite
+      } // nb double overwrite
       wick_matrix_s1(i, nlc) = g0(current_config_1[i], current_config_1[nlc], !use_lesser_on_eq);
-      wick_matrix_s1(nlc, i) = g0(current_config_1[nlc], current_config_1[i],  use_lesser_on_eq);
+      wick_matrix_s1(nlc, i) = g0(current_config_1[nlc], current_config_1[i], use_lesser_on_eq);
 
       wick_matrix_s2(i, nlc) = g0(current_config_2[i], current_config_2[nlc], !use_lesser_on_eq);
-      wick_matrix_s2(nlc, i) = g0(current_config_2[nlc], current_config_2[i],  use_lesser_on_eq);
+      wick_matrix_s2(nlc, i) = g0(current_config_2[nlc], current_config_2[i], use_lesser_on_eq);
     }
+
+    // std::cout << "*****" << std::endl;
+    // TRIQS_PRINT(wick_matrix_s1);
+    // TRIQS_PRINT(wick_matrix_s2);
 
     // TRIQS_PRINT(wick_matrix_s1);
     // TRIQS_PRINT(wick_matrix_s2);
-    integrand_result += parity * determinant(wick_matrix_s1) * determinant(wick_matrix_s2);
+    integrand_result +=
+       parity * triqs::arrays::determinant(wick_matrix_s1) * triqs::arrays::determinant(wick_matrix_s2);
     // TRIQS_PRINT(integrand_result);
   }
   // TRIQS_PRINT(integrand_result);

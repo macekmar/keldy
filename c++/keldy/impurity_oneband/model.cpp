@@ -82,11 +82,11 @@ void g0_model::make_semicircular_model() {
     g0_greater_omega[w] = g0_dd(1, 0);
   }
 
-  gf<retime, scalar_valued> g0_lesser_up = make_gf_from_fourier(g0_lesser_omega, time_mesh);
+  gf<retime, scalar_valued> g0_lesser_up  = make_gf_from_fourier(g0_lesser_omega, time_mesh);
   gf<retime, scalar_valued> g0_greater_up = make_gf_from_fourier(g0_greater_omega, time_mesh);
 
   // Since Spin up and down are currently identical
-  g0_lesser = make_block_gf<retime, scalar_valued>({"up", "down"}, {g0_lesser_up, g0_lesser_up});
+  g0_lesser  = make_block_gf<retime, scalar_valued>({"up", "down"}, {g0_lesser_up, g0_lesser_up});
   g0_greater = make_block_gf<retime, scalar_valued>({"up", "down"}, {g0_greater_up, g0_greater_up});
 }
 
@@ -108,14 +108,27 @@ void g0_model::make_flat_band() {
     return 1.0 / (std::exp(param_.beta * omega) + 1);
   };
 
-  for (auto w : freq_mesh) {
-    g0_lesser_omega[w] = 1_j * param_.Gamma * (nFermi(w + param_.bias_V / 2) + nFermi(w - param_.bias_V / 2))
-       / ((w - param_.eps_d) * (w - param_.eps_d) + std::pow(param_.Gamma, 2));
-    // g0_lesser_omega()[down] = g0_lesser_omega()[up];
+  auto G0_dd_w = [&](double w) {
+    double we = w - param_.eps_d;
+    auto R = 0.5 / (we + 1_j * param_.Gamma);
+    auto A = 0.5 / (we - 1_j * param_.Gamma);
+    auto K = 1_j * param_.Gamma / (we * we + param_.Gamma * param_.Gamma) * (nFermi(w - param_.bias_V / 2) + nFermi(w + param_.bias_V / 2) - 1.);
+    return array<dcomplex, 2>{{K + R + A, K - R + A}, {K + R - A, K - R - A}};
+  };
 
-    g0_greater_omega[w] = 1_j * param_.Gamma * (nFermi(w + param_.bias_V / 2) + nFermi(w - param_.bias_V / 2) - 2)
-       / ((w - param_.eps_d) * (w - param_.eps_d) + std::pow(param_.Gamma, 2));
-    // g0_greater_omega(w)[down] = g0_lesser_omega(w)[up];
+  for (auto w : freq_mesh) {
+    auto g0_dd = G0_dd_w(w);
+
+    g0_lesser_omega[w] = g0_dd(0, 1);
+    g0_greater_omega[w] = g0_dd(1, 0);
+
+    // g0_lesser_omega[w] = 1_j * param_.Gamma * (nFermi(w + param_.bias_V / 2) + nFermi(w - param_.bias_V / 2))
+    //    / ((w - param_.eps_d) * (w - param_.eps_d) + std::pow(param_.Gamma, 2));
+    // // g0_lesser_omega()[down] = g0_lesser_omega()[up];
+
+    // g0_greater_omega[w] = 1_j * param_.Gamma * (nFermi(w + param_.bias_V / 2) + nFermi(w - param_.bias_V / 2) - 2)
+    //    / ((w - param_.eps_d) * (w - param_.eps_d) + std::pow(param_.Gamma, 2));
+    // // g0_greater_omega(w)[down] = g0_lesser_omega(w)[up];
   }
 
   gf<retime, scalar_valued> g0_lesser_up = make_gf_from_fourier(g0_lesser_omega, time_mesh);

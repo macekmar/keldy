@@ -38,6 +38,8 @@ namespace keldy {
 
 // };
 
+class new_class {};
+
 class sobol {
  public:
   std::vector<double> operator()() {

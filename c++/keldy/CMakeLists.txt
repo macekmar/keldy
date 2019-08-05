@@ -1,4 +1,4 @@
-file(GLOB_RECURSE sources *.cpp)
+file(GLOB_RECURSE sources *.cpp *.hpp)
 add_library(keldy_c ${sources})
 
 # Link against dependencies
