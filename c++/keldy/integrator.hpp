@@ -41,8 +41,8 @@ class CPP2PY_IGNORE integrator_t {
  public:
   void run(int nr_steps) {
     for (int i = 0; i < nr_steps; i++) {
-      // TODO: need MPI skip
       auto li_vec = rng(); //set correct size / dimensionality
+      if(i % comm.size() != comm.rank()) continue;
       std::vector<double> ui_vec = warper.ui_from_li(li_vec);
       acc(ui_vec, warper.jacobian(li_vec));
     }

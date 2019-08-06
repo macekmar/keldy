@@ -44,8 +44,15 @@ dcomplex integrand_g_t1t2_direct::operator()(std::vector<double> const &times) c
     return 0.0;
   }
 
+
+
+
   if (order_n == 0) {
     return g0(a, b, true);
+  }
+
+  if(*std::min_element(times.begin(), times.end()) < 0){ // can replace with a for_any
+    return 0.0;
   }
 
   // must allow to be flippable

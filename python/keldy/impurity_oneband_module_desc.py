@@ -161,6 +161,16 @@ c.add_method("""keldy::dcomplex operator() (std::vector<double> times)""",
 
 module.add_class(c)
 
+# The class new_class
+c = class_(
+        py_type = "NewClass",  # name of the python class
+        c_type = "keldy::new_class",   # name of the C++ class
+        doc = r"""""",   # doc of the C++ class
+        hdf5 = False,
+)
+
+module.add_class(c)
+
 # The class sobol
 c = class_(
         py_type = "Sobol",  # name of the python class
@@ -223,6 +233,9 @@ c.add_method("""void run (int nr_steps)""",
              doc = r"""""")
 
 c.add_method("""keldy::dcomplex reduce_result ()""",
+             doc = r"""""")
+
+c.add_method("""int get_nr_points_run ()""",
              doc = r"""""")
 
 module.add_class(c)

@@ -37,6 +37,7 @@ class compute_charge_Q {
   
  private:
   dcomplex result = 0.0;
+  int nr_points = 0;
   std::function<dcomplex(std::vector<double> const &)> integrand; // for viz purposes
   integrator_t<warper_plasma_simple_t> integrator;
   mpi::communicator comm;
@@ -57,17 +58,9 @@ class compute_charge_Q {
 
     TRIQS_PRINT(f({0.5, 1.0}));
 
-    auto f2 = [&result = this->result, f](std::vector<double> const &ui_vec, double jac) {
-      // for(auto ui: ui_vec){
-      //   std::cout << "ui ... " << ui << std::endl;
-      // }
-      //  TRIQS_PRINT(f({0.5, 1.0}));
-
-      // TRIQS_PRINT(f(ui_vec));
-      // TRIQS_PRINT(jac);
-      // TRIQS_PRINT(jac * f(ui_vec));
-      result += jac * f(ui_vec);
-      // TRIQS_PRINT(result);
+    auto f2 = [&result = this->result, &nr_points = this->nr_points, f](std::vector<double> const &ui_vec, double jac) {
+      result += jac * f(ui_vec); 
+      nr_points++;
     };
 
     integrator = integrator_t{f2, warper, order, "sobol", comm};
@@ -75,8 +68,16 @@ class compute_charge_Q {
 
   void run(int nr_steps) { integrator.run(nr_steps); }
 
-  // dcomplex reduce_result() const { return mpi::all_reduce(result, comm); }
-  dcomplex reduce_result() const { return result; }
+  dcomplex reduce_result() const { 
+    dcomplex result_all =  mpi::all_reduce(result, comm); 
+    return result_all / get_nr_points_run();
+  }
+
+  int get_nr_points_run() const {
+    int nr_points_total = mpi::all_reduce(nr_points, comm); 
+    return nr_points_total;
+  }
+  // dcomplex reduce_result() const { return result; }
 
   // FIXME
   // warper_t get_warper() {return integrator.warper}
