@@ -26,7 +26,7 @@
 namespace keldy::impurity_oneband {
 
 g0_model::g0_model(model_param_t const &parameters) : param_(parameters) {
-  TRIQS_PRINT(param_.bath_type);
+  // TRIQS_PRINT(param_.bath_type);
   if (param_.bath_type == "semicircle") {
     make_semicircular_model();
   } else if (param_.bath_type == "flatband") {

@@ -11,7 +11,7 @@ AllowAllParametersOfDeclarationOnNextLine: true
 AllowShortBlocksOnASingleLine: false
 AllowShortCaseLabelsOnASingleLine: true
 AllowShortFunctionsOnASingleLine: All
-AllowShortIfStatementsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: true
 AllowShortLoopsOnASingleLine: false
 AlwaysBreakBeforeMultilineStrings: true
 AlwaysBreakTemplateDeclarations: true

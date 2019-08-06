@@ -22,14 +22,13 @@
 
 #pragma once
 
-#include "model.hpp"
 #include "keldy/common.hpp"
+#include "model.hpp"
 
+#include <triqs/gfs.hpp>
 #include <triqs/utility/first_include.hpp>
 #include <triqs/utility/variant.hpp>
-#include <triqs/gfs.hpp>
 #include <vector>
-
 
 using namespace triqs::gfs;
 
@@ -41,14 +40,17 @@ namespace keldy::impurity_oneband {
 // };
 
 class integrand_g_t1t2_direct {
-  public:
   g0_keldysh_contour_t g0;
   gf_index_t external_A;
   gf_index_t external_B;
+
+ public:
   /// Returns integrand for the specified times
   dcomplex operator()(std::vector<double> const &times) const;
-  integrand_g_t1t2_direct(g0_keldysh_contour_t g0_, gf_index_t external_A_, gf_index_t external_B_) :
-  g0(std::move(g0_)), external_A(std::move(external_A_)), external_B(std::move(external_B_)) {};
+
+  integrand_g_t1t2_direct(g0_keldysh_contour_t g0_, gf_index_t external_A_, gf_index_t external_B_)
+     : g0(std::move(g0_)), external_A(std::move(external_A_)), external_B(std::move(external_B_)){};
+     
 };
 
 // struct integrand_weight_kernel {
@@ -56,4 +58,4 @@ class integrand_g_t1t2_direct {
 //   dcomplex operator()(configuration_t const &config) const;
 // };
 
-} // namespace anderson_re
+} // namespace keldy::impurity_oneband

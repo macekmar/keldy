@@ -33,56 +33,69 @@
 
 namespace keldy::impurity_oneband {
 
-class compute_charge_Q {
-  
- private:
+class CPP2PY_IGNORE output_scalar_t {
+ public:
   dcomplex result = 0.0;
   int nr_points = 0;
-  std::function<dcomplex(std::vector<double> const &)> integrand; // for viz purposes
-  integrator_t<warper_plasma_simple_t> integrator;
+
+
+
+  // for reduction
+  output_scalar_t &operator+=(const output_scalar_t &rhs) {
+    this->result += rhs.result;
+    this->nr_points += rhs.nr_points;
+    return *this;
+  }
+
+  // output_scalar_t() = default;
+};
+
+#pragma omp declare reduction(+ : output_scalar_t : omp_out += omp_in) \
+  initializer(omp_priv = output_scalar_t{})
+
+
+class compute_charge_Q {
+
+ private:
+  output_scalar_t output;
+  integrator_t<warper_plasma_simple_t, output_scalar_t> integrator;
   mpi::communicator comm;
 
  public:
-  compute_charge_Q(int order, double time, model_param_t params, int nr_sample_points_ansatz) {
+  integrand_g_t1t2_direct integrand; // keep public copy for viz purposes
 
-    g0_model g0_model(params);
+  compute_charge_Q(int order, double time, model_param_t params, int nr_sample_points_ansatz)
+     : integrand{g0_keldysh_contour_t{g0_model{params}}, gf_index_t{time, up, backward},
+                 gf_index_t{time, up, forward}} {
 
-    gf_index_t a(time, up, backward);
-    gf_index_t b(time, up, forward);
+    auto f1 = [time, f = this->integrand](double t) { return std::abs(f(std::vector<double>{time - t})) + 1e-12; };
 
-    auto f = integrand_g_t1t2_direct{g0_keldysh_contour_t{g0_model}, a, b};
-    integrand = f;
-
-    auto f1 = [time, f](double t) { return std::abs(f(std::vector<double>{time - t})) + 1e-12; };
     warper_plasma_simple_t warper{f1, time, nr_sample_points_ansatz};
 
-    TRIQS_PRINT(f({0.5, 1.0}));
-
-    auto f2 = [&result = this->result, &nr_points = this->nr_points, f](std::vector<double> const &ui_vec, double jac) {
-      result += jac * f(ui_vec); 
-      nr_points++;
+    auto f2 = [f = this->integrand](output_scalar_t &out, std::vector<double> const &ui_vec, double jac) {
+      out.result += jac * f(ui_vec);
+      out.nr_points++;
     };
 
-    integrator = integrator_t{f2, warper, order, "sobol", comm};
+    integrator = integrator_t<warper_plasma_simple_t, output_scalar_t>{f2, warper, order, "sobol", comm};
   }
 
-  void run(int nr_steps) { integrator.run(nr_steps); }
+  void run(int nr_steps) { 
+    integrator.run(output, nr_steps); 
+  }
 
-  dcomplex reduce_result() const { 
-    dcomplex result_all =  mpi::all_reduce(result, comm); 
+  dcomplex reduce_result() const {
+    dcomplex result_all = mpi::all_reduce(output.result, comm);
     return result_all / get_nr_points_run();
   }
 
   int get_nr_points_run() const {
-    int nr_points_total = mpi::all_reduce(nr_points, comm); 
+    int nr_points_total = mpi::all_reduce(output.nr_points, comm);
     return nr_points_total;
   }
-  // dcomplex reduce_result() const { return result; }
 
   // FIXME
   // warper_t get_warper() {return integrator.warper}
-
-  // std::function<dcomplex(std::vector<double> const &)> get_integrand() const { return integrand; };
 };
 
 } // namespace keldy::impurity_oneband

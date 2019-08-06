@@ -6,15 +6,17 @@ using namespace keldy::impurity_oneband;
 
 TEST(ComputeObs, Initialize1) { // NOLINT
   model_param_t params;
-  TRIQS_PRINT(params.bath_type);
-  compute_charge_Q computer(1, 5.0, params, 100);
+  // TRIQS_PRINT(params.bath_type);
+  compute_charge_Q computer(1, 10.0, params, 1000);
   // tests
 
   // run
-  computer.run(100);
+  computer.run(1000);
+  computer.run(1000);
+
   //
-  dcomplex result = computer.reduce_result();
-  std::cout << result << std::endl;
+  std::cout << computer.reduce_result() << std::endl;
+  std::cout << computer.get_nr_points_run() << std::endl;
   // get_warper
 
   // get_integrand
@@ -22,18 +24,16 @@ TEST(ComputeObs, Initialize1) { // NOLINT
 
 TEST(ComputeObs, Initialize2) { // NOLINT
   model_param_t params;
-  TRIQS_PRINT(params.bath_type);
-  compute_charge_Q computer(2, 5.0, params, 100);
+  // TRIQS_PRINT(params.bath_type);
+  compute_charge_Q computer(4, 10.0, params, 1000);
   // tests
 
   // run
-  computer.run(100);
+  computer.run(50000);
   //
-  dcomplex result = computer.reduce_result();
-  std::cout << result << std::endl;
-  // get_warper
 
-  // get_integrand
+  std::cout << computer.reduce_result() << std::endl;
+  std::cout << computer.get_nr_points_run() << std::endl;
 }
 
 MAKE_MAIN; // NOLINT

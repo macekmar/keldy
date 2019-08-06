@@ -138,21 +138,6 @@ c = class_(
         hdf5 = False,
 )
 
-c.add_member(c_name = "g0",
-             c_type = "keldy::impurity_oneband::g0_keldysh_contour_t",
-             read_only= True,
-             doc = r"""""")
-
-c.add_member(c_name = "external_A",
-             c_type = "keldy::impurity_oneband::gf_index_t",
-             read_only= True,
-             doc = r"""""")
-
-c.add_member(c_name = "external_B",
-             c_type = "keldy::impurity_oneband::gf_index_t",
-             read_only= True,
-             doc = r"""""")
-
 c.add_constructor("""(keldy::impurity_oneband::g0_keldysh_contour_t g0_, keldy::impurity_oneband::gf_index_t external_A_, keldy::impurity_oneband::gf_index_t external_B_)""", doc = r"""""")
 
 c.add_method("""keldy::dcomplex operator() (std::vector<double> times)""",
@@ -226,6 +211,11 @@ c = class_(
         doc = r"""""",   # doc of the C++ class
         hdf5 = False,
 )
+
+c.add_member(c_name = "integrand",
+             c_type = "keldy::impurity_oneband::integrand_g_t1t2_direct",
+             read_only= True,
+             doc = r"""""")
 
 c.add_constructor("""(int order, double time, keldy::impurity_oneband::model_param_t params, int nr_sample_points_ansatz)""", doc = r"""""")
 

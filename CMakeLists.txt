@@ -90,6 +90,29 @@ target_compile_options(project_warnings
 find_package(GSL REQUIRED)
 
 
+# Find OpenMP
+if(APPLE AND USE_OpenMP)
+    if(CMAKE_C_COMPILER_ID MATCHES "Clang")
+        set(OpenMP_C "${CMAKE_C_COMPILER}")
+        set(OpenMP_C_FLAGS "-fopenmp -Wno-unused-command-line-argument")
+    endif()
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+      set(OpenMP_CXX "${CMAKE_CXX_COMPILER}")
+      set(OpenMP_CXX_FLAGS "-fopenmp -Wno-unused-command-line-argument")
+    endif()
+endif()
+
+find_package(OpenMP REQUIRED)
+
+if (OPENMP_FOUND)
+    # include_directories("${OPENMP_INCLUDES}")
+    # link_directories("${OPENMP_LIBRARIES}")
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+endif(OPENMP_FOUND)
+
+
 # #############
 # Build Project
 
