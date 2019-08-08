@@ -26,7 +26,6 @@
 namespace keldy::impurity_oneband {
 
 g0_model::g0_model(model_param_t const &parameters) : param_(parameters) {
-  // TRIQS_PRINT(param_.bath_type);
   if (param_.bath_type == "semicircle") {
     make_semicircular_model();
   } else if (param_.bath_type == "flatband") {
@@ -57,10 +56,8 @@ void g0_model::make_semicircular_model() {
   // Retarded self energy with semi circular sigma dos (linear chain).
   auto sigma_linear_chain = [](double omega) -> dcomplex {
     omega = omega / 2.;
-    if (std::abs(omega) < 1)
-      return dcomplex{omega, -std::sqrt(1 - omega * omega)};
-    if (omega > 1)
-      return omega - std::sqrt(omega * omega - 1);
+    if (std::abs(omega) < 1) return dcomplex{omega, -std::sqrt(1 - omega * omega)};
+    if (omega > 1) return omega - std::sqrt(omega * omega - 1);
     return omega + std::sqrt(omega * omega - 1);
   };
 
@@ -82,11 +79,11 @@ void g0_model::make_semicircular_model() {
     g0_greater_omega[w] = g0_dd(1, 0);
   }
 
-  gf<retime, scalar_valued> g0_lesser_up  = make_gf_from_fourier(g0_lesser_omega, time_mesh);
+  gf<retime, scalar_valued> g0_lesser_up = make_gf_from_fourier(g0_lesser_omega, time_mesh);
   gf<retime, scalar_valued> g0_greater_up = make_gf_from_fourier(g0_greater_omega, time_mesh);
 
   // Since Spin up and down are currently identical
-  g0_lesser  = make_block_gf<retime, scalar_valued>({"up", "down"}, {g0_lesser_up, g0_lesser_up});
+  g0_lesser = make_block_gf<retime, scalar_valued>({"up", "down"}, {g0_lesser_up, g0_lesser_up});
   g0_greater = make_block_gf<retime, scalar_valued>({"up", "down"}, {g0_greater_up, g0_greater_up});
 }
 
@@ -112,7 +109,8 @@ void g0_model::make_flat_band() {
     double we = w - param_.eps_d;
     auto R = 0.5 / (we + 1_j * param_.Gamma);
     auto A = 0.5 / (we - 1_j * param_.Gamma);
-    auto K = 1_j * param_.Gamma / (we * we + param_.Gamma * param_.Gamma) * (nFermi(w - param_.bias_V / 2) + nFermi(w + param_.bias_V / 2) - 1.);
+    auto K = 1_j * param_.Gamma / (we * we + param_.Gamma * param_.Gamma)
+       * (nFermi(w - param_.bias_V / 2) + nFermi(w + param_.bias_V / 2) - 1.);
     return array<dcomplex, 2>{{K + R + A, K - R + A}, {K + R - A, K - R - A}};
   };
 

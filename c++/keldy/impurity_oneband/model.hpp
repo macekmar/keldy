@@ -33,7 +33,7 @@ using namespace triqs::gfs;
 
 namespace keldy::impurity_oneband {
 
-class CPP2PY_IGNORE model_param_t {
+class model_param_t {
   public:
   double beta = 1.0;
   double bias_V = 0.0;
@@ -64,7 +64,6 @@ class g0_model {
   /// Greater Green function $G^{>}_{\sigma}(t)$; block spin $\sigma$ {up, down}
   block_gf<retime, scalar_valued> g0_greater;
 
-  CPP2PY_ARG_AS_DICT
   explicit g0_model(model_param_t const &parameters);
 
   void make_semicircular_model();

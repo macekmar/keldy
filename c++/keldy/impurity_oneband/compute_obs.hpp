@@ -36,8 +36,8 @@ namespace keldy::impurity_oneband {
 class compute_charge_Q {
 
  private:
-  dcomplex output = 0;
-  integrator_t<warper_plasma_simple_t, output_scalar_t> integrator;
+  dcomplex result = 0;
+  integrator_t<warper_plasma_simple_t, dcomplex> integrator;
   mpi::communicator comm;
   uint64_t n_points = 0;
 
@@ -52,20 +52,29 @@ class compute_charge_Q {
 
     warper_plasma_simple_t warper{f1, time, nr_sample_points_ansatz};
 
-    auto f2 = [f = this->integrand](dcomplex &out, std::vector<double> const &ui_vec, double jac) {
-      out.result += jac * f(ui_vec);
+    auto f2 = [f = this->integrand](dcomplex &result, std::vector<double> const &ui_vec, double jac) {
+      result += jac * f(ui_vec);
     };
 
-    integrator = integrator_t<warper_plasma_simple_t, output_scalar_t>{f2, warper, order, "sobol", comm};
+    integrator = integrator_t<warper_plasma_simple_t, dcomplex>{f2, warper, order, "sobol", comm};
   }
 
-  void run(int nr_steps) { n_points += integrator.run(output, nr_steps); }
+  void run(int nr_steps) { n_points += integrator.run(result, nr_steps); }
 
   uint64_t get_nr_points_run() const { return mpi::all_reduce(n_points, comm); }
 
+  void run_mpi(int nr_steps) { 
+    integrator.run_mpi(result, nr_steps); 
+  }
+
   dcomplex reduce_result() const {
-    dcomplex result_all = mpi::all_reduce(output.result, comm);
+    dcomplex result_all = mpi::all_reduce(result, comm);
     return result_all / get_nr_points_run();
+  }
+
+  int reduce_nr_points_run() const {
+    int nr_points_total = mpi::all_reduce(n_points, comm);
+    return nr_points_total;
   }
 
   // FIXME

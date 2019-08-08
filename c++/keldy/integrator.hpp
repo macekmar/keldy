@@ -32,16 +32,14 @@ namespace keldy {
 
 template <typename W, typename M>
 class CPP2PY_IGNORE integrator_t {
-  W warper; //make erased warper_t ?
+  W warper;
 
-  // f = accumulate(times_vector, jaobian)
   std::function<void(M &, std::vector<double> const &, double)> acc;
   std::function<std::vector<double>()> rng;
   mpi::communicator comm;
 
  public:
   uint64_t run(M &measure, int nr_steps) {
-
     uint64_t n_pts = 0;
 // No "for" in pragma: all threads execute full loop.
 // Reduction adds to initial value of measure at the end : TODO
@@ -61,6 +59,17 @@ class CPP2PY_IGNORE integrator_t {
       { rng = local_rng; }
     }
     return n_pts;
+  }
+
+  uint64_t run_mpi(M &measure, int nr_steps) {
+    int mpi_rank = comm.rank(), mpi_size = comm.size(); // call only once
+    for (int i = 0; i < nr_steps; i++) {
+      auto li_vec = rng();
+      if (i % mpi_size != mpi_rank) continue;
+      std::vector<double> ui_vec = warper.ui_from_li(li_vec);
+      acc(measure, ui_vec, warper.jacobian(li_vec));
+    }
+    return nr_steps;
   }
 
   integrator_t() = default;
