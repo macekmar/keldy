@@ -33,33 +33,13 @@
 
 namespace keldy::impurity_oneband {
 
-class CPP2PY_IGNORE output_scalar_t {
- public:
-  dcomplex result = 0.0;
-  int nr_points = 0;
-
-
-
-  // for reduction
-  output_scalar_t &operator+=(const output_scalar_t &rhs) {
-    this->result += rhs.result;
-    this->nr_points += rhs.nr_points;
-    return *this;
-  }
-
-  // output_scalar_t() = default;
-};
-
-#pragma omp declare reduction(+ : output_scalar_t : omp_out += omp_in) \
-  initializer(omp_priv = output_scalar_t{})
-
-
 class compute_charge_Q {
 
  private:
-  output_scalar_t output;
+  dcomplex output = 0;
   integrator_t<warper_plasma_simple_t, output_scalar_t> integrator;
   mpi::communicator comm;
+  uint64_t n_points = 0;
 
  public:
   integrand_g_t1t2_direct integrand; // keep public copy for viz purposes
@@ -72,30 +52,24 @@ class compute_charge_Q {
 
     warper_plasma_simple_t warper{f1, time, nr_sample_points_ansatz};
 
-    auto f2 = [f = this->integrand](output_scalar_t &out, std::vector<double> const &ui_vec, double jac) {
+    auto f2 = [f = this->integrand](dcomplex &out, std::vector<double> const &ui_vec, double jac) {
       out.result += jac * f(ui_vec);
-      out.nr_points++;
     };
 
     integrator = integrator_t<warper_plasma_simple_t, output_scalar_t>{f2, warper, order, "sobol", comm};
   }
 
-  void run(int nr_steps) { 
-    integrator.run(output, nr_steps); 
-  }
+  void run(int nr_steps) { n_points += integrator.run(output, nr_steps); }
+
+  uint64_t get_nr_points_run() const { return mpi::all_reduce(n_points, comm); }
 
   dcomplex reduce_result() const {
     dcomplex result_all = mpi::all_reduce(output.result, comm);
     return result_all / get_nr_points_run();
   }
 
-  int get_nr_points_run() const {
-    int nr_points_total = mpi::all_reduce(output.nr_points, comm);
-    return nr_points_total;
-  }
-
   // FIXME
-  // warper_t get_warper() {return integrator.warper}
+  //  warper_t get_warper() {return {integrator.warper};}
 };
 
 } // namespace keldy::impurity_oneband
