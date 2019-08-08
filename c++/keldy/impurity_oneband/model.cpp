@@ -139,37 +139,41 @@ void g0_model::make_flat_band() {
   g0_greater = make_block_gf<retime, scalar_valued>({"up", "down"}, {g0_greater_up, g0_greater_up});
 }
 
-
 // *****
 
-dcomplex g0_keldysh_contour_t::operator()(gf_index_t const &a, gf_index_t const &b,
-                                          bool use_lesser_at_eq_points) const {
+/// Adaptor: return $g^{ab}(t,t')$ in contour basis from $g^<, g^>$ functions
+/// Mapping takes care of correct keldysh ordering [0 = forward contour; 1 = backward contour]
+///  a    b    (a.time > b.time)   L/G ?
+///  0    0           1             G
+///  0    0           0             L
+///  1    1           1             L
+///  1    1           0             G
+///
+///  0    1           *             L
+///  1    0           *             G
+///
+/// At equal times and Keldysh index we need to point-split times according to external integer (time-ordering).
+/// For self contractions (no external ordering), use $g^< \sim c^\dag c$ since this is normal ordering defined by V
+dcomplex g0_keldysh_contour_t::operator()(gf_index_t const &a, gf_index_t const &b, int a_timesplit,
+                                          int b_timesplit) const {
   if (a.spin != b.spin) {
     return 0.0; //  g0 is diagonal in spin
   }
 
-  // At equal contour points, we need to point split:
-  // For self-contraction: use g0_lesser (~ c^\dag c), since V is normal ordered
-  // Multiple vertices at equal time: need to correctly swap relative g0_greater / g_lesser
-  // (Float is ok in == since we are not doing any operations on times),
-  if (a.time == b.time && a.k_idx == b.k_idx) {
-    if (!use_lesser_at_eq_points) {
-      return model.g0_greater[a.spin](0.0);
+  // Takes care of 01 & 10 case
+  bool is_greater = a.k_idx;
+
+  if (a.k_idx == b.k_idx) {
+    if (a.time == b.time) {
+      if (a_timesplit == b_timesplit) {
+        is_greater = false;
+      } else {
+        is_greater = a.k_idx xor (a_timesplit > b_timesplit);
+      }
+    } else {
+      is_greater = a.k_idx xor (a.time > b.time);
     }
-    return model.g0_lesser[a.spin](0.0);
   }
-
-  // mapping to g^< / g^> [0 = forward contour; 1 = backward contour]
-  //  a    b    (a.time > b.time)   L/G ?
-  //  0    0           1             G
-  //  0    0           0             L
-  //  1    1           1             L
-  //  1    1           0             G
-  //
-  //  0    1           *             L
-  //  1    0           *             G
-
-  bool is_greater = (a.k_idx == b.k_idx ? (a.k_idx xor (a.time > b.time)) : a.k_idx);
 
   if (is_greater) {
     return model.g0_greater[a.spin](a.time - b.time);

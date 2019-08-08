@@ -124,8 +124,8 @@ c.add_member(c_name = "model",
 
 c.add_constructor("""(keldy::impurity_oneband::g0_model model_)""", doc = r"""""")
 
-c.add_method("""keldy::dcomplex operator() (keldy::impurity_oneband::gf_index_t a, keldy::impurity_oneband::gf_index_t b, bool use_lesser_at_eq_points)""",
-               name = "__call__",
+c.add_method("""keldy::dcomplex operator() (keldy::impurity_oneband::gf_index_t a, keldy::impurity_oneband::gf_index_t b, int a_timesplit, int b_timesplit)""",
+             name = "__call__",
              doc = r"""Evalutate G, passing two Keldysh contour points""")
 
 module.add_class(c)
@@ -141,7 +141,7 @@ c = class_(
 c.add_constructor("""(keldy::impurity_oneband::g0_keldysh_contour_t g0_, keldy::impurity_oneband::gf_index_t external_A_, keldy::impurity_oneband::gf_index_t external_B_)""", doc = r"""""")
 
 c.add_method("""keldy::dcomplex operator() (std::vector<double> times)""",
-               name = "__call__",
+             name = "__call__",
              doc = r"""Returns integrand for the specified times""")
 
 module.add_class(c)
@@ -167,7 +167,7 @@ c = class_(
 c.add_constructor("""(int dim, int log_max_points_ = 31)""", doc = r"""""")
 
 c.add_method("""std::vector<double> operator() ()""",
-               name = "__call__",
+             name = "__call__",
              doc = r"""""")
 
 c.add_method("""void seed (int k)""",

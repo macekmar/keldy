@@ -77,7 +77,7 @@ class g0_model {
 struct g0_keldysh_contour_t {
   g0_model model;
   /// Evalutate G, passing two Keldysh contour points 
-  dcomplex operator()(gf_index_t const &a, gf_index_t const &b, bool use_lesser_at_eq_points) const;
+  dcomplex operator()(gf_index_t const &a, gf_index_t const &b, int a_timesplit,int b_timesplit) const;
   g0_keldysh_contour_t(g0_model model_): model(std::move(model_)) {};
 };
 

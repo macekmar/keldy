@@ -44,11 +44,8 @@ dcomplex integrand_g_t1t2_direct::operator()(std::vector<double> const &times) c
     return 0.0;
   }
 
-
-
-
   if (order_n == 0) {
-    return g0(a, b, true);
+    return g0(a, b, order_n, order_n);
   }
 
   if(*std::min_element(times.begin(), times.end()) < 0){ // can replace with a for_any
@@ -59,7 +56,7 @@ dcomplex integrand_g_t1t2_direct::operator()(std::vector<double> const &times) c
   matrix<dcomplex> wick_matrix_s1(order_n + 1, order_n + 1);
   matrix<dcomplex> wick_matrix_s2(order_n, order_n);
 
-  // Construct for initial configuration (all forward contour)
+  // Construct for initial configuration (all forward contour):
 
   // Vector of gf vertex
   std::vector<gf_index_t> current_config_1(order_n);
@@ -69,29 +66,16 @@ dcomplex integrand_g_t1t2_direct::operator()(std::vector<double> const &times) c
     current_config_2[i] = gf_index_t{times[i], spin_t(1 - a.spin), forward};
   }
 
-  // for (int i = 0; i < order_n; i++) {
-  //   TRIQS_PRINT(current_config_1[i].k_idx);
-  //   TRIQS_PRINT(current_config_2[i].k_idx);
-  // }
-
-  wick_matrix_s1(order_n, order_n) = g0(a, b, true); // equal if we set == 0;
+  wick_matrix_s1(order_n, order_n) = g0(a, b, order_n, order_n); // equal if we set == 0;
   for (int i = 0; i < order_n; i++) {
-    wick_matrix_s1(order_n, i) = g0(a, current_config_1[i], true);
-    wick_matrix_s1(i, order_n) = g0(current_config_1[i], b, false);
+    wick_matrix_s1(order_n, i) = g0(a, current_config_1[i], order_n, i);
+    wick_matrix_s1(i, order_n) = g0(current_config_1[i], b, i, order_n);
 
-    bool use_lesser_on_eq = true;
     for (int j = 0; j < order_n; j++) {
-      if (j > i) {
-        use_lesser_on_eq = false;
-      }
-      wick_matrix_s1(i, j) = g0(current_config_1[i], current_config_1[j], use_lesser_on_eq);
-      wick_matrix_s2(i, j) = g0(current_config_2[i], current_config_2[j], use_lesser_on_eq);
+      wick_matrix_s1(i, j) = g0(current_config_1[i], current_config_1[j], i, j);
+      wick_matrix_s2(i, j) = g0(current_config_2[i], current_config_2[j], i, j);
     }
   }
-
-  // std::cout << "*****" << std::endl;
-  // TRIQS_PRINT(wick_matrix_s1);
-  // TRIQS_PRINT(wick_matrix_s2);
 
   dcomplex integrand_result = determinant(wick_matrix_s1) * determinant(wick_matrix_s2);
   // TRIQS_PRINT(integrand_result);
@@ -110,38 +94,21 @@ dcomplex integrand_g_t1t2_direct::operator()(std::vector<double> const &times) c
     current_config_1[nlc].k_idx = keldysh_idx_t(1 - current_config_1[nlc].k_idx);
     current_config_2[nlc].k_idx = keldysh_idx_t(1 - current_config_2[nlc].k_idx);
 
-    // for (int i = 0; i < order_n; i++) {
-    //   TRIQS_PRINT(current_config_1[i].k_idx);
-    //   TRIQS_PRINT(current_config_2[i].k_idx);
-    // }
-
     // Connect to External Vertices
-    wick_matrix_s1(order_n, nlc) = g0(a, current_config_1[nlc], true);
-    wick_matrix_s1(nlc, order_n) = g0(current_config_1[nlc], b, false);
+    wick_matrix_s1(order_n, nlc) = g0(a, current_config_1[nlc], order_n, nlc);
+    wick_matrix_s1(nlc, order_n) = g0(current_config_1[nlc], b, nlc, order_n);
 
-    bool use_lesser_on_eq = true;
     for (int i = 0; i < order_n; i++) {
-      if (i > nlc) {
-        use_lesser_on_eq = false;
-      } // nb double overwrite
-      wick_matrix_s1(i, nlc) = g0(current_config_1[i], current_config_1[nlc], !use_lesser_on_eq);
-      wick_matrix_s1(nlc, i) = g0(current_config_1[nlc], current_config_1[i], use_lesser_on_eq);
+      wick_matrix_s1(i, nlc) = g0(current_config_1[i], current_config_1[nlc], i, nlc);
+      wick_matrix_s1(nlc, i) = g0(current_config_1[nlc], current_config_1[i], nlc, i);
 
-      wick_matrix_s2(i, nlc) = g0(current_config_2[i], current_config_2[nlc], !use_lesser_on_eq);
-      wick_matrix_s2(nlc, i) = g0(current_config_2[nlc], current_config_2[i], use_lesser_on_eq);
+      wick_matrix_s2(i, nlc) = g0(current_config_2[i], current_config_2[nlc], i, nlc);
+      wick_matrix_s2(nlc, i) = g0(current_config_2[nlc], current_config_2[i], nlc, i);
     }
 
-    // std::cout << "*****" << std::endl;
-    // TRIQS_PRINT(wick_matrix_s1);
-    // TRIQS_PRINT(wick_matrix_s2);
-
-    // TRIQS_PRINT(wick_matrix_s1);
-    // TRIQS_PRINT(wick_matrix_s2);
     integrand_result +=
        parity * triqs::arrays::determinant(wick_matrix_s1) * triqs::arrays::determinant(wick_matrix_s2);
-    // TRIQS_PRINT(integrand_result);
   }
-  // TRIQS_PRINT(integrand_result);
   return integrand_result;
 }
 
