@@ -26,51 +26,6 @@ using namespace keldy::impurity_oneband;
 module.add_enum("spin_t", ['spin_t::up', 'spin_t::down'], "keldy", doc = r"""""")
 module.add_enum("keldysh_idx_t", ['keldysh_idx_t::forward', 'keldysh_idx_t::backward'], "keldy", doc = r"""""")
 
-# The class model_param_t
-c = class_(
-        py_type = "ModelParamT",  # name of the python class
-        c_type = "keldy::impurity_oneband::model_param_t",   # name of the C++ class
-        doc = r"""""",   # doc of the C++ class
-        hdf5 = False,
-)
-
-c.add_member(c_name = "beta",
-             c_type = "double",
-             read_only= True,
-             doc = r"""""")
-
-c.add_member(c_name = "bias_V",
-             c_type = "double",
-             read_only= True,
-             doc = r"""""")
-
-c.add_member(c_name = "eps_d",
-             c_type = "double",
-             read_only= True,
-             doc = r"""""")
-
-c.add_member(c_name = "Gamma",
-             c_type = "double",
-             read_only= True,
-             doc = r"""""")
-
-c.add_member(c_name = "time_max",
-             c_type = "double",
-             read_only= True,
-             doc = r"""""")
-
-c.add_member(c_name = "nr_time_points_gf",
-             c_type = "int",
-             read_only= True,
-             doc = r"""""")
-
-c.add_member(c_name = "bath_type",
-             c_type = "std::string",
-             read_only= True,
-             doc = r"""""")
-
-module.add_class(c)
-
 # The class gf_index_t
 c = class_(
         py_type = "GfIndexT",  # name of the python class
@@ -148,10 +103,6 @@ c.add_member(c_name = "model",
 
 c.add_constructor("""(keldy::impurity_oneband::g0_model model_)""", doc = r"""""")
 
-c.add_method("""keldy::dcomplex operator() (keldy::impurity_oneband::gf_index_t a, keldy::impurity_oneband::gf_index_t b, int a_timesplit, int b_timesplit)""",
-             name = "__call__",
-             doc = r"""Evalutate G, passing two Keldysh contour points""")
-
 module.add_class(c)
 
 # The class integrand_g_t1t2_direct
@@ -163,10 +114,6 @@ c = class_(
 )
 
 c.add_constructor("""(keldy::impurity_oneband::g0_keldysh_contour_t g0_, keldy::impurity_oneband::gf_index_t external_A_, keldy::impurity_oneband::gf_index_t external_B_)""", doc = r"""""")
-
-c.add_method("""keldy::dcomplex operator() (std::vector<double> times)""",
-             name = "__call__",
-             doc = r"""Returns integrand for the specified times""")
 
 module.add_class(c)
 
@@ -189,10 +136,6 @@ c = class_(
 )
 
 c.add_constructor("""(int dim, int log_max_points_ = 31)""", doc = r"""""")
-
-c.add_method("""std::vector<double> operator() ()""",
-             name = "__call__",
-             doc = r"""""")
 
 c.add_method("""void seed (int k)""",
              doc = r"""""")
@@ -260,10 +203,75 @@ c.add_method("""int reduce_nr_points_run ()""",
 
 module.add_class(c)
 
+module.add_function ("void keldy::impurity_oneband::fake (**keldy::impurity_oneband::model_param_t)", doc = r"""
+
+
+
++-------------------+-------------+------------+---------------+
+| Parameter Name    | Type        | Default    | Documentation |
++===================+=============+============+===============+
+| beta              | double      | 1.0        |               |
++-------------------+-------------+------------+---------------+
+| bias_V            | double      | 0.0        |               |
++-------------------+-------------+------------+---------------+
+| eps_d             | double      | 0.0        |               |
++-------------------+-------------+------------+---------------+
+| Gamma             | double      | 1.0        |               |
++-------------------+-------------+------------+---------------+
+| time_max          | double      | +100.0     |               |
++-------------------+-------------+------------+---------------+
+| nr_time_points_gf | int         | 1000       |               |
++-------------------+-------------+------------+---------------+
+| bath_type         | std::string | "flatband" |               |
++-------------------+-------------+------------+---------------+
+""")
+
 module.add_function ("std::vector<double> keldy::vi_from_ui (double t_max, std::vector<double> u_times)", doc = r"""""")
 
 module.add_function ("std::vector<double> keldy::ui_from_vi (double t_max, std::vector<double> v_times)", doc = r"""""")
 
+
+# Converter for model_param_t
+c = converter_(
+        c_type = "keldy::impurity_oneband::model_param_t",
+        doc = r"""""",
+)
+c.add_member(c_name = "beta",
+             c_type = "double",
+             initializer = """ 1.0 """,
+             doc = r"""""")
+
+c.add_member(c_name = "bias_V",
+             c_type = "double",
+             initializer = """ 0.0 """,
+             doc = r"""""")
+
+c.add_member(c_name = "eps_d",
+             c_type = "double",
+             initializer = """ 0.0 """,
+             doc = r"""""")
+
+c.add_member(c_name = "Gamma",
+             c_type = "double",
+             initializer = """ 1.0 """,
+             doc = r"""""")
+
+c.add_member(c_name = "time_max",
+             c_type = "double",
+             initializer = """ +100.0 """,
+             doc = r"""""")
+
+c.add_member(c_name = "nr_time_points_gf",
+             c_type = "int",
+             initializer = """ 1000 """,
+             doc = r"""""")
+
+c.add_member(c_name = "bath_type",
+             c_type = "std::string",
+             initializer = """ "flatband" """,
+             doc = r"""""")
+
+module.add_converter(c)
 
 
 module.generate_code()
