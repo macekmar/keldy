@@ -24,8 +24,8 @@
 
 #include "keldy/common.hpp"
 #include "keldy/gsl_interp_wrap.hpp"
-#include <any>
 #include <algorithm>
+#include <any>
 #include <functional>
 #include <numeric>
 #include <triqs/gfs.hpp>
@@ -81,7 +81,7 @@ class warper_plasma_simple_t {
   //     warper_plasma_simple_t(std::function<double(double)>(f1_), t_max_, nr_function_sample_points) {} // points vs resampling points
 
   warper_plasma_simple_t() = default;
-  
+
   warper_plasma_simple_t(std::function<double(double)> f1_, double t_max_,
                          int nr_function_sample_points) // points vs resampling points
      : t_max(t_max_), f1(std::move(f1_)) {
@@ -112,7 +112,7 @@ class warper_plasma_simple_t {
     }
   }
 
-  std::vector<double> ui_from_li(std::vector<double> const &li_vec) {
+  std::vector<double> ui_from_li(std::vector<double> const &li_vec) const {
     std::vector<double> result = li_vec;
     for (auto &li : result) {
       li = f1_integrated_inverse(li);
@@ -120,7 +120,7 @@ class warper_plasma_simple_t {
     return ui_from_vi(t_max, result);
   };
 
-  std::vector<double> li_from_ui(std::vector<double> const &ui_vec) {
+  std::vector<double> li_from_ui(std::vector<double> const &ui_vec) const {
     auto result = vi_from_ui(t_max, ui_vec);
     // map ui to vi
     for (auto &ui : result) {
@@ -129,7 +129,7 @@ class warper_plasma_simple_t {
     return result;
   }
 
-  double jacobian(std::vector<double> const &li_vec) {
+  double jacobian(std::vector<double> const &li_vec) const {
     double result = 1.0;
     for (auto li : li_vec) {
       result *= f1_integrate_norm / f1(f1_integrated_inverse(li));
@@ -137,7 +137,7 @@ class warper_plasma_simple_t {
     return result;
   }
 
-  double evaluate_warping_function(std::vector<double> const& ui_vec){
+  double evaluate_warping_function(std::vector<double> const &ui_vec) const {
     double result = 1.0;
     auto vi_vec = vi_from_ui(t_max, ui_vec);
     for (auto vi : vi_vec) {
@@ -145,10 +145,6 @@ class warper_plasma_simple_t {
     }
     return result;
   }
-  
-
 };
-
-
 
 } // namespace keldy
