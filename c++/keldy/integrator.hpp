@@ -32,7 +32,11 @@ namespace keldy {
 
 template <typename W, typename M>
 class CPP2PY_IGNORE integrator_t {
+  public:
+
   W warper;
+
+  private:
 
   std::function<void(M &, std::vector<double> const &, double)> acc;
   std::function<std::vector<double>()> rng;
