@@ -25,24 +25,20 @@
 #include "keldy/common.hpp"
 #include "model.hpp"
 
-#include <triqs/gfs.hpp>
 #include <triqs/utility/first_include.hpp>
 #include <triqs/utility/variant.hpp>
 #include <vector>
 
-using namespace triqs::gfs;
-
 namespace keldy::impurity_oneband {
-
-// struct measure_operator_t {
-//   std::vector<gf_index_t> creation_operators;
-//   std::vector<gf_index_t> annihilation_operators;
-// };
 
 class integrand_g_t1t2_direct {
   g0_keldysh_contour_t g0;
   gf_index_t external_A;
   gf_index_t external_B;
+
+  // To Do in the future:
+  //   std::vector<gf_index_t> creation_operators;
+  //   std::vector<gf_index_t> annihilation_operators;
 
  public:
   /// Returns integrand for the specified times
@@ -50,12 +46,6 @@ class integrand_g_t1t2_direct {
 
   integrand_g_t1t2_direct(g0_keldysh_contour_t g0_, gf_index_t external_A_, gf_index_t external_B_)
      : g0(std::move(g0_)), external_A(std::move(external_A_)), external_B(std::move(external_B_)){};
-     
 };
-
-// struct integrand_weight_kernel {
-//   /// Returns integrand for the specified configuratiton
-//   dcomplex operator()(configuration_t const &config) const;
-// };
 
 } // namespace keldy::impurity_oneband
