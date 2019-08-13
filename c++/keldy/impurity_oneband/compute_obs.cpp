@@ -20,10 +20,6 @@
 //
 //******************************************************************************
 
-
 #include "compute_obs.hpp"
 
 namespace keldy::impurity_oneband {}
-
-
-

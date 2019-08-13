@@ -63,9 +63,7 @@ class compute_charge_Q {
 
   uint64_t get_nr_points_run() const { return mpi::all_reduce(n_points, comm); }
 
-  void run_mpi(int nr_steps) { 
-    integrator.run_mpi(result, nr_steps); 
-  }
+  void run_mpi(int nr_steps) { integrator.run_mpi(result, nr_steps); }
 
   dcomplex reduce_result() const {
     dcomplex result_all = mpi::all_reduce(result, comm);
@@ -77,8 +75,56 @@ class compute_charge_Q {
     return nr_points_total;
   }
 
-  // FIXME
-  //  warper_t get_warper() {return {integrator.warper};}
+  auto get_warper() const { return integrator.warper; }
 };
+
+// ****************************************************************
+
+class compute_kernel {
+
+  //  private:
+  //   dcomplex result = 0;
+  //   integrator_t<warper_plasma_simple_t, dcomplex> integrator;
+  //   mpi::communicator comm;
+  //   uint64_t n_points = 0;
+
+  //  public:
+  //   integrand_g_t1t2_direct integrand; // keep public copy for viz purposes
+
+  //   compute_charge_Q(int order, double time, model_param_t params, int nr_sample_points_ansatz)
+  //      : integrand{g0_keldysh_contour_t{g0_model{params}}, gf_index_t{time, up, backward},
+  //                  gf_index_t{time, up, forward}} {
+
+  //     auto f1 = [time, f = this->integrand](double t) { return std::abs(f(std::vector<double>{time - t})) + 1e-12; };
+
+  //     warper_plasma_simple_t warper{f1, time, nr_sample_points_ansatz};
+
+  //     auto f2 = [f = this->integrand](dcomplex &result, std::vector<double> const &ui_vec, double jac) {
+  //       result += jac * f(ui_vec);
+  //     };
+
+  //     integrator = integrator_t<warper_plasma_simple_t, dcomplex>{f2, warper, order, "sobol", comm};
+  //   }
+
+  //   void run(int nr_steps) { n_points += integrator.run(result, nr_steps); }
+
+  //   uint64_t get_nr_points_run() const { return mpi::all_reduce(n_points, comm); }
+
+  //   void run_mpi(int nr_steps) { integrator.run_mpi(result, nr_steps); }
+
+  //   dcomplex reduce_result() const {
+  //     dcomplex result_all = mpi::all_reduce(result, comm);
+  //     return result_all / get_nr_points_run();
+  //   }
+
+  //   int reduce_nr_points_run() const {
+  //     int nr_points_total = mpi::all_reduce(n_points, comm);
+  //     return nr_points_total;
+  //   }
+
+  //   auto get_warper() const { return integrator.warper; }
+};
+
+// ****************************************************************
 
 } // namespace keldy::impurity_oneband
