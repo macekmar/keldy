@@ -152,8 +152,7 @@ void g0_model::make_flat_band() {
 ///
 /// At equal times and Keldysh index we need to point-split times according to external integer (time-ordering).
 /// For self contractions (no external ordering), use $g^< \sim c^\dag c$ since this is normal ordering defined by V
-dcomplex g0_keldysh_contour_t::operator()(gf_index_t const &a, gf_index_t const &b, int a_timesplit,
-                                          int b_timesplit) const {
+dcomplex g0_keldysh_contour_t::operator()(gf_index_t const &a, gf_index_t const &b, bool internal_point) const {
   if (a.spin != b.spin) {
     return 0.0; //  g0 is diagonal in spin
   }
@@ -162,14 +161,16 @@ dcomplex g0_keldysh_contour_t::operator()(gf_index_t const &a, gf_index_t const 
   bool is_greater = a.k_idx;
 
   if (a.k_idx == b.k_idx) {
-    if (a.time == b.time) {
-      if (a_timesplit == b_timesplit) {
-        is_greater = false;
-      } else {
-        is_greater = a.k_idx xor (a_timesplit > b_timesplit);
-      }
-    } else {
+    if (a.time != b.time) { // generic case (table above)
       is_greater = a.k_idx xor (a.time > b.time);
+    } else {
+      // Need to time split from external ordering unless it is a self-contraction (tadpole)
+      if (a.timesplit_n != b.timesplit_n) {
+        is_greater = a.k_idx xor (a.timesplit_n > b.timesplit_n);
+      } else {
+        // if internal index use alpha. Else use from external
+        return model.g0_lesser[a.spin](0.0) - internal_point * 1_j * model.param_.alpha;
+      }
     }
   }
 

@@ -34,28 +34,36 @@ using namespace triqs::gfs;
 namespace keldy::impurity_oneband {
 
 class CPP2PY_IGNORE model_param_t {
-  public:
+ public:
   double beta = 1.0;
   double bias_V = 0.0;
   double eps_d = 0.0;
   double Gamma = 1.0;
   double time_max = +100.0; // (time_limit_min = - time_limit_max)
   int nr_time_points_gf = 1000;
+  double alpha = 0.0;
   std::string bath_type = "flatband";
 };
 
-CPP2PY_ARG_AS_DICT inline void fake(model_param_t const & temp) {};
+// fake function to get cpp2py to create adaptor for model_param_t
+CPP2PY_ARG_AS_DICT inline void fake(model_param_t const &temp){};
 
 /// Point of the Contour Keldysh Green Function (time, spin, keldysh_idx)
 class gf_index_t {
-  public:
+ public:
+  // time / contour related:
   time_real_t time;
-  spin_t spin;
   keldysh_idx_t k_idx;
+  int timesplit_n = 0; // time-spliting order to dinstiguish vertices at equal times
+
+  spin_t spin;
+
   /// Constructor: (time, spin, keldysh_idx)
   gf_index_t() = default;
   gf_index_t(time_real_t time_, int spin_, int k_idx_)
-     : time(time_), spin(spin_t(spin_)), k_idx(keldysh_idx_t(k_idx_)) {}
+     : time(time_), k_idx(keldysh_idx_t(k_idx_)), spin(spin_t(spin_)) {}
+  gf_index_t(time_real_t time_, int spin_, int k_idx_, int timesplit_n_)
+     : time(time_), k_idx(keldysh_idx_t(k_idx_)), timesplit_n(timesplit_n_), spin(spin_t(spin_)) {}
 };
 
 /// Defines model throuh non-interacting Green function g_lesser / g_greater
@@ -63,6 +71,7 @@ class g0_model {
  public:
   /// Lesser Green function $G^{<}_{\sigma}(t)$; block spin $\sigma$ {up, down}
   block_gf<retime, scalar_valued> g0_lesser;
+
   /// Greater Green function $G^{>}_{\sigma}(t)$; block spin $\sigma$ {up, down}
   block_gf<retime, scalar_valued> g0_greater;
 
@@ -71,15 +80,15 @@ class g0_model {
   void make_semicircular_model();
   void make_flat_band();
 
-  model_param_t param_; // TODO: Never used again. Save for retrival?
+  model_param_t param_; // g0_keldysh_contour_t will need access to alpha
 };
 
 /// Adapt g0_lesser and g0_greater into Green function on Keldysh contour
 struct g0_keldysh_contour_t {
   g0_model model;
-  /// Evalutate G, passing two Keldysh contour points 
-  dcomplex operator()(gf_index_t const &a, gf_index_t const &b, int a_timesplit,int b_timesplit) const;
-  g0_keldysh_contour_t(g0_model model_): model(std::move(model_)) {};
+  /// Evalutate G, passing two Keldysh contour points
+  dcomplex operator()(gf_index_t const &a, gf_index_t const &b, bool internal_point = true) const;
+  g0_keldysh_contour_t(g0_model model_) : model(std::move(model_)){};
 };
 
 // class g0_keldysh_LO_t {
