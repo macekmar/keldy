@@ -39,19 +39,26 @@ c.add_member(c_name = "time",
              read_only= True,
              doc = r"""""")
 
-c.add_member(c_name = "spin",
-             c_type = "keldy::spin_t",
+c.add_member(c_name = "k_idx",
+             c_type = "keldy::keldysh_idx_t",
              read_only= True,
              doc = r"""""")
 
-c.add_member(c_name = "k_idx",
-             c_type = "keldy::keldysh_idx_t",
+c.add_member(c_name = "timesplit_n",
+             c_type = "int",
+             read_only= True,
+             doc = r"""""")
+
+c.add_member(c_name = "spin",
+             c_type = "keldy::spin_t",
              read_only= True,
              doc = r"""""")
 
 c.add_constructor("""()""", doc = r"""Constructor: (time, spin, keldysh_idx)""")
 
 c.add_constructor("""(keldy::time_real_t time_, int spin_, int k_idx_)""", doc = r"""""")
+
+c.add_constructor("""(keldy::time_real_t time_, int spin_, int k_idx_, int timesplit_n_)""", doc = r"""""")
 
 module.add_class(c)
 
@@ -103,6 +110,10 @@ c.add_member(c_name = "model",
 
 c.add_constructor("""(keldy::impurity_oneband::g0_model model_)""", doc = r"""""")
 
+c.add_method("""keldy::dcomplex operator() (keldy::impurity_oneband::gf_index_t a, keldy::impurity_oneband::gf_index_t b, bool internal_point = true)""",
+             name = "__call__",
+             doc = r"""Evalutate G, passing two Keldysh contour points""")
+
 module.add_class(c)
 
 # The class integrand_g_t1t2_direct
@@ -114,6 +125,10 @@ c = class_(
 )
 
 c.add_constructor("""(keldy::impurity_oneband::g0_keldysh_contour_t g0_, keldy::impurity_oneband::gf_index_t external_A_, keldy::impurity_oneband::gf_index_t external_B_)""", doc = r"""""")
+
+c.add_method("""keldy::dcomplex operator() (std::vector<double> times)""",
+             name = "__call__",
+             doc = r"""Returns integrand for the specified times""")
 
 module.add_class(c)
 
@@ -136,6 +151,10 @@ c = class_(
 )
 
 c.add_constructor("""(int dim, int log_max_points_ = 31)""", doc = r"""""")
+
+c.add_method("""std::vector<double> operator() ()""",
+             name = "__call__",
+             doc = r"""""")
 
 c.add_method("""void seed (int k)""",
              doc = r"""""")
@@ -201,6 +220,9 @@ c.add_method("""keldy::dcomplex reduce_result ()""",
 c.add_method("""int reduce_nr_points_run ()""",
              doc = r"""""")
 
+c.add_method("""keldy::warper_plasma_simple_t get_warper ()""",
+             doc = r"""""")
+
 module.add_class(c)
 
 module.add_function ("void keldy::impurity_oneband::fake (**keldy::impurity_oneband::model_param_t)", doc = r"""
@@ -221,6 +243,8 @@ module.add_function ("void keldy::impurity_oneband::fake (**keldy::impurity_oneb
 | time_max          | double      | +100.0     |               |
 +-------------------+-------------+------------+---------------+
 | nr_time_points_gf | int         | 1000       |               |
++-------------------+-------------+------------+---------------+
+| alpha             | double      | 0.0        |               |
 +-------------------+-------------+------------+---------------+
 | bath_type         | std::string | "flatband" |               |
 +-------------------+-------------+------------+---------------+
@@ -264,6 +288,11 @@ c.add_member(c_name = "time_max",
 c.add_member(c_name = "nr_time_points_gf",
              c_type = "int",
              initializer = """ 1000 """,
+             doc = r"""""")
+
+c.add_member(c_name = "alpha",
+             c_type = "double",
+             initializer = """ 0.0 """,
              doc = r"""""")
 
 c.add_member(c_name = "bath_type",
