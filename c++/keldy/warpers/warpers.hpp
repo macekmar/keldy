@@ -26,23 +26,34 @@
 #include "plasma.hpp"
 #include "plasma_simple.hpp"
 
+
 #include <algorithm>
 #include <functional>
 
 namespace keldy {
 
-// warper eraser
-struct CPP2PY_IGNORE warper_t {
-  std::any warp;
-  std::function<std::vector<double>(std::vector<double> const &)> ui_from_li;
-  std::function<double(std::vector<double> const &)> jacobian;
+// // warper eraser
+// class warper_t {
+//  private:
+//   std::any warp;
+//   std::function<std::vector<double>(std::vector<double> const &)> ui_from_li_;
+//   std::function<double(std::vector<double> const &)> jacobian_;
 
-  template <typename T>
-  warper_t(T &&x) : warp{std::forward<T>(x)} {
-    T *p = std::any_cast<T>(&warp); // retrieve a pointer on the stored T object
-    ui_from_li = [p](std::vector<double> const &li_vec) { p->ui_from_li(li_vec); };
-    jacobian = [p](std::vector<double> const &li_vec) { p->jacobian(li_vec); };
-  }
-};
+//  public:
 
-}
+//   warper_t() = default;
+
+//   template <typename T>
+//   CPP2PY_IGNORE warper_t(T x) : warp{std::move(x)} {
+//     T const *p = std::any_cast<T const>(&warp); // retrieve a pointer on the stored T object
+
+//     ui_from_li_ = [p](std::vector<double> const &li_vec) { return p->ui_from_li(li_vec); };
+//     jacobian_  = [p](std::vector<double> const &li_vec) { return p->jacobian(li_vec); };
+//   }
+
+//   double jacobian(std::vector<double> const &x) const {return jacobian_(x);}
+//   std::vector<double> ui_from_li(std::vector<double> const &x) const {return ui_from_li_(x);}
+
+// };
+
+} // namespace keldy
