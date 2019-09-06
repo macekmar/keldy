@@ -95,35 +95,32 @@ void integrand_g_kernel::operator()(kernel_binner &kernel, std::vector<double> c
 
     col_pick_s1[0] = external_idx;
     for (int i = 0; i < order_n; i++) {
-      col_pick_s1[i + 1] = = i + GetBit(idx_kel, i) * order_n;
+      col_pick_s1[i + 1] = i + GetBit(idx_kel, i) * order_n;
       col_pick_s2[i] = col_pick_s1[i + 1];
     }
 
     // Extract data into temporar matrices
-    matrix<dcomplex> tmp_mat_s1(order_n + 1, order_n + 1);
-    matrix<dcomplex> tmp_mat_s2(order_n, order_n);
+    matrix<dcomplex> g_mat_s1(order_n + 1, order_n + 1);
+    matrix<dcomplex> g_mat_s2(order_n, order_n);
 
     for (auto [i, j] : itertools::zip(col_pick_s2, col_pick_s2)) {
-      tmp_mat_s2(i, j) = wick_matrix_s2(col_pick_s2[i], col_pick_s2[j]);
+      g_mat_s2(i, j) = wick_matrix_s2(col_pick_s2[i], col_pick_s2[j]);
     }
 
     for (auto [i, j] : itertools::zip(col_pick_s1, col_pick_s1)) {
-      tmp_mat_s1(i, j) = wick_matrix_s1(col_pick_s1[i], col_pick_s1[j]);
+      g_mat_s1(i, j) = wick_matrix_s1(col_pick_s1[i], col_pick_s1[j]);
     }
 
-    array<int, 1> pivot_index_array(tmp_mat_s1.rows());
-    pivot_index_array() = 0;
+    triqs::arrays::vector<int> pivot_index_array(first_dim(g_mat_s1));
 
-    auto tmp_mat_s1_copy = tmp_mat_s1;
-    int info = 0;
-
-    // TODO: FIX LAPACK WRAPPING / SIGNATURE:
     // TODO: Do we want to go to full pivoting rather than partial pivoting?
 
     // Calculate LU decomposition with partial pivoting
-    LAPACK_zgetrf(&tmp_mat_s1.rows(), &tmp_mat_s1.cols(), tmp_mat_s1.data(), &tmp_mat_s1.rows(), tmp_mat_s1.data(),
-                  &info);
-    if (info != 0) TRIQS_RUNTIME_ERROR << "Lapack zgetrf failed with error code " << info;
+    triqs::arrays::lapack::getrf(g_mat_s1, pivot_index_array);
+
+    /*LAPACK_zgetrf(&g_mat_s1.rows(), &g_mat_s1.cols(), g_mat_s1.data(), &g_mat_s1.rows(), g_mat_s1.data(),*/
+    //&info);
+    //if (info != 0) TRIQS_RUNTIME_ERROR << "Lapack zgetrf failed with error code " << info;
 
     // TODO: Calculate Condition Number:
     // LAPACK_zgecon(char const* norm, lapack_int const* n,lapack_complex_double const* A, lapack_int const* lda,
@@ -132,25 +129,25 @@ void integrand_g_kernel::operator()(kernel_binner &kernel, std::vector<double> c
     // TODO: ZGEEQU for equilibiration (scaling of rows / columns for better conditioning)
 
     // Extract det from LU decompositon (note permutations)
-    dcomplex tmp_mat_s1_det = 1.0;
-    for (int i = 0; i < tmp_mat_s1.rows(); i++) {
-      tmp_mat_s1_det *= tmp_mat_s1(i, i);
+    dcomplex g_mat_s1_det = 1.0;
+    for (int i = 0; i < first_dim(g_mat_s1); i++) {
+      g_mat_s1_det *= g_mat_s1(i, i);
       if (pivot_index_array(i) != i) {
-        tmp_mat_s1_det *= 1;
+        g_mat_s1_det *= 1;
       }
     }
 
     // Find cofactors by solving linear equation Ax = e1 * det(A)
-    array<dcomplex, 1> x_minors(tmp_mat_s1.rows());
+    array<dcomplex, 1> x_minors(first_dim(g_mat_s1));
     x_minors() = 0;
-    x_minors(0) = tmp_mat_s1_det;
+    x_minors(0) = g_mat_s1_det;
 
     int nrhs = 1;
-    LAPACK_zgetrs('N', &tmp_mat_s1.rows(), &nrhs, tmp_mat_s1.data(), &tmp_mat_s1.rows(), tmp_mat_s1.data(),
-                  x_minors.data(), &x_minors.rows(), &info);
+    //LAPACK_zgetrs('N', &g_mat_s1.rows(), &nrhs, g_mat_s1.data(), &g_mat_s1.rows(), g_mat_s1.data(),
+    //x_minors.data(), &x_minors.rows(), &info);
 
     // Multiply by signs / parity / other spin determinant:
-    x_minors *= GetBitParity(idx_kel) * determinant(tmp_mat_s2);
+    x_minors *= GetBitParity(idx_kel) * determinant(g_mat_s2);
 
     // Bin: Find gf_index to bin to. We leave out first element, which connects external verticies only
     for (int i = 1; i < x_minors.size(); i++) {
