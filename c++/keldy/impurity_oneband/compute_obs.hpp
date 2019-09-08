@@ -59,11 +59,9 @@ class compute_charge_Q {
     integrator = integrator_t<warper_plasma_simple_t, dcomplex>{f2, warper, order, "sobol", comm};
   }
 
-  void run(int nr_steps) { n_points += integrator.run(result, nr_steps); }
-
   uint64_t get_nr_points_run() const { return mpi::all_reduce(n_points, comm); }
 
-  void run_mpi(int nr_steps) { integrator.run_mpi(result, nr_steps); }
+  void run(int nr_steps) { integrator.run(result, nr_steps); }
 
   dcomplex reduce_result() const {
     dcomplex result_all = mpi::all_reduce(result, comm);

@@ -43,29 +43,8 @@ class CPP2PY_IGNORE integrator_t {
   mpi::communicator comm;
 
  public:
-  uint64_t run(M &measure, int nr_steps) {
-    uint64_t n_pts = 0;
-// No "for" in pragma: all threads execute full loop.
-// Reduction adds to initial value of measure at the end : TODO
-#pragma omp parallel reduction(+ : measure, n_pts)
-    {
-      auto local_rng = rng;
-      int thread_num = omp_get_thread_num(), number_of_threads = omp_get_num_threads(); // call only once
-      for (int i = 0; i < nr_steps; i++) {
-        auto li_vec = local_rng();
-        // if (i % comm.size() != comm.rank()) continue;
-        if (i % number_of_threads != thread_num) continue;
-        std::vector<double> ui_vec = warper.ui_from_li(li_vec);
-        acc(measure, ui_vec, warper.jacobian(li_vec));
-        ++n_pts;
-      }
-#pragma omp master
-      { rng = local_rng; }
-    }
-    return n_pts;
-  }
 
-  uint64_t run_mpi(M &measure, int nr_steps) {
+  uint64_t run(M &measure, int nr_steps) {
     int mpi_rank = comm.rank(), mpi_size = comm.size(); // call only once
     for (int i = 0; i < nr_steps; i++) {
       auto li_vec = rng();
