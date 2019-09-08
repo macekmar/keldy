@@ -49,10 +49,10 @@ class compute_charge_Q {
                  gf_index_t{time, up, forward}} {
 
     auto f1 = [time, f = this->integrand](double t) { return std::abs(f(std::vector<double>{time - t})) + 1e-12; };
-
     warper_plasma_simple_t warper{f1, time, nr_sample_points_ansatz};
 
-    auto f2 = [&result = this->result, &n_points = this->n_points, f = this->integrand](std::vector<double> const &ui_vec, double jac) {
+    auto f2 = [&result = this->result, &n_points = this->n_points,
+               f = this->integrand](std::vector<double> const &ui_vec, double jac) {
       result += jac * f(ui_vec);
       n_points++;
     };
@@ -67,9 +67,7 @@ class compute_charge_Q {
     return result_all / reduce_nr_points_run();
   }
 
-  uint64_t reduce_nr_points_run() const {
-    return mpi::all_reduce(n_points, comm);
-  }
+  uint64_t reduce_nr_points_run() const { return mpi::all_reduce(n_points, comm); }
 
   auto get_warper() const { return integrator.warper; }
 };
