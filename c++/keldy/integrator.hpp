@@ -30,35 +30,31 @@
 
 namespace keldy {
 
-template <typename W, typename M>
+template <typename W>
 class CPP2PY_IGNORE integrator_t {
-  public:
-
+ public:
   W warper;
 
-  private:
-
-  std::function<void(M &, std::vector<double> const &, double)> acc;
+ private:
+  std::function<void(std::vector<double> const &, double)> acc;
   std::function<std::vector<double>()> rng;
   mpi::communicator comm;
 
  public:
-
-  uint64_t run(M &measure, int nr_steps) {
+  void run(int nr_steps) {
     int mpi_rank = comm.rank(), mpi_size = comm.size(); // call only once
     for (int i = 0; i < nr_steps; i++) {
       auto li_vec = rng();
       if (i % mpi_size != mpi_rank) continue;
       std::vector<double> ui_vec = warper.ui_from_li(li_vec);
-      acc(measure, ui_vec, warper.jacobian(li_vec));
+      acc(ui_vec, warper.jacobian(li_vec));
     }
-    return nr_steps;
   }
 
   integrator_t() = default;
 
-  integrator_t(std::function<void(M &, std::vector<double> const &, double)> acc_, W w, int dimension,
-               std::string rng_name, mpi::communicator comm_)
+  integrator_t(std::function<void(std::vector<double> const &, double)> acc_, W w, int dimension, std::string rng_name,
+               mpi::communicator comm_)
      : warper(std::move(w)), acc(std::move(acc_)), comm(std::move(comm_)) {
     if (rng_name == "sobol") {
       rng = sobol(dimension);
