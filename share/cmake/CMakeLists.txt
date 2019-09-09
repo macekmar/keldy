@@ -7,4 +7,4 @@ install(
   DESTINATION lib/cmake/keldy
 )
 
-install(EXPORT keldy-targets DESTINATION lib/cmake/keldy)
+install(EXPORT keldy-targets NAMESPACE keldy:: DESTINATION lib/cmake/keldy)
