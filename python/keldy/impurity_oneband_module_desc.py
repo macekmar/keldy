@@ -208,20 +208,24 @@ c.add_constructor("""(int order, double time, keldy::impurity_oneband::model_par
 c.add_method("""void run (int nr_steps)""",
              doc = r"""""")
 
-c.add_method("""uint64_t get_nr_points_run ()""",
-             doc = r"""""")
-
-c.add_method("""void run_mpi (int nr_steps)""",
-             doc = r"""""")
-
 c.add_method("""keldy::dcomplex reduce_result ()""",
              doc = r"""""")
 
-c.add_method("""int reduce_nr_points_run ()""",
+c.add_method("""uint64_t reduce_nr_points_run ()""",
              doc = r"""""")
 
 c.add_method("""keldy::warper_plasma_simple_t get_warper ()""",
              doc = r"""""")
+
+module.add_class(c)
+
+# The class compute_kernel
+c = class_(
+        py_type = "ComputeKernel",  # name of the python class
+        c_type = "keldy::impurity_oneband::compute_kernel",   # name of the C++ class
+        doc = r"""""",   # doc of the C++ class
+        hdf5 = False,
+)
 
 module.add_class(c)
 

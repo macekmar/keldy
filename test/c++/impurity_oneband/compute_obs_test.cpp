@@ -16,7 +16,7 @@ TEST(ComputeObs, Initialize1) { // NOLINT
 
   //
   std::cout << computer.reduce_result() << std::endl;
-  std::cout << computer.get_nr_points_run() << std::endl;
+  std::cout << computer.reduce_nr_points_run() << std::endl;
   // get_warper
 
   // get_integrand
@@ -33,7 +33,7 @@ TEST(ComputeObs, Initialize2) { // NOLINT
   //
 
   std::cout << computer.reduce_result() << std::endl;
-  std::cout << computer.get_nr_points_run() << std::endl;
+  std::cout << computer.reduce_nr_points_run() << std::endl;
 }
 
 MAKE_MAIN; // NOLINT
