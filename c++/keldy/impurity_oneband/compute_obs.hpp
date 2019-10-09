@@ -48,7 +48,10 @@ class compute_charge_Q {
      : integrand{g0_keldysh_contour_t{g0_model{params}}, gf_index_t{time, up, backward},
                  gf_index_t{time, up, forward}} {
 
-    auto f1 = [time, f = this->integrand](double t) { return std::abs(f(std::vector<double>{time - t})) + 1e-12; };
+    // auto f1 = [time, f = this->integrand](double t) { return std::abs(f(std::vector<double>{time - t})) + 1e-12; };
+    auto f1 = [time, f = this->integrand](double t) { return std::abs(1.0 / ((1.0 + t) * (1.0 + t))); };
+
+
     warper_plasma_simple_t warper{f1, time, nr_sample_points_ansatz};
 
     auto f2 = [&result = this->result, &n_points = this->n_points,
@@ -57,7 +60,7 @@ class compute_charge_Q {
       n_points++;
     };
 
-    integrator = integrator_t<warper_plasma_simple_t>{f2, warper, order, "sobol", comm};
+    integrator = integrator_t<warper_plasma_simple_t>{f2, warper, order, "sobol", 0, comm};
   }
 
   void run(int nr_steps) { integrator.run(nr_steps); }
@@ -71,6 +74,7 @@ class compute_charge_Q {
 
   auto get_warper() const { return integrator.warper; }
 };
+
 
 // ****************************************************************
 

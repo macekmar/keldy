@@ -59,7 +59,7 @@ dcomplex integrand_g_t1t2_direct::operator()(std::vector<double> const &times) c
     return g0(a, b, false);
   }
 
-  // Pre-Comute Large Matrix. 
+  // Pre-Comute Large Matrix.
   // "s1": Same spin as external indices / "s2": Opposite spin
   matrix<dcomplex> wick_matrix_s1(2 * order_n + 1, 2 * order_n + 1);
   matrix<dcomplex> wick_matrix_s2(2 * order_n, 2 * order_n);
@@ -67,6 +67,8 @@ dcomplex integrand_g_t1t2_direct::operator()(std::vector<double> const &times) c
   // Vector of indices for Green functions
   std::vector<gf_index_t> all_config_1(2 * order_n);
   std::vector<gf_index_t> all_config_2(2 * order_n);
+
+  #pragma omp parallel for
   for (int i = 0; i < order_n; i++) {
     all_config_1[i]           = gf_index_t{times[i], a.spin, forward, i};
     all_config_1[i + order_n] = gf_index_t{times[i], a.spin, backward, i};
@@ -78,7 +80,7 @@ dcomplex integrand_g_t1t2_direct::operator()(std::vector<double> const &times) c
   int external_idx = 2 * order_n;
 
   wick_matrix_s1(external_idx, external_idx) = g0(a, b, false);
-  // #pragma omp parallel for 
+  #pragma omp parallel for
   for (int i = 0; i < 2 * order_n; i++) {
     wick_matrix_s1(external_idx, i) = g0(a, all_config_1[i]);
     wick_matrix_s1(i, external_idx) = g0(all_config_1[i], b);
@@ -87,30 +89,50 @@ dcomplex integrand_g_t1t2_direct::operator()(std::vector<double> const &times) c
       wick_matrix_s2(i, j) = g0(all_config_2[i], all_config_2[j]);
     }
   }
+  // std::cout << wick_matrix_s1 << std::endl;
+  // std::cout << wick_matrix_s2 << std::endl;
 
   dcomplex integrand_result = 0.0;
   uint64_t nr_keldysh_configs = (uint64_t(1) << order_n);
 
   // Iterate over other Keldysh index configurations. Splict smaller determinant from precomuted matrix
-  // #pragma omp parallel for reduce(+: integrand_result)
-  for (uint64_t idx_kel = 0; idx_kel < nr_keldysh_configs - 1; idx_kel++) {
+
+  #pragma omp parallel for reduction(+: integrand_result)
+  for (uint64_t idx_kel = 0; idx_kel < nr_keldysh_configs; idx_kel++) {
     // Indices of Rows / Cols to pick. Cycle through and shift by (0/1) * order_n depending on idx_kel configuration
     std::vector<int> col_pick_s2(order_n);
-    for(int i = 0; i < order_n; i++){
+    for (int i = 0; i < order_n; i++) {
       col_pick_s2[i] = i + GetBit(idx_kel, i) * order_n;
     }
     std::vector<int> col_pick_s1 = col_pick_s2;
     col_pick_s1.push_back(external_idx);
 
-    // Extract data into temporar matrices
+    // Extract data into temporary matrices
     matrix<dcomplex> tmp_mat_s1(order_n + 1, order_n + 1);
     matrix<dcomplex> tmp_mat_s2(order_n, order_n);
 
-    for(auto [i, j]: itertools::zip(col_pick_s2, col_pick_s2)){
-      tmp_mat_s2(i,j) = wick_matrix_s2(col_pick_s2[i], col_pick_s2[j]);
+    // std::cout << "col_pick_s1" << std::endl;
+
+    // for(auto x: col_pick_s1) {
+    //   std::cout << x << std::endl;
+    // }
+
+    // std::cout << "col_pick_s2" << std::endl;
+
+    // for(auto x: col_pick_s2) {
+    //   std::cout << x << std::endl;
+    // } 
+
+
+    for (int i = 0; i < order_n + 1; ++i) {
+      for (int j = 0; j < order_n + 1; ++j) {
+        tmp_mat_s1(i, j) = wick_matrix_s1(col_pick_s1[i], col_pick_s1[j]);
+      }
     }
-    for(auto [i, j]: itertools::zip(col_pick_s1, col_pick_s1)){
-      tmp_mat_s1(i,j) = wick_matrix_s1(col_pick_s1[i], col_pick_s1[j]);
+    for (int i = 0; i < order_n; ++i) {
+      for (int j = 0; j < order_n; ++j) {
+        tmp_mat_s2(i, j) = wick_matrix_s2(col_pick_s2[i], col_pick_s2[j]);
+      }
     }
     integrand_result += GetBitParity(idx_kel) * determinant(tmp_mat_s1) * determinant(tmp_mat_s2);
   }
@@ -123,10 +145,9 @@ dcomplex integrand_g_t1t2_direct::operator()(std::vector<double> const &times) c
 
 // Old Method Based on Sequential Constructions
 // Copy a,b as need to modify time-splitting
-dcomplex integrand_g_t1t2_direct_grey(gf_index_t a, gf_index_t b, 
-                                      g0_keldysh_contour_t const & g0, 
+dcomplex integrand_g_t1t2_direct_grey(gf_index_t a, gf_index_t b, g0_keldysh_contour_t const &g0,
                                       std::vector<double> const &times) {
-  
+
   // TODO: should we sort times?
 
   using namespace triqs::arrays;

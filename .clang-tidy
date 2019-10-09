@@ -1,2 +1,2 @@
-Checks: '-*,modernize-*,cppcoreguidelines-*,readability-*,performance-*,openmp-*,mpi-*,clang-analyzer-*,bugprone-*'
+Checks: '-*,modernize-*,cppcoreguidelines-*,readability-*,performance-*,openmp-*,mpi-*,clang-analyzer-*,bugprone-*,-modernize-use-trailing-return-type'
 HeaderFilterRegex: 'keldy'

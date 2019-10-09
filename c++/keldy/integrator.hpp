@@ -54,10 +54,10 @@ class CPP2PY_IGNORE integrator_t {
   integrator_t() = default;
 
   integrator_t(std::function<void(std::vector<double> const &, double)> acc_, W w, int dimension, std::string rng_name,
-               mpi::communicator comm_)
+               int rng_seed, mpi::communicator comm_)
      : warper(std::move(w)), acc(std::move(acc_)), comm(std::move(comm_)) {
     if (rng_name == "sobol") {
-      rng = sobol(dimension);
+      rng = sobol(dimension, rng_seed);
     } else {
       TRIQS_RUNTIME_ERROR << "No other rng available.";
     }

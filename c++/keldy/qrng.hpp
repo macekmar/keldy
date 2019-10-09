@@ -60,13 +60,14 @@ class sobol {
     }
   }
 
-  sobol(int dim, int log_max_points_ = 31)
+  sobol(int dim, int rng_seed, int log_max_points_ = 31)
      : //dimension(dim),
        log_max_points(log_max_points_),
        generator(qmc::JK2008_sobolseq<double, std::uint32_t>(dim, log_max_points_)) {
     if (log_max_points > 31) {
       TRIQS_RUNTIME_ERROR << "To many points requested from Sobol generator.";
     }
+    generator.set_state(std::uint32_t(rng_seed));
   }
 
  private:

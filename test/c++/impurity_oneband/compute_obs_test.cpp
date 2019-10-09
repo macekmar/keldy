@@ -11,8 +11,8 @@ TEST(ComputeObs, Initialize1) { // NOLINT
   // tests
 
   // run
-  computer.run(1000);
-  computer.run(1000);
+  computer.run(10);
+  computer.run(10);
 
   //
   std::cout << computer.reduce_result() << std::endl;
@@ -26,10 +26,11 @@ TEST(ComputeObs, Initialize2) { // NOLINT
   model_param_t params;
   // TRIQS_PRINT(params.bath_type);
   compute_charge_Q computer(4, 10.0, params, 1000);
+  
   // tests
 
   // run
-  computer.run(50000);
+  computer.run(10);
   //
 
   std::cout << computer.reduce_result() << std::endl;
