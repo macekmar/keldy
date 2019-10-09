@@ -16,12 +16,7 @@ Why is this feature of general interest?
 
 ### Implementation
 
-<<<<<<< HEAD
-A clear and concise description of the alternative solutions you've considered.
-Be sure to explain why the existing customizability of keldy isn't suitable for this feature.
-=======
 What user interface do you suggest?
->>>>>>> keldy_remote/2.2.x
 
 ### Formatting
 
