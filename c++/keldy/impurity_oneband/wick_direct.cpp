@@ -21,6 +21,9 @@
 //******************************************************************************
 
 #include "wick_direct.hpp"
+#include <complex>
+
+#pragma omp declare reduction(+: dcomplex: omp_out += omp_in)
 
 namespace {
 
@@ -97,7 +100,7 @@ dcomplex integrand_g_t1t2_direct::operator()(std::vector<double> const &times) c
 
   // Iterate over other Keldysh index configurations. Splict smaller determinant from precomuted matrix
 
-  #pragma omp parallel for reduction(+: integrand_result)
+  #pragma omp parallel for reduction(+:integrand_result)
   for (uint64_t idx_kel = 0; idx_kel < nr_keldysh_configs; idx_kel++) {
     // Indices of Rows / Cols to pick. Cycle through and shift by (0/1) * order_n depending on idx_kel configuration
     std::vector<int> col_pick_s2(order_n);

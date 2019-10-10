@@ -2,7 +2,7 @@ file(GLOB_RECURSE sources *.cpp *.hpp)
 add_library(keldy_c ${sources})
 
 # Link against dependencies
-target_link_libraries(keldy_c PUBLIC triqs PRIVATE project_warnings GSL::gsl)
+target_link_libraries(keldy_c PUBLIC triqs GSL::gsl PRIVATE project_warnings)
 
 # Configure compilation
 target_compile_options(keldy_c PUBLIC -fPIC)
