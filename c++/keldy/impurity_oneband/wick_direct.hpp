@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include "keldy/common.hpp"
+#include "../common.hpp"
 #include "model.hpp"
 
 #include <triqs/utility/first_include.hpp>

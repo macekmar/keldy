@@ -22,8 +22,8 @@
 
 #pragma once
 
-#include "keldy/common.hpp"
-#include "keldy/gsl_interp_wrap.hpp"
+#include "../common.hpp"
+#include "../gsl_interp_wrap.hpp"
 #include <algorithm>
 #include <any>
 #include <functional>
@@ -39,7 +39,7 @@ using namespace triqs::gfs;
 // Coordinate Transforms (ui <-> vi):
 std::vector<double> vi_from_ui(double t_max, std::vector<double> const &u_times) {
   std::vector<double> v_times = u_times;
-  std::sort(v_times.begin(), v_times.end(), std::greater<int>());
+  std::sort(v_times.begin(), v_times.end(), std::greater<>());
   int n = v_times.size();
   for (int i = n - 1; i > 0; i--) {
     v_times[i] = (v_times[i - 1] - v_times[i]);
@@ -67,8 +67,8 @@ using gf_t = triqs::gfs::gf<retime, scalar_real_valued>;
 
 class warper_plasma_simple_t {
  private:
-  double t_max;
-  double f1_integrate_norm;
+  double t_max{};
+  double f1_integrate_norm{};
   gf_t f1_integrated;
   gf_t f1_integrated_inverse;
 

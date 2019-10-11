@@ -42,10 +42,13 @@ class CPP2PY_IGNORE integrator_t {
 
  public:
   void run(int nr_steps) {
-    int mpi_rank = comm.rank(), mpi_size = comm.size(); // call only once
+    int mpi_rank = comm.rank();
+    int mpi_size = comm.size();
     for (int i = 0; i < nr_steps; i++) {
       auto li_vec = rng();
-      if (i % mpi_size != mpi_rank) continue;
+      if (i % mpi_size != mpi_rank) {
+        continue;
+      }
       std::vector<double> ui_vec = warper.ui_from_li(li_vec);
       acc(ui_vec, warper.jacobian(li_vec));
     }
@@ -53,7 +56,7 @@ class CPP2PY_IGNORE integrator_t {
 
   integrator_t() = default;
 
-  integrator_t(std::function<void(std::vector<double> const &, double)> acc_, W w, int dimension, std::string rng_name,
+  integrator_t(std::function<void(std::vector<double> const &, double)> acc_, W w, int dimension, const std::string& rng_name,
                int rng_seed, mpi::communicator comm_)
      : warper(std::move(w)), acc(std::move(acc_)), comm(std::move(comm_)) {
     if (rng_name == "sobol") {

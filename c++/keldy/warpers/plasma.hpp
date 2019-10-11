@@ -22,24 +22,11 @@
 
 #pragma once
 
-#include "keldy/common.hpp"
+#include "../common.hpp"
 
 namespace keldy {
 
 // class warper_plasma_t {
-//   std::vector<gf_t> f1_vecs;
-//   double t_max;
-//   // // parameters form simulation
-//   // // only for viz purposes?
-//   // dcomplex operator()(std::vector<double> const &args) const {
-//   //   // make sure times are sorted.
-//   //   int n = args.size();
-//   //   dcomplex product_f1s = f1(t_max - args[0]);
-//   //   for (int i = 0; i < n - 1; i++) {
-//   //     product_f1s *= f1(args[i + 1] - args[i])
-//   //   }
-//   //   //
-//   template <typename F> warper(F f, function_ansatz ansatz) : integrand(std::move(f)), ansatz(std::move(ansatz_)) {}
 // };
 
 }

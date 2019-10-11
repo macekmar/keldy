@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include "keldy/common.hpp"
+#include "../common.hpp"
 
 #include <triqs/gfs.hpp>
 #include <triqs/utility/first_include.hpp>
@@ -52,11 +52,11 @@ CPP2PY_ARG_AS_DICT inline void fake(model_param_t const &temp){};
 class gf_index_t {
  public:
   // time / contour related:
-  time_real_t time;
-  keldysh_idx_t k_idx;
+  time_real_t time{};
+  keldysh_idx_t k_idx = forward;
   int timesplit_n = 0; // time-spliting order to dinstiguish vertices at equal times
 
-  spin_t spin;
+  spin_t spin = up;
 
   /// Constructor: (time, spin, keldysh_idx)
   gf_index_t() = default;

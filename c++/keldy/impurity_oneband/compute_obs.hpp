@@ -25,9 +25,9 @@
 #include "model.hpp"
 #include "wick_direct.hpp"
 
-#include "keldy/common.hpp"
-#include "keldy/integrator.hpp"
-#include "keldy/warpers/warpers.hpp"
+#include "../common.hpp"
+#include "../integrator.hpp"
+#include "../warpers/warpers.hpp"
 
 #include <triqs/utility/first_include.hpp>
 
@@ -38,7 +38,7 @@ class compute_charge_Q {
  private:
   dcomplex result = 0;
   integrator_t<warper_plasma_simple_t> integrator;
-  mpi::communicator comm;
+  mpi::communicator comm{};
   uint64_t n_points = 0;
 
  public:
@@ -48,9 +48,8 @@ class compute_charge_Q {
      : integrand{g0_keldysh_contour_t{g0_model{params}}, gf_index_t{time, up, backward},
                  gf_index_t{time, up, forward}} {
 
-    // auto f1 = [time, f = this->integrand](double t) { return std::abs(f(std::vector<double>{time - t})) + 1e-12; };
-    auto f1 = [time, f = this->integrand](double t) { return std::abs(1.0 / ((1.0 + t) * (1.0 + t))); };
-
+    auto f1 = [time, f = this->integrand](double t) { return std::abs(f(std::vector<double>{time - t})) + 1e-12; };
+    // auto f1 = [time, f = this->integrand](double t) { return std::abs(1.0 / ((1.0 + t) * (1.0 + t))); };
 
     warper_plasma_simple_t warper{f1, time, nr_sample_points_ansatz};
 
@@ -74,7 +73,6 @@ class compute_charge_Q {
 
   auto get_warper() const { return integrator.warper; }
 };
-
 
 // ****************************************************************
 

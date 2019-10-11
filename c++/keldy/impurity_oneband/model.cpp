@@ -56,8 +56,12 @@ void g0_model::make_semicircular_model() {
   // Retarded self energy with semi circular sigma dos (linear chain).
   auto sigma_linear_chain = [](double omega) -> dcomplex {
     omega = omega / 2.;
-    if (std::abs(omega) < 1) return dcomplex{omega, -std::sqrt(1 - omega * omega)};
-    if (omega > 1) return omega - std::sqrt(omega * omega - 1);
+    if (std::abs(omega) < 1) {
+      return dcomplex{omega, -std::sqrt(1 - omega * omega)};
+    }
+    if (omega > 1) {
+      return omega - std::sqrt(omega * omega - 1);
+    }
     return omega + std::sqrt(omega * omega - 1);
   };
 
@@ -169,7 +173,7 @@ dcomplex g0_keldysh_contour_t::operator()(gf_index_t const &a, gf_index_t const 
         is_greater = a.k_idx xor (a.timesplit_n > b.timesplit_n);
       } else {
         // if internal index use alpha. Else use from external
-        return model.g0_lesser[a.spin](0.0) - internal_point * 1_j * model.param_.alpha;
+        return model.g0_lesser[a.spin](0.0) - static_cast<long>(internal_point) * 1_j * model.param_.alpha;
       }
     }
   }

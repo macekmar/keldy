@@ -23,11 +23,11 @@
 #include "wick_direct.hpp"
 #include <complex>
 
-#pragma omp declare reduction(+: dcomplex: omp_out += omp_in)
+#pragma omp declare reduction(+ : dcomplex : omp_out += omp_in)
 
 namespace {
 
-inline int GetBit(int in, int offset) { return (in & (1 << offset)) != 0; }
+inline int GetBit(int in, int offset) { return static_cast<int>((in & (1 << offset)) != 0); }
 
 inline int GetBitParity(unsigned int in) { return 1 - 2 * __builtin_parity(in); }
 
@@ -73,9 +73,9 @@ dcomplex integrand_g_t1t2_direct::operator()(std::vector<double> const &times) c
 
   #pragma omp parallel for
   for (int i = 0; i < order_n; i++) {
-    all_config_1[i]           = gf_index_t{times[i], a.spin, forward, i};
+    all_config_1[i] = gf_index_t{times[i], a.spin, forward, i};
     all_config_1[i + order_n] = gf_index_t{times[i], a.spin, backward, i};
-    all_config_2[i]           = gf_index_t{times[i], spin_t(1 - a.spin), forward, i};
+    all_config_2[i] = gf_index_t{times[i], spin_t(1 - a.spin), forward, i};
     all_config_2[i + order_n] = gf_index_t{times[i], spin_t(1 - a.spin), backward, i};
   }
 
@@ -124,8 +124,7 @@ dcomplex integrand_g_t1t2_direct::operator()(std::vector<double> const &times) c
 
     // for(auto x: col_pick_s2) {
     //   std::cout << x << std::endl;
-    // } 
-
+    // }
 
     for (int i = 0; i < order_n + 1; ++i) {
       for (int j = 0; j < order_n + 1; ++j) {

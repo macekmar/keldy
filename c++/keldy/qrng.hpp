@@ -35,7 +35,6 @@ namespace keldy {
 //   void seed();
 //   void discard();
 //   // ctor
-
 // };
 
 class new_class {};

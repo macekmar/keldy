@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include "keldy/common.hpp"
+#include "../common.hpp"
 #include "model.hpp"
 
 #include <triqs/utility/first_include.hpp>
@@ -41,13 +41,14 @@ using namespace triqs::gfs;
 /// TODO: How to include spin up / down separatley.
 ///
 class kernel_binner {
-  // External point $X'$
-  gf_index_t external_point_X;
-
   double t_min = 0.0;
   double t_max = 1.0;
   int nr_bins = 100;
   double bin_size = 0.01;
+
+  // External point $X'$
+  gf_index_t external_point_X;
+
 
   int nr_point_dropped = 0;
 
