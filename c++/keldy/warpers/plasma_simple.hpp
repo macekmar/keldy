@@ -85,7 +85,7 @@ class warper_plasma_simple_t {
   //     warper_plasma_simple_t(std::function<double(double)>(f1_), t_max_, nr_function_sample_points) {} // points vs resampling points
 
   // Identity Constructor: should use this if nothing else is specified
-  warper_plasma_simple_t(double t_max_) : warper_plasma_simple_t{idenity_function{}, t_max_, 4} {}
+  warper_plasma_simple_t(double t_max_) : warper_plasma_simple_t{idenity_function{}, t_max_, 8} {}
 
   warper_plasma_simple_t(std::function<double(double)> f1_, double t_max_,
                          int nr_function_sample_points) // points vs resampling points
