@@ -111,7 +111,7 @@ class warper_plasma_simple_t {
     }
 
     f1_integrated_inverse = gf_t({0.0, 1.0, 1 + 5 * (nr_function_sample_points - 1)});
-    details::gsl_interp_wrapper_t interpolate(gsl_interp_steffen, data, mesh_time);
+    details::gsl_interp_wrapper_t interpolate(gsl_interp_akima, data, mesh_time); //gsl_interp_steffen
     for (auto l : f1_integrated_inverse.mesh()) {
       f1_integrated_inverse[l] = interpolate(l);
     }
