@@ -34,6 +34,9 @@ namespace keldy::impurity_oneband {
 using namespace triqs::arrays;
 using namespace triqs::gfs;
 
+// Small wrapper for data
+class sparse_kernel {
+};
 
 /// Kernel binner for Green Function $K(Y, X')$ with binning happening over $Y$
 /// and $X'$ fixed by boundary conditions.
@@ -46,9 +49,8 @@ class kernel_binner {
   int nr_bins = 100;
   double bin_size = 0.01;
 
-  // External point $X'$
-  gf_index_t external_point_X;
-
+  // // External point $X'$
+  // gf_index_t external_point_X;
 
   int nr_point_dropped = 0;
 
@@ -62,7 +64,7 @@ class kernel_binner {
      : t_min(t_min_),
        t_max(t_max_),
        nr_bins(nr_bins_),
-       external_point_X(std::move(external_point_X_)),
+      //  external_point_X(std::move(external_point_X_)),
        values(nr_bins, 2),
        nr_values(nr_bins, 2),
        bin_times(nr_bins) {
@@ -97,26 +99,36 @@ class kernel_binner {
       nr_point_dropped++;
     }
   }
+
+  kernel_binner& operator+=(std::vector<std::pair<gf_index_t, dcomplex>> const & rhs){
+    for(int i = 0; i < rhs.size(); i++){
+      accumulate(rhs[i].first, rhs[i].second);
+    }
+    return *this;
+  }
+
 };
+
+// implement this: double * std::vector<std::pair<gf_index_t, dcomplex>>
 
 
 
 class integrand_g_kernel {
   g0_keldysh_contour_t g0;
-  gf_index_t external_point_X; // Fixed Point in Kernal
-  // bool expand_col = true;
-  // double condition_numebr_tol;
+  gf_index_t g_idx_X; // Fixed Point in Kernal
 
-  // To Do in the future:
-  //   std::vector<gf_index_t> creation_operators;
-  //   std::vector<gf_index_t> annihilation_operators;
+  // bool expand_col = true; // expand_row = false
+  // double condition_numebr_tol;
 
  public:
   /// Returns integrand for the specified times
-  void operator()(kernel_binner &kernel, std::vector<double> const &times) const;
+  std::vector<std::pair<gf_index_t, dcomplex>> operator()(std::vector<double> const &times) const;
 
-  integrand_g_kernel(g0_keldysh_contour_t g0_) : g0(std::move(g0_)){};
+  integrand_g_kernel(g0_keldysh_contour_t g0_, gf_index_t g_idx_X_) : g0(std::move(g0_)), g_idx_X(std::move(g_idx_X_)) {};
 };
+
+// template<kernel_binner>
+// constexpr bool is_binned_variable = true;
 
 
 } // namespace keldy::impurity_oneband

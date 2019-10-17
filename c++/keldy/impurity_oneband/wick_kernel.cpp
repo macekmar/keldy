@@ -1,24 +1,24 @@
-//******************************************************************************
-//
-// keldy
-//
-// Copyright (C) 2019, The Simons Foundation
-// authors: Philipp Dumitrescu
-//
-// keldy is free software: you can redistribute it and/or modify it under the
-// terms of the GNU General Public License as published by the Free Software
-// Foundation, either version 3 of the License, or (at your option) any later
-// version.
-//
-// keldy is distributed in the hope that it will be useful, but WITHOUT ANY
-// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
-// details.
-//
-// You should have received a copy of the GNU General Public License along with
-// keldy. If not, see <http://www.gnu.org/licenses/>.
-//
-//******************************************************************************
+// //******************************************************************************
+// //
+// // keldy
+// //
+// // Copyright (C) 2019, The Simons Foundation
+// // authors: Philipp Dumitrescu
+// //
+// // keldy is free software: you can redistribute it and/or modify it under the
+// // terms of the GNU General Public License as published by the Free Software
+// // Foundation, either version 3 of the License, or (at your option) any later
+// // version.
+// //
+// // keldy is distributed in the hope that it will be useful, but WITHOUT ANY
+// // WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// // FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+// // details.
+// //
+// // You should have received a copy of the GNU General Public License along with
+// // keldy. If not, see <http://www.gnu.org/licenses/>.
+// //
+// //******************************************************************************
 
 #include "wick_kernel.hpp"
 
@@ -35,11 +35,11 @@ namespace keldy::impurity_oneband {
 // TODO: Where is sorting of times done?
 // TODO: Efficnencies for spin symmetric case.
 
-void integrand_g_kernel::operator()(kernel_binner &kernel, std::vector<double> const &times) const {
+std::vector<std::pair<gf_index_t, dcomplex>> integrand_g_kernel::operator()(std::vector<double> const &times) const {
   using namespace triqs::arrays;
   // Interaction starts a t = 0
   if (*std::min_element(times.begin(), times.end()) < 0) { // can replace with a for_any
-    return;
+    return std::vector<std::pair<gf_index_t, dcomplex>>{};
   }
 
   int order_n = times.size();
@@ -48,8 +48,8 @@ void integrand_g_kernel::operator()(kernel_binner &kernel, std::vector<double> c
   //   return 1.0; // TODO: CHECK NORMALIZATION
   // }
 
-  auto a = external_point_X; // This is now a dummy index
-  auto b = external_point_X;
+  auto a = g_idx_X; // This is now a dummy index
+  auto b = g_idx_X;
   // define time-splitting for external-points
   a.timesplit_n = order_n;
   b.timesplit_n = order_n;
@@ -99,9 +99,9 @@ void integrand_g_kernel::operator()(kernel_binner &kernel, std::vector<double> c
       col_pick_s2[i] = col_pick_s1[i + 1];
     }
 
-    // Extract data into temporar matrices
-    matrix<dcomplex> g_mat_s1(order_n + 1, order_n + 1);
-    matrix<dcomplex> g_mat_s2(order_n, order_n);
+    // Extract data into temporary matrices
+    matrix<dcomplex> g_mat_s1(order_n + 1, order_n + 1, FORTRAN_LAYOUT);
+    matrix<dcomplex> g_mat_s2(order_n, order_n, FORTRAN_LAYOUT);
 
     for (auto [i, j] : itertools::zip(col_pick_s2, col_pick_s2)) {
       g_mat_s2(i, j) = wick_matrix_s2(col_pick_s2[i], col_pick_s2[j]);
@@ -111,49 +111,46 @@ void integrand_g_kernel::operator()(kernel_binner &kernel, std::vector<double> c
       g_mat_s1(i, j) = wick_matrix_s1(col_pick_s1[i], col_pick_s1[j]);
     }
 
-    triqs::arrays::vector<int> pivot_index_array(first_dim(g_mat_s1));
-
-    // TODO: Do we want to go to full pivoting rather than partial pivoting?
+    // Strategy: Do row expansion by solving linear equation for cofactors.
+    // TODO: Do we want to go to full pivoting rather than partial pivoting for LU decomposition?
+    // TODO: Consider checking Condition Number via LAPACK_zgecon
+    // TODO: Consider ZGEEQU for equilibiration (scaling of rows / columns for better conditioning)
 
     // Calculate LU decomposition with partial pivoting
-    triqs::arrays::lapack::getrf(g_mat_s1, pivot_index_array);
-
-    /*LAPACK_zgetrf(&g_mat_s1.rows(), &g_mat_s1.cols(), g_mat_s1.data(), &g_mat_s1.rows(), g_mat_s1.data(),*/
-    //&info);
-    //if (info != 0) TRIQS_RUNTIME_ERROR << "Lapack zgetrf failed with error code " << info;
-
-    // TODO: Calculate Condition Number:
-    // LAPACK_zgecon(char const* norm, lapack_int const* n,lapack_complex_double const* A, lapack_int const* lda,
-    // double const* anorm,ouble* rcond,lapack_complex_double* work,double* rwork,lapack_int* info )
-
-    // TODO: ZGEEQU for equilibiration (scaling of rows / columns for better conditioning)
+    triqs::arrays::vector<int> pivot_index_array(first_dim(g_mat_s1));
+    triqs::arrays::lapack::getrf(g_mat_s1, pivot_index_array, true);
+    // == LAPACK_zgetrf(&g_mat_s1.rows(), &g_mat_s1.cols(), g_mat_s1.data(), &g_mat_s1.rows(), g_mat_s1.data(), &info);
 
     // Extract det from LU decompositon (note permutations)
     dcomplex g_mat_s1_det = 1.0;
+    int det_flip = 1;
     for (int i = 0; i < first_dim(g_mat_s1); i++) {
       g_mat_s1_det *= g_mat_s1(i, i);
-      if (pivot_index_array(i) != i) {
-        g_mat_s1_det *= 1;
+      if (pivot_index_array(i) != i + 1) { // TODO: check +1 from fortran index
+        det_flip = - det_flip;
       }
     }
+    g_mat_s1_det *= det_flip;
 
     // Find cofactors by solving linear equation Ax = e1 * det(A)
-    array<dcomplex, 1> x_minors(first_dim(g_mat_s1));
+    triqs::arrays::vector<dcomplex> x_minors(first_dim(g_mat_s1));
     x_minors() = 0;
     x_minors(0) = g_mat_s1_det;
 
-    int nrhs = 1;
-    //LAPACK_zgetrs('N', &g_mat_s1.rows(), &nrhs, g_mat_s1.data(), &g_mat_s1.rows(), g_mat_s1.data(),
-    //x_minors.data(), &x_minors.rows(), &info);
+    // triqs::arrays::lapack::getrs(g_mat_s1, x_minors, ipiv);
+    // LAPACK_zgetrs('N', &g_mat_s1.rows(), &nrhs, g_mat_s1.data(), &g_mat_s1.rows(), g_mat_s1.data(), x_minors.data(), &x_minors.rows(), &info);
 
-    // Multiply by signs / parity / other spin determinant:
+    // Multiply by Keldysh index parity & other spin determinant:
     x_minors *= GetBitParity(idx_kel) * determinant(g_mat_s2);
+
+    std::vector<std::pair<gf_index_t, dcomplex>> result(order_n);
 
     // Bin: Find gf_index to bin to. We leave out first element, which connects external verticies only
     for (int i = 1; i < x_minors.size(); i++) {
-      kernel.accumulate(all_config_1[col_pick_s1[i]], x_minors(i));
+      result.push_back(std::make_pair(all_config_1[col_pick_s1[i]], x_minors(i)));
     }
   }
+  return result;
 }
 
 } // namespace keldy::impurity_oneband
