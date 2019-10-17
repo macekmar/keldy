@@ -31,6 +31,7 @@
 #include "../warpers/warpers.hpp"
 
 #include <triqs/utility/first_include.hpp>
+#include <string>
 
 namespace keldy::impurity_oneband {
 
@@ -57,26 +58,26 @@ class compute_charge_Q_direct : public integrator<dcomplex, integrand_g_t1t2_dir
   }
 };
 
-// ******************************************************************************************************************************************************
-// Kernal Method
+// // ******************************************************************************************************************************************************
+// // Kernal Method
 
-std::function<double(double)> scalar_warper_function_factory_kernel(std::string const &label, integrand_g_kernel const &f, double time) {
-  if (label == "first_order") {
-    return [time, &f](double t) -> double { return sum(abs(f(std::vector<double>{time - t}))) + 1e-12; }; // refine this a little...
-  }
-  if (label == "identity") {
-    return [](double t) -> double { return 1.0; };
-  }
-  TRIQS_RUNTIME_ERROR << "Warper function name is not defined.";
-}
+// std::function<double(double)> scalar_warper_function_factory_kernel(std::string const &label, integrand_g_kernel const &f, double time) {
+//   if (label == "first_order") {
+//     return [time, &f](double t) -> double { return sum(abs(f(std::vector<double>{time - t}))) + 1e-12; }; // refine this a little...
+//   }
+//   if (label == "identity") {
+//     return [](double t) -> double { return 1.0; };
+//   }
+//   TRIQS_RUNTIME_ERROR << "Warper function name is not defined.";
+// }
 
-class compute_gf_kernel : public integrator<kernel_binner, integrand_g_kernel, warper_plasma_simple_t> {
-  public:
-  compute_gf_kernel(model_param_t params, double time, int order, std::string const &warper_function_name, int nr_sample_points_warper)
-     : integrator{integrand_g_kernel{g0_keldysh_contour_t{g0_model{params}}, gf_index_t{time, up, forward}},
-                  warper_plasma_simple_t{time}, order, "sobol", 0} {
-    warper = {scalar_warper_function_factory_kernel(warper_function_name, integrand, time), time, nr_sample_points_warper};
-  }
-};
+// class compute_gf_kernel : public integrator<kernel_binner, integrand_g_kernel, warper_plasma_simple_t> {
+//   public:
+//   compute_gf_kernel(model_param_t params, double time, int order, std::string const &warper_function_name, int nr_sample_points_warper)
+//      : integrator{integrand_g_kernel{g0_keldysh_contour_t{g0_model{params}}, gf_index_t{time, up, forward}},
+//                   warper_plasma_simple_t{time}, order, "sobol", 0} {
+//     warper = {scalar_warper_function_factory_kernel(warper_function_name, integrand, time), time, nr_sample_points_warper};
+//   }
+// };
 
 } // namespace keldy::impurity_oneband
