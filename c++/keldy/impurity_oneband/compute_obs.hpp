@@ -24,6 +24,7 @@
 
 #include "model.hpp"
 #include "wick_direct.hpp"
+#include "wick_kernel.hpp"
 
 #include "../common.hpp"
 #include "../integrator.hpp"
@@ -33,94 +34,49 @@
 
 namespace keldy::impurity_oneband {
 
-class compute_charge_Q {
+// ******************************************************************************************************************************************************
+// Direct Evaluation ('Profumo')
 
- private:
-  dcomplex result = 0;
-  integrator_t<warper_plasma_simple_t> integrator;
-  mpi::communicator comm{};
-  uint64_t n_points = 0;
+std::function<double(double)> scalar_warper_function_factory(std::string const &label, integrand_g_t1t2_direct const &f, double time) {
+  if (label == "first_order") {
+    return [time, &f](double t) -> double { return std::abs(f(std::vector<double>{time - t})) + 1e-12; };
+  }
+  if (label == "identity") {
+    return [](double t) -> double { return 1.0; };
+  }
+  TRIQS_RUNTIME_ERROR << "Warper function name is not defined.";
+}
 
+// Class to compute charge = G^{lesser}_{up,up}(t).
+class compute_charge_Q_direct : public integrator<dcomplex, integrand_g_t1t2_direct, warper_plasma_simple_t> {
  public:
-  integrand_g_t1t2_direct integrand; // keep public copy for viz purposes
-
-  compute_charge_Q(int order, double time, model_param_t params, int nr_sample_points_ansatz)
-     : integrand{g0_keldysh_contour_t{g0_model{params}}, gf_index_t{time, up, backward},
-                 gf_index_t{time, up, forward}} {
-
-    auto f1 = [time, f = this->integrand](double t) { return std::abs(f(std::vector<double>{time - t})) + 1e-12; };
-    // auto f1 = [time, f = this->integrand](double t) { return std::abs(1.0 / ((1.0 + t) * (1.0 + t))); };
-
-    warper_plasma_simple_t warper{f1, time, nr_sample_points_ansatz};
-
-    auto f2 = [&result = this->result, &n_points = this->n_points,
-               f = this->integrand](std::vector<double> const &ui_vec, double jac) {
-      result += jac * f(ui_vec);
-      n_points++;
-    };
-
-    integrator = integrator_t<warper_plasma_simple_t>{f2, warper, order, "sobol", 0, comm};
+  compute_charge_Q_direct(model_param_t params, double time, int order, std::string const &warper_function_name, int nr_sample_points_warper)
+     : integrator{integrand_g_t1t2_direct{g0_keldysh_contour_t{g0_model{params}}, gf_index_t{time, up, forward}, gf_index_t{time, up, backward}},
+                  warper_plasma_simple_t{time}, order, "sobol", 0} {
+    warper = {scalar_warper_function_factory(warper_function_name, integrand, time), time, nr_sample_points_warper};
   }
-
-  void run(int nr_steps) { integrator.run(nr_steps); }
-
-  dcomplex reduce_result() const {
-    dcomplex result_all = mpi::all_reduce(result, comm);
-    return result_all / reduce_nr_points_run();
-  }
-
-  uint64_t reduce_nr_points_run() const { return mpi::all_reduce(n_points, comm); }
-
-  auto get_warper() const { return integrator.warper; }
 };
 
-// ****************************************************************
+// ******************************************************************************************************************************************************
+// Kernal Method
 
-class compute_kernel {
+std::function<double(double)> scalar_warper_function_factory_kernel(std::string const &label, integrand_g_kernel const &f, double time) {
+  if (label == "first_order") {
+    return [time, &f](double t) -> double { return sum(abs(f(std::vector<double>{time - t}))) + 1e-12; }; // refine this a little...
+  }
+  if (label == "identity") {
+    return [](double t) -> double { return 1.0; };
+  }
+  TRIQS_RUNTIME_ERROR << "Warper function name is not defined.";
+}
 
-  //  private:
-  //   dcomplex result = 0;
-  //   integrator_t<warper_plasma_simple_t, dcomplex> integrator;
-  //   mpi::communicator comm;
-  //   uint64_t n_points = 0;
-
-  //  public:
-  //   integrand_g_t1t2_direct integrand; // keep public copy for viz purposes
-
-  //   compute_charge_Q(int order, double time, model_param_t params, int nr_sample_points_ansatz)
-  //      : integrand{g0_keldysh_contour_t{g0_model{params}}, gf_index_t{time, up, backward},
-  //                  gf_index_t{time, up, forward}} {
-
-  //     auto f1 = [time, f = this->integrand](double t) { return std::abs(f(std::vector<double>{time - t})) + 1e-12; };
-
-  //     warper_plasma_simple_t warper{f1, time, nr_sample_points_ansatz};
-
-  //     auto f2 = [f = this->integrand](dcomplex &result, std::vector<double> const &ui_vec, double jac) {
-  //       result += jac * f(ui_vec);
-  //     };
-
-  //     integrator = integrator_t<warper_plasma_simple_t, dcomplex>{f2, warper, order, "sobol", comm};
-  //   }
-
-  //   void run(int nr_steps) { n_points += integrator.run(result, nr_steps); }
-
-  //   uint64_t get_nr_points_run() const { return mpi::all_reduce(n_points, comm); }
-
-  //   void run_mpi(int nr_steps) { integrator.run_mpi(result, nr_steps); }
-
-  //   dcomplex reduce_result() const {
-  //     dcomplex result_all = mpi::all_reduce(result, comm);
-  //     return result_all / get_nr_points_run();
-  //   }
-
-  //   int reduce_nr_points_run() const {
-  //     int nr_points_total = mpi::all_reduce(n_points, comm);
-  //     return nr_points_total;
-  //   }
-
-  //   auto get_warper() const { return integrator.warper; }
+class compute_gf_kernel : public integrator<kernel_binner, integrand_g_kernel, warper_plasma_simple_t> {
+  public:
+  compute_gf_kernel(model_param_t params, double time, int order, std::string const &warper_function_name, int nr_sample_points_warper)
+     : integrator{integrand_g_kernel{g0_keldysh_contour_t{g0_model{params}}, gf_index_t{time, up, forward}},
+                  warper_plasma_simple_t{time}, order, "sobol", 0} {
+    warper = {scalar_warper_function_factory_kernel(warper_function_name, integrand, time), time, nr_sample_points_warper};
+  }
 };
-
-// ****************************************************************
 
 } // namespace keldy::impurity_oneband

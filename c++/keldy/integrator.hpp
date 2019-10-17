@@ -25,20 +25,39 @@
 #include "common.hpp"
 #include "qrng.hpp"
 #include "warpers/warpers.hpp"
+#include <cstddef>
 #include <mpi/mpi.hpp>
 #include <omp.h>
+#include <triqs/utility/macros.hpp>
 
 namespace keldy {
 
-template <typename W>
-class CPP2PY_IGNORE integrator_t {
- public:
+template <typename T>
+constexpr bool is_binned_variable = false;
+// if (is_binned_variable<R>) {}
+
+template <typename R, typename I, typename W>
+class integrator {
+ protected:
+  mpi::communicator comm{};
+
+  // Result of the integration and number of samples
+  R result = 0; // TODO: do = 0 this for kernel
+  uint64_t n_points = 0;
+
+  // Function that when called with a vector of times returns the integrand
+  I integrand;
+
+  // Warper which defines the sample points transofrm [li -> ui] & Jacobian
   W warper;
 
- private:
-  std::function<void(std::vector<double> const &, double)> acc;
+  // Random number generator
   std::function<std::vector<double>()> rng;
-  mpi::communicator comm;
+
+  // Checks that result of integrand can be added to result
+  static_assert(std::is_same_v<decltype(std::declval<R &>() += std::declval<typename I::result_t>()), R &>);
+
+  // TODO: static_assert that R can be mpi::all_reduce
 
  public:
   void run(int nr_steps) {
@@ -50,21 +69,31 @@ class CPP2PY_IGNORE integrator_t {
         continue;
       }
       std::vector<double> ui_vec = warper.ui_from_li(li_vec);
-      acc(ui_vec, warper.jacobian(li_vec));
+
+      result += warper.jacobian(li_vec) * integrand(ui_vec);
+      n_points++;
     }
   }
 
-  integrator_t() = default;
-
-  integrator_t(std::function<void(std::vector<double> const &, double)> acc_, W w, int dimension, const std::string& rng_name,
-               int rng_seed, mpi::communicator comm_)
-     : warper(std::move(w)), acc(std::move(acc_)), comm(std::move(comm_)) {
+  integrator(I integrand_, W warper_, int dimension, const std::string &rng_name, int rng_seed)
+     : integrand(std::move(integrand_)), warper(std::move(warper_)) {
     if (rng_name == "sobol") {
       rng = sobol(dimension, rng_seed);
     } else {
       TRIQS_RUNTIME_ERROR << "No other rng available.";
     }
   }
+
+  R reduce_result() const {
+    R result_all = mpi::all_reduce(result, comm);
+    return result_all / reduce_nr_points_run();
+  }
+
+  uint64_t reduce_nr_points_run() const { return mpi::all_reduce(n_points, comm); }
+
+  // For Python Visualzation Purposes:
+  auto get_integrand() const { return integrand; }
+  auto get_warper() const { return warper; }
 };
 
 } // namespace keldy
