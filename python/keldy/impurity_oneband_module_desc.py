@@ -172,7 +172,7 @@ c = class_(
         hdf5 = False,
 )
 
-c.add_constructor("""()""", doc = r"""""")
+c.add_constructor("""(double t_max_)""", doc = r"""""")
 
 c.add_constructor("""(std::function<double(double)> f1_, double t_max_, int nr_function_sample_points)""", doc = r"""""")
 
@@ -192,18 +192,13 @@ module.add_class(c)
 
 # The class compute_charge_Q
 c = class_(
-        py_type = "ComputeChargeQ",  # name of the python class
-        c_type = "keldy::impurity_oneband::compute_charge_Q",   # name of the C++ class
+        py_type = "ComputeChargeQDirect",  # name of the python class
+        c_type = "keldy::impurity_oneband::compute_charge_Q_direct",   # name of the C++ class
         doc = r"""""",   # doc of the C++ class
         hdf5 = False,
 )
 
-c.add_member(c_name = "integrand",
-             c_type = "keldy::impurity_oneband::integrand_g_t1t2_direct",
-             read_only= True,
-             doc = r"""""")
-
-c.add_constructor("""(int order, double time, keldy::impurity_oneband::model_param_t params, int nr_sample_points_ansatz)""", doc = r"""""")
+c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, std::string warper_function_name, int nr_sample_points_warper)""", doc = r"""""")
 
 c.add_method("""void run (int nr_steps)""",
              doc = r"""""")
@@ -217,17 +212,11 @@ c.add_method("""uint64_t reduce_nr_points_run ()""",
 c.add_method("""keldy::warper_plasma_simple_t get_warper ()""",
              doc = r"""""")
 
-module.add_class(c)
-
-# The class compute_kernel
-c = class_(
-        py_type = "ComputeKernel",  # name of the python class
-        c_type = "keldy::impurity_oneband::compute_kernel",   # name of the C++ class
-        doc = r"""""",   # doc of the C++ class
-        hdf5 = False,
-)
+c.add_method("""keldy::impurity_oneband::integrand_g_t1t2_direct get_integrand ()""",
+             doc = r"""""")
 
 module.add_class(c)
+
 
 module.add_function ("void keldy::impurity_oneband::fake (**keldy::impurity_oneband::model_param_t)", doc = r"""
 
