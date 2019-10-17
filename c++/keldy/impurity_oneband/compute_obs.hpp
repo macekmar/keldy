@@ -50,7 +50,7 @@ std::function<double(double)> scalar_warper_function_factory(std::string const &
 // Class to compute charge = G^{lesser}_{up,up}(t).
 class compute_charge_Q_direct : public integrator<dcomplex, integrand_g_t1t2_direct, warper_plasma_simple_t> {
  public:
-  compute_charge_Q_direct(model_param_t params, double time, int order, std::string const &warper_function_name, int nr_sample_points_warper)
+  compute_charge_Q_direct(model_param_t params, double time, int order, std::string warper_function_name, int nr_sample_points_warper)
      : integrator{integrand_g_t1t2_direct{g0_keldysh_contour_t{g0_model{params}}, gf_index_t{time, up, forward}, gf_index_t{time, up, backward}},
                   warper_plasma_simple_t{time}, order, "sobol", 0} {
     warper = {scalar_warper_function_factory(warper_function_name, integrand, time), time, nr_sample_points_warper};
