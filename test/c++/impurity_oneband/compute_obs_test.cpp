@@ -7,7 +7,7 @@ using namespace keldy::impurity_oneband;
 TEST(ComputeObs, Initialize1) { // NOLINT
   model_param_t params;
   // TRIQS_PRINT(params.bath_type);
-  compute_charge_Q computer(1, 10.0, params, 1000);
+  compute_charge_Q_direct computer(params, 10.0, 1, "first_order", 1000);
   // tests
 
   // run
@@ -25,10 +25,10 @@ TEST(ComputeObs, Initialize1) { // NOLINT
 TEST(ComputeObs, Initialize2) { // NOLINT
   model_param_t params;
   // TRIQS_PRINT(params.bath_type);
-  compute_charge_Q computer(4, 10.0, params, 1000);
+  compute_charge_Q_direct computer(params, 10.0, 4, "first_order", 1000);
   
   // tests
-
+// model_param_t params, double time, int order, std::string const &warper_function_name, int nr_sample_points_ansatz
   // run
   computer.run(10);
   //
