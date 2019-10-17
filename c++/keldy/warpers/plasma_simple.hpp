@@ -62,6 +62,10 @@ std::vector<double> ui_from_vi(double t_max, std::vector<double> const &v_times)
 // * replace nr_function_sample_points by variable sample_grid?
 // * OP: wrapping of constructor with funciton for cpp2py. No templating?
 
+struct idenity_function {
+  double operator()(double t) { return 1.0; }
+};
+
 // std::function<dcomplex(double)>;
 using gf_t = triqs::gfs::gf<retime, scalar_real_valued>;
 
@@ -80,7 +84,8 @@ class warper_plasma_simple_t {
   // warper_plasma_simple_t(F f1_, double t_max_, int nr_function_sample_points) :
   //     warper_plasma_simple_t(std::function<double(double)>(f1_), t_max_, nr_function_sample_points) {} // points vs resampling points
 
-  warper_plasma_simple_t() = default;
+  // Identity Constructor: should use this if nothing else is specified
+  warper_plasma_simple_t(double t_max_) : warper_plasma_simple_t{idenity_function{}, t_max_, 4} {}
 
   warper_plasma_simple_t(std::function<double(double)> f1_, double t_max_,
                          int nr_function_sample_points) // points vs resampling points
@@ -118,7 +123,7 @@ class warper_plasma_simple_t {
       li = f1_integrated_inverse(li);
     }
     return ui_from_vi(t_max, result);
-  };
+  }
 
   std::vector<double> li_from_ui(std::vector<double> const &ui_vec) const {
     auto result = vi_from_ui(t_max, ui_vec);
