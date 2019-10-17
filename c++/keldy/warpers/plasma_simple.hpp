@@ -37,7 +37,7 @@ namespace keldy {
 using namespace triqs::gfs;
 
 // Coordinate Transforms (ui <-> vi):
-std::vector<double> vi_from_ui(double t_max, std::vector<double> const &u_times) {
+inline std::vector<double> vi_from_ui(double t_max, std::vector<double> const &u_times) {
   std::vector<double> v_times = u_times;
   std::sort(v_times.begin(), v_times.end(), std::greater<>());
   int n = v_times.size();
@@ -48,7 +48,7 @@ std::vector<double> vi_from_ui(double t_max, std::vector<double> const &u_times)
   return v_times;
 }
 
-std::vector<double> ui_from_vi(double t_max, std::vector<double> const &v_times) {
+inline std::vector<double> ui_from_vi(double t_max, std::vector<double> const &v_times) {
   std::vector<double> u_times = v_times;
   u_times[0] = t_max - u_times[0];
   std::partial_sum(u_times.begin(), u_times.end(), u_times.begin(), std::minus<>());

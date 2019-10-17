@@ -42,7 +42,7 @@ namespace qmc {
       * @see Bit reverse code from Stanford Bit hacks page:
       * https://graphics.stanford.edu/~seander/bithacks.html#ReverseParallel
       */
-    std::uint32_t bitreverse(std::uint32_t k)
+    inline std::uint32_t bitreverse(std::uint32_t k)
     {
         std::uint32_t v = k;
         v = ((v >> 1) & 0x55555555) | ((v & 0x55555555) << 1);  // swap odd and even bits
@@ -59,7 +59,7 @@ namespace qmc {
       * Calls twice the version for std::uint32_t.
       * \see bitreverse(std::uint32_t)
       */
-    std::uint64_t bitreverse(std::uint64_t k)
+    inline std::uint64_t bitreverse(std::uint64_t k)
     {
         return (std::uint64_t(bitreverse(std::uint32_t(k))) << 32)
               | std::uint64_t(bitreverse(std::uint32_t(k >> 32)));
