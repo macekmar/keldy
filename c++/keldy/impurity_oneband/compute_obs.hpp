@@ -38,7 +38,7 @@ namespace keldy::impurity_oneband {
 // ******************************************************************************************************************************************************
 // Direct Evaluation ('Profumo')
 
-inline std::function<double(double)> scalar_warper_function_factory(std::string const &label, integrand_g_t1t2_direct const &f, double time) CPP2PY_IGNORE{
+inline std::function<double(double)> scalar_warper_function_factory(std::string const &label, integrand_g_direct const &f, double time) CPP2PY_IGNORE{
   if (label == "first_order") {
     return [time, &f](double t) -> double { return std::abs(f(std::vector<double>{time - t})) + 1e-12; };
   }
@@ -49,11 +49,11 @@ inline std::function<double(double)> scalar_warper_function_factory(std::string 
 }
 
 // Class to compute charge = G^{lesser}_{up,up}(t).
-class compute_charge_Q_direct : public integrator<dcomplex, integrand_g_t1t2_direct, warper_plasma_simple_t> {
+class compute_charge_Q_direct : public integrator<dcomplex, integrand_g_direct, warper_plasma_simple_t> {
  public:
   compute_charge_Q_direct(model_param_t params, double time, int order, std::string warper_function_name, int nr_sample_points_warper)
      : integrator{dcomplex{0}, 
-                  integrand_g_t1t2_direct{g0_keldysh_contour_t{g0_model{params}}, gf_index_t{time, up, forward}, gf_index_t{time, up, backward}},
+                  integrand_g_direct{g0_keldysh_contour_t{g0_model{params}}, gf_index_t{time, up, forward}, gf_index_t{time, up, backward}},
                   warper_plasma_simple_t{time}, order, "sobol", 0} {
     warper = {scalar_warper_function_factory(warper_function_name, integrand, time), time, nr_sample_points_warper};
   }

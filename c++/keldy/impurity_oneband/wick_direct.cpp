@@ -36,7 +36,7 @@ inline int GetBitParity(unsigned int in) { return 1 - 2 * __builtin_parity(in); 
 namespace keldy::impurity_oneband {
 
 // should we sort times?
-dcomplex integrand_g_t1t2_direct::operator()(std::vector<double> const &times) const {
+dcomplex integrand_g_direct::operator()(std::vector<double> const &times) const {
   using namespace triqs::arrays;
 
   // Model is diagonal in spin
@@ -147,7 +147,7 @@ dcomplex integrand_g_t1t2_direct::operator()(std::vector<double> const &times) c
 
 // Old Method Based on Sequential Constructions
 // Copy a,b as need to modify time-splitting
-dcomplex integrand_g_t1t2_direct_grey(gf_index_t a, gf_index_t b, g0_keldysh_contour_t const &g0,
+dcomplex integrand_g_direct_grey(gf_index_t a, gf_index_t b, g0_keldysh_contour_t const &g0,
                                       std::vector<double> const &times) {
 
   // TODO: should we sort times?

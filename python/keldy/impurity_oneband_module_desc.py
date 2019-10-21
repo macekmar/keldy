@@ -118,17 +118,17 @@ c.add_method("""keldy::dcomplex operator() (keldy::impurity_oneband::gf_index_t 
 
 module.add_class(c)
 
-# The class integrand_g_t1t2_direct
+# The class integrand_g_direct
 c = class_(
         py_type = "IntegrandGT1t2Direct",  # name of the python class
-        c_type = "keldy::impurity_oneband::integrand_g_t1t2_direct",   # name of the C++ class
+        c_type = "keldy::impurity_oneband::integrand_g_direct",   # name of the C++ class
         doc = r"""""",   # doc of the C++ class
         hdf5 = False,
 )
 
 c.add_constructor("""(keldy::impurity_oneband::g0_keldysh_contour_t g0_, keldy::impurity_oneband::gf_index_t external_A_, keldy::impurity_oneband::gf_index_t external_B_)""", doc = r"""""")
 
-c.add_method("""keldy::impurity_oneband::integrand_g_t1t2_direct::result_t operator() (std::vector<double> times)""",
+c.add_method("""keldy::impurity_oneband::integrand_g_direct::result_t operator() (std::vector<double> times)""",
              name = "__call__",
              doc = r"""Returns integrand for the specified times""")
 
@@ -297,7 +297,7 @@ c.add_method("""uint64_t reduce_nr_points_run ()""",
 c.add_method("""keldy::warper_plasma_simple_t get_warper ()""",
              doc = r"""""")
 
-c.add_method("""keldy::impurity_oneband::integrand_g_t1t2_direct get_integrand ()""",
+c.add_method("""keldy::impurity_oneband::integrand_g_direct get_integrand ()""",
              doc = r"""""")
 
 module.add_class(c)

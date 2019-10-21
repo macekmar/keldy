@@ -31,7 +31,7 @@
 
 namespace keldy::impurity_oneband {
 
-class integrand_g_t1t2_direct {
+class integrand_g_direct {
   g0_keldysh_contour_t g0;
   gf_index_t external_A;
   gf_index_t external_B;
@@ -47,7 +47,7 @@ class integrand_g_t1t2_direct {
   /// Returns integrand for the specified times
   result_t operator()(std::vector<double> const &times) const;
 
-  integrand_g_t1t2_direct(g0_keldysh_contour_t g0_, gf_index_t external_A_, gf_index_t external_B_)
+  integrand_g_direct(g0_keldysh_contour_t g0_, gf_index_t external_A_, gf_index_t external_B_)
      : g0(std::move(g0_)), external_A(std::move(external_A_)), external_B(std::move(external_B_)){};
 };
 
