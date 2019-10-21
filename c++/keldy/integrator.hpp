@@ -42,7 +42,7 @@ class integrator {
   mpi::communicator comm{};
 
   // Result of the integration and number of samples
-  R result = 0; // TODO: do = 0 this for kernel
+  R result{};
   uint64_t n_points = 0;
 
   // Function that when called with a vector of times returns the integrand
@@ -75,8 +75,8 @@ class integrator {
     }
   }
 
-  integrator(I integrand_, W warper_, int dimension, const std::string &rng_name, int rng_seed)
-     : integrand(std::move(integrand_)), warper(std::move(warper_)) {
+  integrator(R result_, I integrand_, W warper_, int dimension, const std::string &rng_name, int rng_seed)
+     : result(std::move(result_)), integrand(std::move(integrand_)), warper(std::move(warper_)) {
     if (rng_name == "sobol") {
       rng = sobol(dimension, rng_seed);
     } else {
