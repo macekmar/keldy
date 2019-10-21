@@ -70,7 +70,10 @@ class integrator {
       }
       std::vector<double> ui_vec = warper.ui_from_li(li_vec);
 
-      result += warper.jacobian(li_vec) * integrand(ui_vec);
+      auto eval = integrand(ui_vec);
+      eval *= warper.jacobian(li_vec);
+      
+      result += eval;
       n_points++;
     }
   }
