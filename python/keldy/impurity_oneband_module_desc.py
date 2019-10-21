@@ -15,8 +15,10 @@ module.add_include("keldy/impurity_oneband/compute_obs.hpp")
 module.add_preamble("""
 #include <cpp2py/converters/complex.hpp>
 #include <cpp2py/converters/function.hpp>
+#include <cpp2py/converters/pair.hpp>
 #include <cpp2py/converters/string.hpp>
 #include <cpp2py/converters/vector.hpp>
+#include <triqs/cpp2py_converters/arrays.hpp>
 #include <triqs/cpp2py_converters/gf.hpp>
 
 using namespace keldy;
@@ -126,9 +128,78 @@ c = class_(
 
 c.add_constructor("""(keldy::impurity_oneband::g0_keldysh_contour_t g0_, keldy::impurity_oneband::gf_index_t external_A_, keldy::impurity_oneband::gf_index_t external_B_)""", doc = r"""""")
 
-c.add_method("""keldy::dcomplex operator() (std::vector<double> times)""",
+c.add_method("""keldy::impurity_oneband::integrand_g_t1t2_direct::result_t operator() (std::vector<double> times)""",
              name = "__call__",
              doc = r"""Returns integrand for the specified times""")
+
+module.add_class(c)
+
+# The class sparse_kernel_binner
+c = class_(
+        py_type = "SparseKernelBinner",  # name of the python class
+        c_type = "keldy::impurity_oneband::sparse_kernel_binner",   # name of the C++ class
+        doc = r"""""",   # doc of the C++ class
+        hdf5 = False,
+)
+
+c.add_member(c_name = "data",
+             c_type = "std::vector<std::pair<gf_index_t, dcomplex> >",
+             read_only= True,
+             doc = r"""""")
+
+c.add_method("""double sum_weights ()""",
+             doc = r"""""")
+
+module.add_class(c)
+
+# The class kernel_binner
+c = class_(
+        py_type = "KernelBinner",  # name of the python class
+        c_type = "keldy::impurity_oneband::kernel_binner",   # name of the C++ class
+        doc = r"""Kernel binner for Green Function :math:`K(Y, X')` with binning happening over :math:`Y`
+ and :math:`X'` fixed by boundary conditions.
+
+ TODO: How to include spin up / down separatley.""",   # doc of the C++ class
+        hdf5 = False,
+)
+
+c.add_constructor("""()""", doc = r"""""")
+
+c.add_constructor("""(double t_min_, double t_max_, int nr_bins_)""", doc = r"""""")
+
+c.add_method("""triqs::arrays::array<std::__1::complex<double>,2> get_values ()""",
+             doc = r"""""")
+
+c.add_method("""triqs::arrays::array<uint64_t,2> get_nr_values ()""",
+             doc = r"""""")
+
+c.add_method("""triqs::arrays::array<double,1> get_bin_times ()""",
+             doc = r"""""")
+
+c.add_method("""double get_bin_size ()""",
+             doc = r"""""")
+
+c.add_method("""int get_nr_point_dropped ()""",
+             doc = r"""""")
+
+c.add_method("""void accumulate (keldy::impurity_oneband::gf_index_t a, keldy::dcomplex value)""",
+             doc = r"""Includes boundary points, so t_min <= t <= t_max. t_max gets put in last bin""")
+
+module.add_class(c)
+
+# The class integrand_g_kernel
+c = class_(
+        py_type = "IntegrandGKernel",  # name of the python class
+        c_type = "keldy::impurity_oneband::integrand_g_kernel",   # name of the C++ class
+        doc = r"""""",   # doc of the C++ class
+        hdf5 = False,
+)
+
+c.add_constructor("""(keldy::impurity_oneband::g0_keldysh_contour_t g0_, keldy::impurity_oneband::gf_index_t g_idx_X_)""", doc = r"""""")
+
+c.add_method("""keldy::impurity_oneband::integrand_g_kernel::result_t operator() (std::vector<double> times)""",
+             name = "__call__",
+             doc = r"""""")
 
 module.add_class(c)
 
@@ -150,7 +221,7 @@ c = class_(
         hdf5 = False,
 )
 
-c.add_constructor("""(int dim, int log_max_points_ = 31)""", doc = r"""""")
+c.add_constructor("""(int dim, int rng_seed, int log_max_points_ = 31)""", doc = r"""""")
 
 c.add_method("""std::vector<double> operator() ()""",
              name = "__call__",
@@ -160,6 +231,20 @@ c.add_method("""void seed (int k)""",
              doc = r"""""")
 
 c.add_method("""void discard (int nr_discard)""",
+             doc = r"""""")
+
+module.add_class(c)
+
+# The class idenity_function
+c = class_(
+        py_type = "IdenityFunction",  # name of the python class
+        c_type = "keldy::idenity_function",   # name of the C++ class
+        doc = r"""""",   # doc of the C++ class
+        hdf5 = False,
+)
+
+c.add_method("""double operator() (double t)""",
+             name = "__call__",
              doc = r"""""")
 
 module.add_class(c)
@@ -190,7 +275,7 @@ c.add_method("""double evaluate_warping_function (std::vector<double> ui_vec)"""
 
 module.add_class(c)
 
-# The class compute_charge_Q
+# The class compute_charge_Q_direct
 c = class_(
         py_type = "ComputeChargeQDirect",  # name of the python class
         c_type = "keldy::impurity_oneband::compute_charge_Q_direct",   # name of the C++ class
@@ -217,6 +302,32 @@ c.add_method("""keldy::impurity_oneband::integrand_g_t1t2_direct get_integrand (
 
 module.add_class(c)
 
+# The class compute_gf_kernel
+c = class_(
+        py_type = "ComputeGfKernel",  # name of the python class
+        c_type = "keldy::impurity_oneband::compute_gf_kernel",   # name of the C++ class
+        doc = r"""""",   # doc of the C++ class
+        hdf5 = False,
+)
+
+c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, std::string warper_function_name, int nr_sample_points_warper)""", doc = r"""""")
+
+c.add_method("""void run (int nr_steps)""",
+             doc = r"""""")
+
+c.add_method("""keldy::impurity_oneband::kernel_binner reduce_result ()""",
+             doc = r"""""")
+
+c.add_method("""uint64_t reduce_nr_points_run ()""",
+             doc = r"""""")
+
+c.add_method("""keldy::warper_plasma_simple_t get_warper ()""",
+             doc = r"""""")
+
+c.add_method("""keldy::impurity_oneband::integrand_g_kernel get_integrand ()""",
+             doc = r"""""")
+
+module.add_class(c)
 
 module.add_function ("void keldy::impurity_oneband::fake (**keldy::impurity_oneband::model_param_t)", doc = r"""
 
