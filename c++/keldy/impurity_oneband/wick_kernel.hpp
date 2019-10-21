@@ -35,7 +35,7 @@ namespace keldy::impurity_oneband {
 using namespace triqs::arrays;
 using namespace triqs::gfs;
 
-// Small wrapper for data
+// Small wrapper for data computed in kernel
 class sparse_kernel_binner {
  public:
   std::vector<std::pair<gf_index_t, dcomplex>> data{};
@@ -48,15 +48,8 @@ class sparse_kernel_binner {
     return result;
   }
 
-  // make funcitons explicit for wrapping
-  sparse_kernel_binner &operator*=(double scalar) {
-    for (auto &rh : data) {
-      rh.second *= scalar;
-    }
-    return *this;
-  }
-
-  sparse_kernel_binner &operator*=(dcomplex scalar) {
+  template <typename T>
+  sparse_kernel_binner &operator*=(T scalar) {
     for (auto &rh : data) {
       rh.second *= scalar;
     }
@@ -125,16 +118,16 @@ class kernel_binner {
     }
   }
 
-kernel_binner &operator+=(sparse_kernel_binner const &rhs) {
-  for (const auto &rh : rhs.data) {
-    accumulate(rh.first, rh.second);
+  kernel_binner &operator+=(sparse_kernel_binner const &rhs) {
+    for (const auto &rh : rhs.data) {
+      accumulate(rh.first, rh.second);
+    }
+    return *this;
   }
-  return *this;
-}
-
 };
 
-
+// template<kernel_binner>
+// constexpr bool is_binned_variable = true;
 
 class integrand_g_kernel {
   g0_keldysh_contour_t g0;
@@ -151,8 +144,5 @@ class integrand_g_kernel {
   integrand_g_kernel(g0_keldysh_contour_t g0_, gf_index_t g_idx_X_)
      : g0(std::move(g0_)), g_idx_X(std::move(g_idx_X_)){};
 };
-
-// template<kernel_binner>
-// constexpr bool is_binned_variable = true;
 
 } // namespace keldy::impurity_oneband

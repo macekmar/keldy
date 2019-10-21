@@ -38,7 +38,7 @@ namespace keldy::impurity_oneband {
 // ******************************************************************************************************************************************************
 // Direct Evaluation ('Profumo')
 
-inline std::function<double(double)> scalar_warper_function_factory(std::string const &label, integrand_g_t1t2_direct const &f, double time) CPP2PY_IGNORE {
+inline std::function<double(double)> scalar_warper_function_factory(std::string const &label, integrand_g_t1t2_direct const &f, double time) CPP2PY_IGNORE{
   if (label == "first_order") {
     return [time, &f](double t) -> double { return std::abs(f(std::vector<double>{time - t})) + 1e-12; };
   }
