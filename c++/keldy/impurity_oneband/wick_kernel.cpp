@@ -111,12 +111,16 @@ sparse_kernel_binner integrand_g_kernel::operator()(std::vector<double> const &t
     matrix<dcomplex> g_mat_s1(order_n + 1, order_n + 1, FORTRAN_LAYOUT);
     matrix<dcomplex> g_mat_s2(order_n, order_n, FORTRAN_LAYOUT);
 
-    for (auto [i, j] : itertools::zip(col_pick_s2, col_pick_s2)) {
-      g_mat_s2(i, j) = wick_matrix_s2(col_pick_s2[i], col_pick_s2[j]);
+    for (int i = 0; i < order_n; ++i) {
+      for (int j = 0; j < order_n; ++j) {
+        g_mat_s2(i, j) = wick_matrix_s2(col_pick_s2[i], col_pick_s2[j]);
+      }
     }
-
-    for (auto [i, j] : itertools::zip(col_pick_s1, col_pick_s1)) {
-      g_mat_s1(i, j) = wick_matrix_s1(col_pick_s1[i], col_pick_s1[j]);
+    
+    for (int i = 0; i < order_n + 1; ++i) {
+      for (int j = 0; j < order_n + 1; ++j) {
+        g_mat_s1(i, j) = wick_matrix_s1(col_pick_s1[i], col_pick_s1[j]);
+      }
     }
 
     // Strategy: Do row expansion by solving linear equation for cofactors.

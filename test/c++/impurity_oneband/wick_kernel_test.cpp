@@ -26,6 +26,15 @@ TEST(ComputeObs, Initialize3) { // NOLINT
   compute_gf_kernel computer(params, 10.0, 4, "first_order", 1000);
 
   computer.run(10);
+
+  auto result = computer.reduce_result();
+
+  std::cout << result.get_bin_times() << std::endl;
+  std::cout << result.get_bin_size() << std::endl;
+  std::cout << result.get_nr_point_dropped() << std::endl;
+  std::cout << result.get_nr_values()() << std::endl;
+  std::cout << result.get_bin_times() << std::endl;
+
   //
 
   // std::cout << computer.reduce_result() << std::endl;
