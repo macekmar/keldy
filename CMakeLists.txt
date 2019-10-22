@@ -117,7 +117,10 @@ endif(OPENMP_FOUND)
 # TRIQS Additions
 
 add_library(triqs_lapack_additions INTERFACE)
-target_include_directories(triqs_lapack_additions INTERFACE c++/triqs)
+target_include_directories(triqs_lapack_additions INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/c++> $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include>)
+install(TARGETS triqs_lapack_additions EXPORT keldy-targets)
+install(DIRECTORY c++/triqs DESTINATION include FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h")
+
 
 # #############
 # Build Project

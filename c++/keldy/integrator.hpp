@@ -89,7 +89,8 @@ class integrator {
 
   R reduce_result() const {
     R result_all = mpi::all_reduce(result, comm);
-    return result_all / reduce_nr_points_run();
+    result_all *= 1.0 / reduce_nr_points_run();
+    return result_all;
   }
 
   uint64_t reduce_nr_points_run() const { return mpi::all_reduce(n_points, comm); }
