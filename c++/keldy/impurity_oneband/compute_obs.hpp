@@ -42,6 +42,9 @@ inline std::function<double(double)> scalar_warper_function_factory(std::string 
   if (label == "first_order") {
     return [time, &f](double t) -> double { return std::abs(f(std::vector<double>{time - t})) + 1e-12; };
   }
+  if (label == "lorentzian") {
+    return [](double t) -> double { return 1.0 / ((1.0 + t) * (1.0 + t)); };
+  }
   if (label == "identity") {
     return [](double t) -> double { return 1.0; };
   }
