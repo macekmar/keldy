@@ -91,7 +91,6 @@ target_compile_options(project_warnings
 # Load non-TRIQS Dependencies
 find_package(GSL REQUIRED)
 
-
 # Find OpenMP
 if(APPLE AND USE_OpenMP)
     if(CMAKE_C_COMPILER_ID MATCHES "Clang")
@@ -114,6 +113,11 @@ if (OPENMP_FOUND)
     set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif(OPENMP_FOUND)
 
+# #############
+# TRIQS Additions
+
+add_library(triqs_lapack_additions INTERFACE)
+target_include_directories(triqs_lapack_additions INTERFACE c++/triqs)
 
 # #############
 # Build Project
