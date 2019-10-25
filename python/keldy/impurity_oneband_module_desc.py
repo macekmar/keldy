@@ -167,7 +167,7 @@ c.add_constructor("""()""", doc = r"""""")
 
 c.add_constructor("""(double t_min_, double t_max_, int n_bins_)""", doc = r"""""")
 
-c.add_method("""triqs::arrays::array<std::__1::complex<double>,2> get_values ()""",
+c.add_method("""triqs::arrays::array<std::complex<double>,2> get_values ()""",
              doc = r"""""")
 
 c.add_method("""triqs::arrays::array<uint64_t,2> get_nr_values ()""",
