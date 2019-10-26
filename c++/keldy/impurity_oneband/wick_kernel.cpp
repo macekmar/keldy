@@ -161,7 +161,7 @@ sparse_kernel_binner integrand_g_kernel::operator()(std::vector<double> const &t
 
     // Bin: Find gf_index to bin to. We leave out first element, which connects external verticies only
     for (int i = 1; i < x_minors.size(); i++) {
-      result.data.emplace_back(std::make_pair(all_config_1[col_pick_s1[i]], x_minors(i, 0)));
+      result.bin_data(std::make_pair(all_config_1[col_pick_s1[i]], x_minors(i, 0)));
     }
   }
   return result;

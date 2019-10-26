@@ -33,6 +33,7 @@
 #include <triqs/utility/first_include.hpp>
 #include <algorithm>
 #include <vector>
+#include <tuple>
 
 namespace keldy::impurity_oneband {
 
@@ -43,6 +44,15 @@ using namespace triqs::gfs;
 class sparse_kernel_binner {
  public:
   std::vector<std::pair<gf_index_t, dcomplex>> data{};
+
+  void bin_data(std::pair<gf_index_t, dcomplex> const & in){
+    auto loc = std::find_if(std::begin(data), std::end(data), [&in](auto& el){return el.first == in.first;});
+    if (loc != std::end(data)) {
+        (*loc).second += in.second;
+    } else {
+      data.push_back(in);
+    }
+  }
 
   double sum_weights() {
     double result = 0.0;
@@ -78,7 +88,7 @@ class kernel_binner {
   array<double, 1> bin_times;
 
  public:
-  kernel_binner() = default;
+  kernel_binner() : kernel_binner(0.0, 1.0, 100) {};
   kernel_binner(double t_min_, double t_max_, int n_bins_)
      : t_min(t_min_),
        t_max(t_max_),
@@ -105,8 +115,9 @@ class kernel_binner {
   auto get_nr_point_dropped() const { return nr_point_dropped; }
 
   /// Includes boundary points, so t_min <= t <= t_max. t_max gets put in last bin
+  // CHECK THIS TO BE CORRECT!
   void accumulate(gf_index_t const &a, dcomplex value) {
-    if (t_min < a.time && a.time < t_max) {
+    if (t_min <= a.time && a.time < t_max) {
       int bin = int((a.time - t_min) / bin_size);
       values(bin, a.k_idx) += value;
       nr_values(bin, a.k_idx)++;
@@ -130,7 +141,6 @@ class kernel_binner {
     values *= scalar;
     return *this;
   }
-
 
   friend kernel_binner mpi_reduce(kernel_binner const &a, mpi::communicator c, int root, bool all, MPI_Op op);
 };
