@@ -96,7 +96,7 @@ sparse_kernel_binner integrand_g_kernel::operator()(std::vector<double> const &t
 
   // Iterate over other Keldysh index configurations. Splict smaller determinant from precomuted matrix
   // #pragma omp parallel for reduce(+: integrand_result)
-  for (uint64_t idx_kel = 0; idx_kel < nr_keldysh_configs - 1; idx_kel++) {
+  for (uint64_t idx_kel = 0; idx_kel < nr_keldysh_configs; idx_kel++) {
     // Indices of Rows / Cols to pick. Cycle through and shift by (0/1) * order_n depending on idx_kel configuration
     std::vector<int> col_pick_s1(order_n + 1);
     std::vector<int> col_pick_s2(order_n);
