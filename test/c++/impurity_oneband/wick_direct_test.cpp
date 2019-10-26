@@ -40,7 +40,7 @@ TEST(integrand_direct, Order_1) { // NOLINT
   g0_keldysh_contour_t g0_k{g0};
   auto external_A = gf_index_t{5.0, up, forward};
   auto external_B = gf_index_t{5.0, up, forward};
-  integrand_g_t1t2_direct integrand{g0_k, external_A, external_B};
+  integrand_g_direct integrand{g0_k, external_A, external_B};
 
   dcomplex computed_val, expected_val;
 
@@ -64,7 +64,7 @@ TEST(integrand_direct, Order_2) { // NOLINT
   g0_keldysh_contour_t g0_k{g0};
   auto external_A = gf_index_t{5.0, up, forward};
   auto external_B = gf_index_t{5.0, up, forward};
-  integrand_g_t1t2_direct integrand{g0_k, external_A, external_B};
+  integrand_g_direct integrand{g0_k, external_A, external_B};
 
   dcomplex computed_val, expected_val;
 
