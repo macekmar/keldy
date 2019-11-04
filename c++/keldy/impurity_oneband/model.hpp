@@ -66,6 +66,9 @@ class gf_index_t {
      : time(time_), k_idx(keldysh_idx_t(k_idx_)), timesplit_n(timesplit_n_), spin(spin_t(spin_)) {}
 };
 
+/// Define a total ordering over gf_index_t values. Useful for sorting.
+bool operator<(gf_index_t const &a, gf_index_t const &b);
+
 /// Defines model throuh non-interacting Green function g_lesser / g_greater
 class g0_model {
  public:

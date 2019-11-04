@@ -25,6 +25,22 @@
 
 namespace keldy::impurity_oneband {
 
+bool operator<(gf_index_t const &a, gf_index_t const &b) {
+  if (a.k_idx != b.k_idx) {
+    return (a.k_idx < b.k_idx);
+  } else {
+    if (a.time != b.time) {
+      return (a.k_idx == forward) ? a.time < b.time : -a.time < -b.time;
+    } else {
+      if (a.timesplit_n != b.timesplit_n) {
+        return (a.k_idx == forward) ? a.timesplit_n < b.timesplit_n : -a.timesplit_n < -b.timesplit_n;
+      } else {
+        return a.spin < b.spin;
+      }
+    }
+  }
+}
+
 g0_model::g0_model(model_param_t const &parameters) : param_(parameters) {
   if (param_.bath_type == "semicircle") {
     make_semicircular_model();
