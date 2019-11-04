@@ -26,25 +26,28 @@ TEST(kernel_binner, Accumulation) { // NOLINT
   // boundary points
   binner.accumulate({0.0, up, backward}, 10.0);
   binner.accumulate({10.0, up, backward}, 100.0);
+  binner.accumulate({2.5, up, backward}, 1000.0);
+  binner.accumulate({5.0, up, backward}, 10'000.0);
+  binner.accumulate({7.5, up, backward}, 100'000.0);
 
   // dropped values
   binner.accumulate({-1.0, up, forward}, 1000.0_j);
   binner.accumulate({11.0, up, forward}, 10'000.0_j);
-  //TODO: check boundaries *between* bins
 
   // start testing
   EXPECT_EQ(2, binner.get_nr_point_dropped());
 
   array<dcomplex, 2> values_expected(4, 2);
   values_expected() = 0.0;
-  values_expected(range(), 0) = array<dcomplex, 1>{1.0 + 101.0_j, 0.0_j, 0.0_j,  0.0_j        }; // forward
-  values_expected(range(), 1) = array<dcomplex, 1>{10.0 + 0.0_j,  0.0_j, 10.0_j, 100.0 + 0.0_j}; // backward
+  values_expected(range(), 0) = array<dcomplex, 1>{1.0 + 101.0_j, 0.0_j, 0.0_j, 0.0_j}; // forward
+  values_expected(range(), 1) =
+     array<dcomplex, 1>{10.0 + 0.0_j, 1000.0 + 0.0_j, 10'000.0 + 10.0_j, 100'100.0 + 0.0_j}; // backward
   EXPECT_ARRAY_EQ(values_expected, binner.get_values());
 
   array<int, 2> nr_values_expected(4, 2);
   nr_values_expected() = 0;
   nr_values_expected(range(), 0) = array<int, 1>{3, 0, 0, 0};
-  nr_values_expected(range(), 1) = array<int, 1>{1, 0, 1, 1};
+  nr_values_expected(range(), 1) = array<int, 1>{1, 1, 2, 2};
   array<int, 2> nr_values(4, 2);
   nr_values() = binner.get_nr_values(); // cast to signed int
   EXPECT_ARRAY_EQ(nr_values_expected, nr_values);
@@ -57,12 +60,15 @@ TEST(kernel_binner, Accumulation) { // NOLINT
 
 TEST(kernel_binner, Accum_sparse_binner) { // NOLINT
   kernel_binner binner{0.0, 10.0, 4};
-  sparse_kernel_binner sp_binner{{{{1.5, up, forward},  1.0_j},
+  sparse_kernel_binner sp_binner{{{{1.5, up, forward}, 1.0_j},
                                   {{6.3, up, backward}, 10.0_j},
-                                  {{2.0, up, forward},  1.0},
-                                  {{2.0, up, forward},  100.0_j},
+                                  {{2.0, up, forward}, 1.0},
+                                  {{2.0, up, forward}, 100.0_j},
                                   {{0.0, up, backward}, 10.0},
                                   {{10.0, up, backward}, 100.0},
+                                  {{2.5, up, backward}, 1000.0},
+                                  {{5.0, up, backward}, 10'000.0},
+                                  {{7.5, up, backward}, 100'000.0},
                                   {{-1.0, up, forward}, 1000.0_j},
                                   {{11.0, up, forward}, 10'000.0_j}}};
 
@@ -73,14 +79,15 @@ TEST(kernel_binner, Accum_sparse_binner) { // NOLINT
 
   array<dcomplex, 2> values_expected(4, 2);
   values_expected() = 0.0;
-  values_expected(range(), 0) = array<dcomplex, 1>{1.0 + 101.0_j, 0.0_j, 0.0_j,  0.0_j        }; // forward
-  values_expected(range(), 1) = array<dcomplex, 1>{10.0 + 0.0_j,  0.0_j, 10.0_j, 100.0 + 0.0_j}; // backward
+  values_expected(range(), 0) = array<dcomplex, 1>{1.0 + 101.0_j, 0.0_j, 0.0_j, 0.0_j}; // forward
+  values_expected(range(), 1) =
+     array<dcomplex, 1>{10.0 + 0.0_j, 1000.0 + 0.0_j, 10'000.0 + 10.0_j, 100'100.0 + 0.0_j}; // backward
   EXPECT_ARRAY_EQ(values_expected, binner.get_values());
 
   array<int, 2> nr_values_expected(4, 2);
   nr_values_expected() = 0;
   nr_values_expected(range(), 0) = array<int, 1>{3, 0, 0, 0};
-  nr_values_expected(range(), 1) = array<int, 1>{1, 0, 1, 1};
+  nr_values_expected(range(), 1) = array<int, 1>{1, 1, 2, 2};
   array<int, 2> nr_values(4, 2);
   nr_values() = binner.get_nr_values(); // cast to signed int
   EXPECT_ARRAY_EQ(nr_values_expected, nr_values);
