@@ -2,7 +2,7 @@ file(GLOB_RECURSE sources *.cpp *.hpp)
 add_library(keldy_c ${sources})
 
 # Link against dependencies
-target_link_libraries(keldy_c PUBLIC triqs triqs::blas_lapack  GSL::gsl PRIVATE project_warnings triqs_lapack_additions)
+target_link_libraries(keldy_c PUBLIC triqs triqs::boost triqs::blas_lapack  GSL::gsl PRIVATE project_warnings triqs_lapack_additions)
 
 # Configure compilation
 target_compile_options(keldy_c PUBLIC -fPIC)

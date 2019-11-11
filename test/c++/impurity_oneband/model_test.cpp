@@ -1,6 +1,7 @@
 #include <keldy/impurity_oneband/compute_obs.hpp>
 #include <triqs/test_tools/gfs.hpp>
-#include <cmath>
+//#include <cmath>
+#include <boost/math/special_functions/expint.hpp>
 
 using namespace keldy;
 using namespace keldy::impurity_oneband;
@@ -32,7 +33,8 @@ TEST(g0_model, Values) { // NOLINT
 
   auto g0_less_expected = [] (double t1, double t2) -> dcomplex {
     auto Gt = 1.0 * (t1 - t2); // = Gamma * (t1 - t2)
-    auto real_part = (Gt == 0) ? 0.0 : (std::exp(Gt) * std::expint(-Gt) - std::exp(-Gt) * std::expint(Gt)) / (2 * pi);
+    auto real_part =
+       (Gt == 0) ? 0.0 : (std::exp(Gt) * boost::math::expint(-Gt) - std::exp(-Gt) * boost::math::expint(Gt)) / (2 * pi);
     return real_part + 0.5_j * std::exp(-std::abs(Gt));
   };
   auto g0_grea_expected = [g0_less_expected] (double t1, double t2) -> dcomplex { return std::conj(g0_less_expected(t1, t2)); };
