@@ -5,36 +5,7 @@
 using namespace keldy;
 using namespace keldy::impurity_oneband;
 
-<<<<<<< HEAD
-//dcomplex wick_det(g0_keldysh_contour_t& g0_k, std::vector<gf_index_t>& list_rows, std::vector<gf_index_t>& list_cols) {
-//  size_t N = list_rows.size();
-//  if (N != list_cols.size())
-//    return;
-
-//  triqs::arrays::matrix<dcomplex> wick_matrix(N, N);
-//  for (size_t i=0; i<N; ++i) {
-//    for (size_t j=0; j<N; ++j) {
-//      wick_matrix(i, j) = g0_k(list_rows[i], list_cols[j]);
-//    }
-//  }
-
-//  return
-
-TEST(integrand_direct, Initialize) { // NOLINT
-  model_param_t params;
-  g0_model g0{params};
-  g0_keldysh_contour_t g0_k{g0};
-  integrand_g_direct integrand{g0_k, gf_index_t{5.0, up, forward}, gf_index_t{5.0, up, forward}};
-
-  integrand(std::vector<double>{1.0});
-
-  integrand(std::vector<double>{1.0, 2.0});
-}
-
-TEST(integrand_direct, Values) { // NOLINT
-=======
 TEST(integrand_direct, Order_1) { // NOLINT
->>>>>>> 960b3a6... cleanup of wick direct test
   model_param_t params;
   g0_model g0{params};
   g0_keldysh_contour_t g0_k{g0};
