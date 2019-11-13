@@ -8,8 +8,25 @@ using namespace keldy::impurity_oneband;
 
 double const pi = 3.1415926535897932384626433832795028841971693993751058209749;
 
-TEST(g0_model, Initialize) { // NOLINT
+TEST(g0_model, Initialize_flatband) { // NOLINT
   model_param_t params;
+  params.bath_type = "flatband";
+  g0_model g0{params};
+}
+
+TEST(g0_model, Initialize_flatband_analytic) { // NOLINT
+  model_param_t params;
+  params.beta = -1.;
+  params.bias_V = 0.;
+  params.eps_d = 0.;
+  params.alpha = 0.;
+  params.bath_type = "flatband_analytic";
+  g0_model g0{params};
+}
+
+TEST(g0_model, Initialize_semicircle) { // NOLINT
+  model_param_t params;
+  params.bath_type = "semicircle";
   g0_model g0{params};
 }
 

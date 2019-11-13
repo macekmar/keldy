@@ -91,6 +91,7 @@ class g0_model {
 
   void make_semicircular_model();
   void make_flat_band();
+  void make_flat_band_analytic();
 
   model_param_t param_; // g0_keldysh_contour_t will need access to alpha
 };

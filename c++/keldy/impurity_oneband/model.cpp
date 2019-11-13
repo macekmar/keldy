@@ -22,6 +22,9 @@
 
 #include "model.hpp"
 #include <triqs/gfs.hpp>
+#include <boost/math/special_functions/expint.hpp>
+
+double const pi = 3.1415926535897932384626433832795028841971693993751058209749;
 
 namespace keldy::impurity_oneband {
 
@@ -46,6 +49,8 @@ g0_model::g0_model(model_param_t const &parameters) : param_(parameters) {
     make_semicircular_model();
   } else if (param_.bath_type == "flatband") {
     make_flat_band();
+  } else if (param_.bath_type == "flatband_analytic") {
+    make_flat_band_analytic();
   } else {
     TRIQS_RUNTIME_ERROR << "bath_type not defined";
   }
@@ -151,6 +156,36 @@ void g0_model::make_flat_band() {
 
   gf<retime, scalar_valued> g0_lesser_up = make_gf_from_fourier(g0_lesser_omega, time_mesh);
   gf<retime, scalar_valued> g0_greater_up = make_gf_from_fourier(g0_greater_omega, time_mesh);
+
+  // Since Spin up and down are currently identical
+  g0_lesser = make_block_gf<retime, scalar_valued>({"up", "down"}, {g0_lesser_up, g0_lesser_up});
+  g0_greater = make_block_gf<retime, scalar_valued>({"up", "down"}, {g0_greater_up, g0_greater_up});
+}
+
+void g0_model::make_flat_band_analytic() {
+
+  if (param_.beta >= 0 || param_.bias_V != 0. || param_.eps_d != 0. || param_.alpha != 0.) {
+    TRIQS_RUNTIME_ERROR
+       << "Analytic flatband covers only the following parameters: beta=-1 (zero temperature), bias_V=0, eps_d=0, alpha=0.";
+  }
+
+  auto const time_mesh = gf_mesh<retime>({-param_.time_max, param_.time_max, param_.nr_time_points_gf});
+  gf<retime, scalar_valued> g0_lesser_up{time_mesh};
+  gf<retime, scalar_valued> g0_greater_up{time_mesh};
+
+  auto const g0_lesser_values = [this](time_real_t time) -> dcomplex {
+    auto const Gt = param_.Gamma * time;
+    auto const real_part =
+       (Gt == 0) ? 0.0 : (std::exp(Gt) * boost::math::expint(-Gt) - std::exp(-Gt) * boost::math::expint(Gt)) / (2 * pi);
+    return real_part + 0.5_j * std::exp(-std::abs(Gt));
+  };
+
+  dcomplex val = 0.;
+  for (auto t : time_mesh) {
+    val = g0_lesser_values(t);
+    g0_lesser_up[t] = val;
+    g0_greater_up[t] = std::conj(val);
+  }
 
   // Since Spin up and down are currently identical
   g0_lesser = make_block_gf<retime, scalar_valued>({"up", "down"}, {g0_lesser_up, g0_lesser_up});
