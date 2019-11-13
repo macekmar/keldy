@@ -50,7 +50,7 @@ TEST(integrand_kernel, Order_2) { // NOLINT
        - g0_k({v, down, b}, {u, down, a}) * g0_k({u, down, a}, {v, down, b});
   };
 
-  auto const det_prod_a = [&g0_k, &det_down, u, v, external_B](keldysh_idx_t a, keldysh_idx_t b) -> dcomplex {
+  auto const det_prod_u = [&g0_k, &det_down, u, v, external_B](keldysh_idx_t a, keldysh_idx_t b) -> dcomplex {
     int const sign = (a == b) ? +1 : -1;
     return sign
        * (g0_k({u, up, a}, {v, up, b}) * g0_k({v, up, b}, external_B) * det_down(a, b)
@@ -58,19 +58,19 @@ TEST(integrand_kernel, Order_2) { // NOLINT
              * g0_k({u, down, a}, {v, down, b}));
   };
 
-  auto const det_prod_b = [&g0_k, &det_down, u, v, external_B](keldysh_idx_t a, keldysh_idx_t b) -> dcomplex {
+  auto const det_prod_v = [&g0_k, &det_down, u, v, external_B](keldysh_idx_t a, keldysh_idx_t b) -> dcomplex {
     int const sign = (a == b) ? +1 : -1;
-    return sign
+    return -sign
        * (-g0_k({v, up, b}, {u, up, a}) * g0_k({u, up, a}, external_B) * det_down(a, b)
           - g0_k({u, up, forward}, {u, up, backward}) * g0_k({v, up, b}, external_B) * g0_k({v, down, b}, {u, down, a})
              * g0_k({u, down, a}, {v, down, b}));
   };
 
   auto expected_val =
-     sparse_kernel_binner{{{{u, up, forward}, det_prod_a(forward, forward) + det_prod_a(forward, backward)},
-                           {{u, up, backward}, det_prod_a(backward, forward) + det_prod_a(backward, backward)},
-                           {{v, up, forward}, det_prod_b(forward, forward) + det_prod_a(backward, forward)},
-                           {{v, up, backward}, det_prod_b(forward, backward) + det_prod_a(backward, backward)}}}
+     sparse_kernel_binner{{{{u, up, forward}, det_prod_u(forward, forward) + det_prod_u(forward, backward)},
+                           {{u, up, backward}, det_prod_u(backward, forward) + det_prod_u(backward, backward)},
+                           {{v, up, forward}, det_prod_v(forward, forward) + det_prod_v(backward, forward)},
+                           {{v, up, backward}, det_prod_v(forward, backward) + det_prod_v(backward, backward)}}}
         .data;
 
   auto computed_val = integrand(std::vector<double>{u, v}).data;
@@ -83,6 +83,8 @@ TEST(integrand_kernel, Order_2) { // NOLINT
   std::sort(computed_val.begin(), computed_val.end(), compare);
 
   for (int i = 0; i < 4; ++i) {
+    std::cout << computed_val[i].first << " ; " << expected_val[i].first << std::endl;
+    std::cout << computed_val[i].second << " ; " << expected_val[i].second << std::endl;
     EXPECT_COMPLEX_NEAR(computed_val[i].second, expected_val[i].second, 1e-16);
   }
 }
