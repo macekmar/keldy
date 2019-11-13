@@ -38,7 +38,8 @@ namespace keldy::impurity_oneband {
 // ******************************************************************************************************************************************************
 // Direct Evaluation ('Profumo')
 
-inline std::function<double(double)> scalar_warper_function_factory(std::string const &label, integrand_g_direct const &f, double time) CPP2PY_IGNORE{
+inline std::function<double(double)> scalar_warper_function_factory(std::string const &label,
+                                                                    integrand_g_direct const &f, double time) {
   if (label == "first_order") {
     return [time, &f](double t) -> double { return std::abs(f(std::vector<double>{time - t})) + 1e-12; };
   }
@@ -65,7 +66,8 @@ class compute_charge_Q_direct : public integrator<dcomplex, integrand_g_direct, 
 // ******************************************************************************************************************************************************
 // Kernal Method
 
-inline std::function<double(double)> scalar_warper_function_factory_kernel(std::string const &label, integrand_g_kernel const &f, double time) CPP2PY_IGNORE {
+inline std::function<double(double)> scalar_warper_function_factory_kernel(std::string const &label,
+                                                                           integrand_g_kernel const &f, double time) {
   if (label == "first_order") {
     return [time, &f](double t) -> double { return f(std::vector<double>{time - t}).sum_weights() + 1e-12; }; // refine
   }
