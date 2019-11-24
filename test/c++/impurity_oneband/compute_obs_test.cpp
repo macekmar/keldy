@@ -26,9 +26,9 @@ TEST(ComputeObs, Initialize2) { // NOLINT
   model_param_t params;
   // TRIQS_PRINT(params.bath_type);
   compute_charge_Q_direct computer(params, 10.0, 4, "first_order", 1000);
-  
+
   // tests
-// model_param_t params, double time, int order, std::string const &warper_function_name, int nr_sample_points_ansatz
+  // model_param_t params, double time, int order, std::string const &warper_function_name, int nr_sample_points_ansatz
   // run
   computer.run(10);
   //

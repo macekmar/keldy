@@ -1,5 +1,6 @@
 #include "keldy/common.hpp"
 #include <keldy/impurity_oneband/compute_obs.hpp>
+
 #include <triqs/test_tools/gfs.hpp>
 #include <algorithm>
 

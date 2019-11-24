@@ -13,7 +13,8 @@ TEST(integrand_direct, Order_1) { // NOLINT
   auto external_B = gf_index_t{5.0, up, forward};
   integrand_g_direct integrand{g0_k, external_A, external_B};
 
-  dcomplex computed_val, expected_val;
+  dcomplex computed_val;
+  dcomplex expected_val;
 
   // We ignore disconnected diagrams
   expected_val = 0;
@@ -37,7 +38,8 @@ TEST(integrand_direct, Order_2) { // NOLINT
   auto external_B = gf_index_t{5.0, up, forward};
   integrand_g_direct integrand{g0_k, external_A, external_B};
 
-  dcomplex computed_val, expected_val;
+  dcomplex computed_val;
+  dcomplex expected_val;
 
   //// Order 2 with full determinants (unprecise)
   //gf_index_t A, B;

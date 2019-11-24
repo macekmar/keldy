@@ -10,13 +10,12 @@ TEST(GreyCodeTest, Order3) { // NOLINT
 
   std::bitset<64> v = 0;
 
-  for(int idx_kel = 0; idx_kel < nr_keldysh_configs; idx_kel++){
-    int nlc = (idx_kel < nr_keldysh_configs - 1 ? ffs(~idx_kel) : order_n) - 1; 
+  for (int idx_kel = 0; idx_kel < nr_keldysh_configs; idx_kel++) {
+    int nlc = (idx_kel < nr_keldysh_configs - 1 ? ffs(~idx_kel) : order_n) - 1;
 
     v[nlc] = !v[nlc];
 
     std::cout << "idx_kel: " << idx_kel << " ; nlc: " << nlc << " ; v: " << v << std::endl;
-
   }
   // model_param_t in_param;
   // model my_model(in_param);

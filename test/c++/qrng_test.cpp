@@ -1,7 +1,6 @@
 #include <keldy/qrng.hpp>
 #include <triqs/test_tools/gfs.hpp>
 
-
 // using namespace keldy;
 // using namespace keldy::anderson_re;
 

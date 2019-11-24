@@ -12,35 +12,36 @@ using namespace triqs::arrays;
 TEST(ViUiMaps, Simple) { // NOLINT
   double t_max = 1.0;
   std::vector<double> ui_times = {0.8, 0.6, 0.2, 0.1};
-  std::vector<double> vi_out   = vi_from_ui(t_max, ui_times);
+  std::vector<double> vi_out = vi_from_ui(t_max, ui_times);
 
   std::vector<double> vi_result = {0.2, 0.2, 0.4, 0.1};
 
-  for (auto const &[v1, v2] : itertools::zip(vi_out, vi_result)) { EXPECT_DOUBLE_EQ(v1, v2); }
+  for (auto const &[v1, v2] : itertools::zip(vi_out, vi_result)) {
+    EXPECT_DOUBLE_EQ(v1, v2);
+  }
   EXPECT_EQ(ui_from_vi(t_max, vi_out), ui_times);
 }
 
 TEST(ViUiMaps, OutOfOrder) { // NOLINT
   double t_max = 10.0;
   std::vector<double> ui_times = {0.0, 2.0, 6.0, 1.0};
-  std::vector<double> vi_out   = vi_from_ui(t_max, ui_times);
+  std::vector<double> vi_out = vi_from_ui(t_max, ui_times);
 
   std::vector<double> vi_result = {4.0, 4.0, 1.0, 1.0};
 
-  for (auto const &[v1, v2] : itertools::zip(vi_out, vi_result)) { EXPECT_DOUBLE_EQ(v1, v2); }
+  for (auto const &[v1, v2] : itertools::zip(vi_out, vi_result)) {
+    EXPECT_DOUBLE_EQ(v1, v2);
+  }
   EXPECT_EQ(ui_from_vi(t_max, vi_out), std::vector<double>({6.0, 2.0, 1.0, 0.0}));
 }
 
-
-
-
-double linear_function(double x) {
-  if (x > 1 || x < 0) {
-    return 0;
-  } else {
-    return x;
-  }
-}
+// double linear_function(double x) {
+//   if (x > 1 || x < 0) {
+//     return 0;
+//   } else {
+//     return x;
+//   }
+// }
 // VI
 
 // TEST(WarperPlasmaSimple, integrate_ansatz) { // NOLINT
