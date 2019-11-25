@@ -37,4 +37,37 @@ TEST(ComputeObs, Initialize2) { // NOLINT
   std::cout << computer.reduce_nr_points_run() << std::endl;
 }
 
+auto i_to_the_n = std::vector<dcomplex>{1, 1_j, -1, -1_j};
+
+TEST(ComputeObs, Value1) { // NOLINT
+  model_param_t params;
+  params.beta = -1.0; // zero temperature
+  params.bias_V = 0.0;
+  params.eps_d = 0.0;
+  params.Gamma = 1.0;
+  params.time_max = 30.0;
+  params.nr_time_points_gf = 10001;
+  params.alpha = 0.0;
+  params.bath_type = "flatband_analytic";
+
+  // Series computed for epsilon_d=0, alpha=0, from Horvatic & Zlatic in J. Physique 46 (1985) 1459-1467.
+  std::vector<double> HZ_charge_series = {0.5,
+                                          -0.15915494309189533577,
+                                          0.050660591821168885722,
+                                          0.0046743460474992114797,
+                                          -0.015882884762010443238,
+                                          0.0071422698935926388204,
+                                          0.0016484718800775438296};
+
+  //TODO: fix pb with OpenMP when order >= 5
+  for (int order = 1; order <= 4; ++order) {
+    std::cout << "Order " << order << std::endl;
+    compute_charge_Q_direct computer(params, 20.0, order, "lorentzian", 1e5);
+    computer.run(1e4);
+
+    EXPECT_COMPLEX_NEAR(-1_j * i_to_the_n[order % 4] * computer.reduce_result(), HZ_charge_series[order],
+                        1e-3 * std::abs(HZ_charge_series[order]));
+  }
+}
+
 MAKE_MAIN; // NOLINT
