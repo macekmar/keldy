@@ -57,43 +57,52 @@ class gf_index_t {
   int timesplit_n = 0; // time-spliting order to dinstiguish vertices at equal times
 
   spin_t spin = up;
+  orbital_t orbital = 0;
 
   /// Constructor: (time, spin, keldysh_idx)
+  //TODO: how to deal with optionnal parameters? (Corentin)
   gf_index_t() = default;
   gf_index_t(time_real_t time_, int spin_, int k_idx_)
-     : time(time_), k_idx(keldysh_idx_t(k_idx_)), spin(spin_t(spin_)) {}
+     : time(time_), k_idx(keldysh_idx_t(k_idx_)), spin(spin_t(spin_)), orbital(0) {}
   gf_index_t(time_real_t time_, int spin_, int k_idx_, int timesplit_n_)
      : time(time_), k_idx(keldysh_idx_t(k_idx_)), timesplit_n(timesplit_n_), spin(spin_t(spin_)) {}
+  gf_index_t(time_real_t time_, int spin_, int k_idx_, int timesplit_n_, int orbital_)
+     : time(time_),
+       k_idx(keldysh_idx_t(k_idx_)),
+       timesplit_n(timesplit_n_),
+       spin(spin_t(spin_)),
+       orbital(orbital_t(orbital_)) {}
 };
 
 /// Define a total ordering over gf_index_t values. Useful for sorting.
 bool operator<(gf_index_t const &a, gf_index_t const &b);
 
 // no time-split comparison in equality
-inline bool operator==(const gf_index_t &lhs, const gf_index_t &rhs) {
-  return (lhs.time == rhs.time) && (lhs.k_idx == rhs.k_idx) && (lhs.spin == rhs.spin);
+inline bool operator==(const gf_index_t& lhs, const gf_index_t& rhs){
+  return (lhs.time == rhs.time) && (lhs.k_idx == rhs.k_idx) && (lhs.spin == rhs.spin) && (lhs.orbital == rhs.orbital);
 }
 
 inline std::ostream &operator<<(std::ostream &os, gf_index_t const &m) {
-  return os << "{" << m.time << ", " << m.k_idx << ", " << m.spin << "}";
+  return os << "{" << m.time << ", " << m.k_idx << ", " << m.spin << ", " << m.orbital << "}";
 }
 
 /// Defines model throuh non-interacting Green function g_lesser / g_greater
 class g0_model {
  public:
   /// Lesser Green function $G^{<}_{\sigma}(t)$; block spin $\sigma$ {up, down}
-  block_gf<retime, scalar_valued> g0_lesser;
+  block_gf<retime, matrix_valued> g0_lesser;
 
   /// Greater Green function $G^{>}_{\sigma}(t)$; block spin $\sigma$ {up, down}
-  block_gf<retime, scalar_valued> g0_greater;
+  block_gf<retime, matrix_valued> g0_greater;
 
-  explicit g0_model(model_param_t const &parameters);
+  explicit g0_model(model_param_t const &parameters, bool with_leads);
 
   void make_semicircular_model();
   void make_flat_band();
   void make_flat_band_analytic();
 
   model_param_t param_; // g0_keldysh_contour_t will need access to alpha
+  bool const contain_leads;
 };
 
 /// Adapt g0_lesser and g0_greater into Green function on Keldysh contour

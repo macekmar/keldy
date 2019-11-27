@@ -29,22 +29,28 @@
 namespace keldy::impurity_oneband {
 
 bool operator<(gf_index_t const &a, gf_index_t const &b) {
+  // First order on the time contour
   if (a.k_idx != b.k_idx) {
     return (a.k_idx < b.k_idx);
-  } else {
-    if (a.time != b.time) {
-      return (a.k_idx == forward) ? a.time < b.time : -a.time < -b.time;
-    } else {
-      if (a.timesplit_n != b.timesplit_n) {
-        return (a.k_idx == forward) ? a.timesplit_n < b.timesplit_n : -a.timesplit_n < -b.timesplit_n;
-      } else {
-        return a.spin < b.spin;
-      }
-    }
   }
+
+  if (a.time != b.time) {
+    return (a.k_idx == forward) ? a.time < b.time : -a.time < -b.time;
+  }
+
+  if (a.timesplit_n != b.timesplit_n) {
+    return (a.k_idx == forward) ? a.timesplit_n < b.timesplit_n : -a.timesplit_n < -b.timesplit_n;
+  }
+
+  // then use orbital indices
+  if (a.orbital != b.orbital) {
+    return (a.orbital < b.orbital);
+  }
+
+  return a.spin < b.spin;
 }
 
-g0_model::g0_model(model_param_t const &parameters) : param_(parameters) {
+g0_model::g0_model(model_param_t const &parameters, bool with_leads) : param_(parameters), contain_leads(with_leads) {
   if (param_.bath_type == "semicircle") {
     make_semicircular_model();
   } else if (param_.bath_type == "flatband") {
@@ -62,8 +68,8 @@ void g0_model::make_semicircular_model() {
   auto time_mesh = gf_mesh<retime>({-param_.time_max, param_.time_max, param_.nr_time_points_gf});
   auto freq_mesh = make_adjoint_mesh(time_mesh);
 
-  gf<refreq, scalar_valued> g0_lesser_omega{freq_mesh};
-  gf<refreq, scalar_valued> g0_greater_omega{freq_mesh};
+  gf<refreq, matrix_valued> g0_lesser_omega{freq_mesh, {2, 2}};
+  gf<refreq, matrix_valued> g0_greater_omega{freq_mesh, {2, 2}};
 
   // Define local Fermi funciton; reads in beta
   auto nFermi = [&](double omega) {
@@ -100,16 +106,16 @@ void g0_model::make_semicircular_model() {
   for (auto w : freq_mesh) {
     auto g0_dd = G0_dd_w(w);
 
-    g0_lesser_omega[w] = g0_dd(0, 1);
-    g0_greater_omega[w] = g0_dd(1, 0);
+    g0_lesser_omega[w](0, 0) = g0_dd(0, 1);
+    g0_greater_omega[w](0, 0) = g0_dd(1, 0);
   }
 
-  gf<retime, scalar_valued> g0_lesser_up = make_gf_from_fourier(g0_lesser_omega, time_mesh);
-  gf<retime, scalar_valued> g0_greater_up = make_gf_from_fourier(g0_greater_omega, time_mesh);
+  gf<retime, matrix_valued> g0_lesser_up = make_gf_from_fourier(g0_lesser_omega, time_mesh);
+  gf<retime, matrix_valued> g0_greater_up = make_gf_from_fourier(g0_greater_omega, time_mesh);
 
   // Since Spin up and down are currently identical
-  g0_lesser = make_block_gf<retime, scalar_valued>({"up", "down"}, {g0_lesser_up, g0_lesser_up});
-  g0_greater = make_block_gf<retime, scalar_valued>({"up", "down"}, {g0_greater_up, g0_greater_up});
+  g0_lesser = make_block_gf<retime, matrix_valued>({"up", "down"}, {g0_lesser_up, g0_lesser_up});
+  g0_greater = make_block_gf<retime, matrix_valued>({"up", "down"}, {g0_greater_up, g0_greater_up});
 }
 
 void g0_model::make_flat_band() {
@@ -118,8 +124,8 @@ void g0_model::make_flat_band() {
   auto time_mesh = gf_mesh<retime>({-param_.time_max, param_.time_max, param_.nr_time_points_gf});
   auto freq_mesh = make_adjoint_mesh(time_mesh);
 
-  gf<refreq, scalar_valued> g0_lesser_omega{freq_mesh};
-  gf<refreq, scalar_valued> g0_greater_omega{freq_mesh};
+  gf<refreq, matrix_valued> g0_lesser_omega{freq_mesh, {2, 2}};
+  gf<refreq, matrix_valued> g0_greater_omega{freq_mesh, {2, 2}};
 
   // Define local Fermi funciton; reads in beta
   auto nFermi = [&](double omega) {
@@ -139,11 +145,21 @@ void g0_model::make_flat_band() {
     return array<dcomplex, 2>{{K + R + A, K - R + A}, {K + R - A, K - R - A}};
   };
 
+  //// For one lead
+  //auto G0_dc_w = [&](double w) {
+  // double we = w - epsilon_d;
+  // auto R = -0.5_j * Gamma / (we + 1_j * Gamma);
+  // auto A = 0.5_j * Gamma / (we - 1_j * Gamma);
+  // auto K = 1_j * Gamma / (we * we + Gamma * Gamma) *
+  //          (we * (2 * nf(w - muL) - 1) + 1_j * Gamma * (nf(w - muR) - nf(w - muL)));
+  // return array<dcomplex, 2>{{K + R + A, K - R + A}, {K + R - A, K - R - A}};
+  //};
+
   for (auto w : freq_mesh) {
     auto g0_dd = G0_dd_w(w);
 
-    g0_lesser_omega[w] = g0_dd(0, 1);
-    g0_greater_omega[w] = g0_dd(1, 0);
+    g0_lesser_omega[w](0, 0) = g0_dd(0, 1);
+    g0_greater_omega[w](0, 0) = g0_dd(1, 0);
 
     // g0_lesser_omega[w] = 1_j * param_.Gamma * (nFermi(w + param_.bias_V / 2) + nFermi(w - param_.bias_V / 2))
     //    / ((w - param_.eps_d) * (w - param_.eps_d) + std::pow(param_.Gamma, 2));
@@ -154,12 +170,12 @@ void g0_model::make_flat_band() {
     // // g0_greater_omega(w)[down] = g0_lesser_omega(w)[up];
   }
 
-  gf<retime, scalar_valued> g0_lesser_up = make_gf_from_fourier(g0_lesser_omega, time_mesh);
-  gf<retime, scalar_valued> g0_greater_up = make_gf_from_fourier(g0_greater_omega, time_mesh);
+  gf<retime, matrix_valued> g0_lesser_up = make_gf_from_fourier(g0_lesser_omega, time_mesh);
+  gf<retime, matrix_valued> g0_greater_up = make_gf_from_fourier(g0_greater_omega, time_mesh);
 
   // Since Spin up and down are currently identical
-  g0_lesser = make_block_gf<retime, scalar_valued>({"up", "down"}, {g0_lesser_up, g0_lesser_up});
-  g0_greater = make_block_gf<retime, scalar_valued>({"up", "down"}, {g0_greater_up, g0_greater_up});
+  g0_lesser = make_block_gf<retime, matrix_valued>({"up", "down"}, {g0_lesser_up, g0_lesser_up});
+  g0_greater = make_block_gf<retime, matrix_valued>({"up", "down"}, {g0_greater_up, g0_greater_up});
 }
 
 void g0_model::make_flat_band_analytic() {
@@ -170,8 +186,8 @@ void g0_model::make_flat_band_analytic() {
   }
 
   auto const time_mesh = gf_mesh<retime>({-param_.time_max, param_.time_max, param_.nr_time_points_gf});
-  gf<retime, scalar_valued> g0_lesser_up{time_mesh};
-  gf<retime, scalar_valued> g0_greater_up{time_mesh};
+  gf<retime, matrix_valued> g0_lesser_up{time_mesh, {2, 2}};
+  gf<retime, matrix_valued> g0_greater_up{time_mesh, {2, 2}};
 
   auto const g0_lesser_values = [this](time_real_t time) -> dcomplex {
     using namespace boost::math::double_constants;
@@ -185,13 +201,13 @@ void g0_model::make_flat_band_analytic() {
   dcomplex val = 0.;
   for (auto t : time_mesh) {
     val = g0_lesser_values(t);
-    g0_lesser_up[t] = val;
-    g0_greater_up[t] = std::conj(val);
+    g0_lesser_up[t](0, 0) = val;
+    g0_greater_up[t](0, 0) = std::conj(val);
   }
 
   // Since Spin up and down are currently identical
-  g0_lesser = make_block_gf<retime, scalar_valued>({"up", "down"}, {g0_lesser_up, g0_lesser_up});
-  g0_greater = make_block_gf<retime, scalar_valued>({"up", "down"}, {g0_greater_up, g0_greater_up});
+  g0_lesser = make_block_gf<retime, matrix_valued>({"up", "down"}, {g0_lesser_up, g0_lesser_up});
+  g0_greater = make_block_gf<retime, matrix_valued>({"up", "down"}, {g0_greater_up, g0_greater_up});
 }
 
 // *****
@@ -226,15 +242,15 @@ dcomplex g0_keldysh_contour_t::operator()(gf_index_t const &a, gf_index_t const 
         is_greater = a.k_idx xor (a.timesplit_n > b.timesplit_n);
       } else {
         // if internal index use alpha. Else use from external
-        return model.g0_lesser[a.spin](0.0) - static_cast<long>(internal_point) * 1_j * model.param_.alpha;
+        return model.g0_lesser[a.spin](0.0)(0, 0) - static_cast<long>(internal_point) * 1_j * model.param_.alpha;
       }
     }
   }
 
   if (is_greater) {
-    return model.g0_greater[a.spin](a.time - b.time);
+    return model.g0_greater[a.spin](a.time - b.time)(0, 0);
   }
-  return model.g0_lesser[a.spin](a.time - b.time);
+  return model.g0_lesser[a.spin](a.time - b.time)(0, 0);
 }
 
 } // namespace keldy::impurity_oneband

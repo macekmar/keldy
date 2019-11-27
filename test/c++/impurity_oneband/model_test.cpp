@@ -12,7 +12,7 @@ using namespace keldy::impurity_oneband;
 TEST(g0_model, Initialize_flatband) { // NOLINT
   model_param_t params;
   params.bath_type = "flatband";
-  g0_model g0{params};
+  g0_model g0{params, true};
 }
 
 TEST(g0_model, Initialize_flatband_analytic) { // NOLINT
@@ -22,13 +22,13 @@ TEST(g0_model, Initialize_flatband_analytic) { // NOLINT
   params.eps_d = 0.;
   params.alpha = 0.;
   params.bath_type = "flatband_analytic";
-  g0_model g0{params};
+  g0_model g0{params, true};
 }
 
 TEST(g0_model, Initialize_semicircle) { // NOLINT
   model_param_t params;
   params.bath_type = "semicircle";
-  g0_model g0{params};
+  g0_model g0{params, true};
 }
 
 /*
@@ -47,7 +47,7 @@ TEST(g0_model, Values) { // NOLINT
   params.bath_type = "flatband";
 
   // TODO: copy params ?
-  g0_model g0{params};
+  g0_model g0{params, true};
 
   auto g0_less_expected = [](double t1, double t2) -> dcomplex {
     using namespace boost::math::double_constants;
@@ -64,14 +64,14 @@ TEST(g0_model, Values) { // NOLINT
   for (size_t i = 0; i <= 100; ++i) {
     time = -100.0 + i * 2.0;
     std::cout << "t = " << time << std::endl;
-    EXPECT_COMPLEX_NEAR(g0_less_expected(time, 0.0), g0.g0_lesser[up](time), 1e-3);
-    EXPECT_COMPLEX_NEAR(g0_grea_expected(time, 0.0), g0.g0_greater[up](time), 1e-3);
+    EXPECT_COMPLEX_NEAR(g0_less_expected(time, 0.0), g0.g0_lesser[up](time)(0, 0), 1e-3);
+    EXPECT_COMPLEX_NEAR(g0_grea_expected(time, 0.0), g0.g0_greater[up](time)(0, 0), 1e-3);
   }
 }
 
 TEST(g0_keldysh_adaptor, Initialize) { // NOLINT
   model_param_t params;
-  g0_model g0{params};
+  g0_model g0{params, true};
   g0_keldysh_contour_t g0_k{g0};
 }
 

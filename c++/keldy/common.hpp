@@ -30,7 +30,7 @@ namespace keldy {
 using dcomplex = std::complex<double>;
 using time_real_t = double;
 using time_imag_t = double;
-
+using orbital_t = int;
 
 enum spin_t { up = 0, down = 1};
 enum keldysh_idx_t { forward = 0, backward = 1};

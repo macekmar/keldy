@@ -145,9 +145,9 @@ class kernel_binner {
   friend kernel_binner mpi_reduce(kernel_binner const &a, mpi::communicator c, int root, bool all, MPI_Op op);
 };
 
-inline CPP2PY_IGNORE kernel_binner mpi_reduce(kernel_binner const &in, mpi::communicator c = {}, int root = 0, bool all = false,
-                                MPI_Op op = MPI_SUM) {
-  if (op != MPI_SUM) {
+inline kernel_binner CPP2PY_IGNORE mpi_reduce(kernel_binner const &in, mpi::communicator c = {}, int root = 0,
+                                              bool all = false, MPI_Op op = MPI_SUM) {
+  if(op != MPI_SUM){
     TRIQS_RUNTIME_ERROR << "mpi_reduce of kernel_binner can only be performed with op = MPI_SUM";
   }
 

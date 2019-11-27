@@ -56,11 +56,18 @@ c.add_member(c_name = "spin",
              read_only= True,
              doc = r"""""")
 
+c.add_member(c_name = "orbital",
+             c_type = "keldy::orbital_t",
+             read_only= True,
+             doc = r"""""")
+
 c.add_constructor("""()""", doc = r"""Constructor: (time, spin, keldysh_idx)""")
 
 c.add_constructor("""(keldy::time_real_t time_, int spin_, int k_idx_)""", doc = r"""""")
 
 c.add_constructor("""(keldy::time_real_t time_, int spin_, int k_idx_, int timesplit_n_)""", doc = r"""""")
+
+c.add_constructor("""(keldy::time_real_t time_, int spin_, int k_idx_, int timesplit_n_, int orbital_)""", doc = r"""""")
 
 module.add_class(c)
 
@@ -73,12 +80,12 @@ c = class_(
 )
 
 c.add_member(c_name = "g0_lesser",
-             c_type = "block_gf<triqs::gfs::retime, triqs::gfs::scalar_valued>",
+             c_type = "block_gf<triqs::gfs::retime, triqs::gfs::matrix_valued>",
              read_only= True,
              doc = r"""Lesser Green function $G^{<}_{\sigma}(t)$; block spin $\sigma$ {up, down}""")
 
 c.add_member(c_name = "g0_greater",
-             c_type = "block_gf<triqs::gfs::retime, triqs::gfs::scalar_valued>",
+             c_type = "block_gf<triqs::gfs::retime, triqs::gfs::matrix_valued>",
              read_only= True,
              doc = r"""Greater Green function $G^{>}_{\sigma}(t)$; block spin $\sigma$ {up, down}""")
 
@@ -87,12 +94,20 @@ c.add_member(c_name = "param_",
              read_only= True,
              doc = r"""""")
 
-c.add_constructor("""(keldy::impurity_oneband::model_param_t parameters)""", doc = r"""""")
+c.add_member(c_name = "contain_leads",
+             c_type = "const bool",
+             read_only= True,
+             doc = r"""""")
+
+c.add_constructor("""(keldy::impurity_oneband::model_param_t parameters, bool with_leads)""", doc = r"""""")
 
 c.add_method("""void make_semicircular_model ()""",
              doc = r"""""")
 
 c.add_method("""void make_flat_band ()""",
+             doc = r"""""")
+
+c.add_method("""void make_flat_band_analytic ()""",
              doc = r"""""")
 
 module.add_class(c)
@@ -120,7 +135,7 @@ module.add_class(c)
 
 # The class integrand_g_direct
 c = class_(
-        py_type = "IntegrandGT1t2Direct",  # name of the python class
+        py_type = "IntegrandGDirect",  # name of the python class
         c_type = "keldy::impurity_oneband::integrand_g_direct",   # name of the C++ class
         doc = r"""""",   # doc of the C++ class
         hdf5 = False,
@@ -147,6 +162,9 @@ c.add_member(c_name = "data",
              read_only= True,
              doc = r"""""")
 
+c.add_method("""void bin_data (std::pair<gf_index_t,dcomplex> in)""",
+             doc = r"""""")
+
 c.add_method("""double sum_weights ()""",
              doc = r"""""")
 
@@ -170,7 +188,7 @@ c.add_constructor("""(double t_min_, double t_max_, int n_bins_)""", doc = r""""
 c.add_method("""triqs::arrays::array<std::complex<double>,2> get_values ()""",
              doc = r"""""")
 
-c.add_method("""triqs::arrays::array<uint64_t,2> get_nr_values ()""",
+c.add_method("""triqs::arrays::array<unsigned long,2> get_nr_values ()""",
              doc = r"""""")
 
 c.add_method("""triqs::arrays::array<double,1> get_bin_times ()""",
