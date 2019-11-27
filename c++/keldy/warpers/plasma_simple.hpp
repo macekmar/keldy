@@ -23,7 +23,7 @@
 #pragma once
 
 #include "../common.hpp"
-#include "../gsl_interp_wrap.hpp"
+#include "../interfaces/gsl_interp_wrap.hpp"
 #include <algorithm>
 #include <any>
 #include <functional>
