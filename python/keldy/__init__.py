@@ -26,6 +26,6 @@ DOC
 
 """
 import impurity_oneband_module as impurity_oneband
-# from warper_module import *
+import gsl_vegas_wrap
 
 # __all__ = ['Model', 'WarperPlasmaSimpleT']

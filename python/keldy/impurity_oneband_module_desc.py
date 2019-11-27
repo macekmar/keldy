@@ -302,6 +302,114 @@ c.add_method("""keldy::impurity_oneband::integrand_g_direct get_integrand ()""",
 
 module.add_class(c)
 
+
+# The class compute_charge_Q_direct_gsl_vegas
+c = class_(
+        py_type = "ComputeChargeQDirectGSLVegas",  # name of the python class
+        c_type = "keldy::impurity_oneband::compute_charge_Q_direct_gsl_vegas",   # name of the C++ class
+        doc = r"""""",   # doc of the C++ class
+        hdf5 = False,
+)
+
+c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, std::string gsl_rng_name)""", doc = r"""""")
+
+c.add_method("""double get_result ()""",
+             doc = r"""""")
+
+c.add_method("""double get_error ()""",
+             doc = r"""""")
+
+c.add_method("""uint64_t get_nr_points_run ()""",
+             doc = r"""""")
+
+c.add_method("""double chisq ()""",
+             doc = r"""""")
+
+c.add_method("""void run (int nr_steps)""",
+             doc = r"""""")
+
+c.add_method("""void set_params (**keldy::gsl_monte_vegas_params_wrap)""",
+             doc = r"""
+
+
+
++----------------+--------+---------+---------------+
+| Parameter Name | Type   | Default | Documentation |
++================+========+=========+===============+
+| alpha          | double | --      |               |
++----------------+--------+---------+---------------+
+| iterations     | size_t | --      |               |
++----------------+--------+---------+---------------+
+| stage          | int    | --      |               |
++----------------+--------+---------+---------------+
+| mode           | int    | --      |               |
++----------------+--------+---------+---------------+
+| verbose        | int    | --      |               |
++----------------+--------+---------+---------------+
+""")
+
+c.add_method("""keldy::gsl_monte_vegas_params_wrap get_params ()""",
+             doc = r"""""")
+
+module.add_class(c)
+
+
+
+# Converter for gsl_monte_vegas_params_wrap
+c = converter_(
+        c_type = "keldy::gsl_monte_vegas_params_wrap",
+        doc = r"""""",
+)
+c.add_member(c_name = "alpha",
+             c_type = "double",
+             initializer = """  """,
+             doc = r"""""")
+
+c.add_member(c_name = "iterations",
+             c_type = "size_t",
+             initializer = """  """,
+             doc = r"""""")
+
+c.add_member(c_name = "stage",
+             c_type = "int",
+             initializer = """  """,
+             doc = r"""""")
+
+c.add_member(c_name = "mode",
+             c_type = "int",
+             initializer = """  """,
+             doc = r"""""")
+
+c.add_member(c_name = "verbose",
+             c_type = "int",
+             initializer = """  """,
+             doc = r"""""")
+
+
+module.add_converter(c)
+
+c = class_(
+        py_type = "ComputeChargeQDirectCubaVegas",  # name of the python class
+        c_type = "keldy::impurity_oneband::compute_charge_Q_direct_cuba_vegas",   # name of the C++ class
+        doc = r"""""",   # doc of the C++ class
+        hdf5 = False,
+)
+
+c.add_member(c_name = "f",
+             c_type = "std::function<double (std::vector<double>)>",
+             read_only= False,
+             doc = r"""""")
+
+c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, keldy::cuba_common_param in, keldy::cuba_vegas_param in_v)""", doc = r"""""")
+
+c.add_method("""void run ()""",
+             doc = r"""""")
+
+c.add_method("""keldy::cuba_output get_output ()""",
+             doc = r"""""")
+
+module.add_class(c)
+
 # The class compute_gf_kernel
 c = class_(
         py_type = "ComputeGfKernel",  # name of the python class
@@ -402,6 +510,154 @@ c.add_member(c_name = "alpha",
 c.add_member(c_name = "bath_type",
              c_type = "std::string",
              initializer = """ "flatband" """,
+             doc = r"""""")
+
+module.add_converter(c)
+
+
+
+# Converter for cuba_output
+c = converter_(
+        c_type = "keldy::cuba_output",
+        doc = r"""""",
+)
+c.add_member(c_name = "n_regions",
+             c_type = "int",
+             initializer = """ 0 """,
+             doc = r"""""")
+
+c.add_member(c_name = "n_eval",
+             c_type = "int",
+             initializer = """ 0 """,
+             doc = r"""""")
+
+c.add_member(c_name = "error_flag",
+             c_type = "int",
+             initializer = """ 0 """,
+             doc = r"""""")
+
+c.add_member(c_name = "result",
+             c_type = "double",
+             initializer = """ 0.0 """,
+             doc = r"""""")
+
+c.add_member(c_name = "error",
+             c_type = "double",
+             initializer = """ 0.0 """,
+             doc = r"""""")
+
+c.add_member(c_name = "chi_sq_prob",
+             c_type = "double",
+             initializer = """ 0.0 """,
+             doc = r"""""")
+
+module.add_converter(c)
+
+# Converter for cuba_common_param
+c = converter_(
+        c_type = "keldy::cuba_common_param",
+        doc = r"""""",
+)
+c.add_member(c_name = "n_dim",
+             c_type = "int",
+             initializer = """  """,
+             doc = r"""""")
+
+c.add_member(c_name = "n_components",
+             c_type = "int",
+             initializer = """ 1 """,
+             doc = r"""""")
+
+c.add_member(c_name = "n_points_vectorization",
+             c_type = "int",
+             initializer = """ 1 """,
+             doc = r"""""")
+
+c.add_member(c_name = "error_eps_rel",
+             c_type = "double",
+             initializer = """ 1e-12 """,
+             doc = r"""""")
+
+c.add_member(c_name = "error_eps_abs",
+             c_type = "double",
+             initializer = """ 1e-12 """,
+             doc = r"""""")
+
+c.add_member(c_name = "flags",
+             c_type = "int",
+             initializer = """ 0 """,
+             doc = r"""""")
+
+c.add_member(c_name = "verbosity",
+             c_type = "int",
+             initializer = """ 0 """,
+             doc = r"""""")
+
+c.add_member(c_name = "use_last_sampleset_only",
+             c_type = "bool",
+             initializer = """ false """,
+             doc = r"""""")
+
+c.add_member(c_name = "sample_function_smoothing_off",
+             c_type = "bool",
+             initializer = """ false """,
+             doc = r"""""")
+
+c.add_member(c_name = "store_state_after_run",
+             c_type = "bool",
+             initializer = """ false """,
+             doc = r"""""")
+
+c.add_member(c_name = "rng_type",
+             c_type = "std::string",
+             initializer = """ "sobol" """,
+             doc = r"""""")
+
+c.add_member(c_name = "seed",
+             c_type = "int",
+             initializer = """ 1 """,
+             doc = r"""""")
+
+c.add_member(c_name = "randlux_level",
+             c_type = "int",
+             initializer = """ 0 """,
+             doc = r"""""")
+
+c.add_member(c_name = "min_number_evaluations",
+             c_type = "int",
+             initializer = """ 1000 """,
+             doc = r"""""")
+
+c.add_member(c_name = "max_number_evaluations",
+             c_type = "int",
+             initializer = """ int(1e10) """,
+             doc = r"""""")
+
+module.add_converter(c)
+
+# Converter for cuba_vegas_param
+c = converter_(
+        c_type = "keldy::cuba_vegas_param",
+        doc = r"""""",
+)
+c.add_member(c_name = "n_start",
+             c_type = "int",
+             initializer = """ 1000 """,
+             doc = r"""""")
+
+c.add_member(c_name = "n_increase",
+             c_type = "int",
+             initializer = """ 1000 """,
+             doc = r"""""")
+
+c.add_member(c_name = "n_batch",
+             c_type = "int",
+             initializer = """ 500 """,
+             doc = r"""""")
+
+c.add_member(c_name = "gridno",
+             c_type = "int",
+             initializer = """ 0 """,
              doc = r"""""")
 
 module.add_converter(c)
