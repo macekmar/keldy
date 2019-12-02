@@ -408,7 +408,7 @@ c.add_method("""void run_vegas (keldy::cuba_vegas_param in_v)""",
 c.add_method("""void run_suave (keldy::cuba_suave_param in_s)""",
              doc = r"""""")
 
-c.add_method("""void run_cuhre (int key_integratio_order)""",
+c.add_method("""void run_cuhre (int key_integration_order)""",
              doc = r"""""")
 
 c.add_method("""keldy::cuba_output get_output ()""",

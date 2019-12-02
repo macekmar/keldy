@@ -64,24 +64,20 @@ struct CPP2PY_IGNORE cuba_common_param {
   int randlux_level = 0;
 
   int min_number_evaluations = 1000;
-  int max_number_evaluations = int(1e10);
+  int max_number_evaluations = int(1e9);
 };
 
 struct CPP2PY_IGNORE cuba_vegas_param {
   int n_evals_per_iteration_start = 1000;
-  int n_evals_per_iteration_increase = 1000;
-  int n_samples_per_batch = 500;
+  int n_evals_per_iteration_increase = 500;
+  int n_samples_per_batch = 1000;
   int internal_store_grid_nr = 0;
-  // iter
-  // weight
 };
 
 struct CPP2PY_IGNORE cuba_suave_param {
-  int n_new_evals_each_subdivision = 1000;
-  int n_min_samples_region_threashold = 1000;
-  double flatness_parameter_p = 10.0;
-  // iter
-  // weight
+  int n_new_evals_each_subdivision = 5000;
+  int n_min_samples_region_threashold = 500;
+  double flatness_parameter_p = 50.0;
 };
 
 // struct CPP2PY_IGNORE cuba_divonne_param {
@@ -92,7 +88,7 @@ struct CPP2PY_IGNORE cuba_suave_param {
 //   double border_width = 0.0;
 //   double max_chi_sq_per_subregion = 5.0;
 //   double min_deviation = 1.0;
-//   // int n_points_given_array; 
+//   // int n_points_given_array;
 //   // iter
 //   // weight
 // };
@@ -164,6 +160,7 @@ class cuba_wrapper {
           nullptr, &out.n_regions, &out.n_eval, &out.error_flag, &out.result, &out.error, &out.chi_sq_prob);
   }
 
+  // TODO: Wrapper
   // void run_divonne() {
   //   Divonne(in.n_dim, in.n_components, extern_c::cuba_f_wrap, this, in.n_points_vectorization, in.error_eps_rel,
   //           in.error_eps_abs, in.flags, in.seed, in.min_number_evaluations, in.max_number_evaluations, const int key1,
@@ -173,10 +170,15 @@ class cuba_wrapper {
   //           &out.result, &out.error, &out.chi_sq_prob);
   // }
 
-  void run_cuhre(int key_integratio_order) {
+
+  // key_integration_order: 
+  //      k = 7,9,11,13 else defaults. Degree of cubature rule. 
+  //      k = 13 only for dim = 2, k = 11 only for dim = 3
+  //      defaults to max key available for given dim
+  void run_cuhre(int key_integration_order) {
     Cuhre(in.n_dim, in.n_components, extern_c::cuba_f_wrap, this, in.n_points_vectorization, in.error_eps_rel,
-          in.error_eps_abs, in.flags, in.min_number_evaluations, in.max_number_evaluations, key_integratio_order, nullptr, nullptr,
-          &out.n_regions, &out.n_eval, &out.error_flag, &out.result, &out.error, &out.chi_sq_prob);
+          in.error_eps_abs, in.flags, in.min_number_evaluations, in.max_number_evaluations, key_integration_order,
+          nullptr, nullptr, &out.n_regions, &out.n_eval, &out.error_flag, &out.result, &out.error, &out.chi_sq_prob);
   }
 
   cuba_output get_output() { return out; }
