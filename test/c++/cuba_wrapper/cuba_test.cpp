@@ -39,9 +39,9 @@ TEST(cuba_wrapper, cuhre_gaussian) { // NOLINT
     auto o = cuba.get_output();
 
     // Basic Sanity Checks
-    EXPECT_GE(o.n_regions, 1); 
-    EXPECT_GE(o.n_eval, p.min_number_evaluations); 
-    EXPECT_GE(o.chi_sq_prob, 0.0); 
+    EXPECT_GE(o.n_regions, 1);
+    EXPECT_GE(o.n_eval, p.min_number_evaluations);
+    EXPECT_GE(o.chi_sq_prob, 0.0);
 
     EXPECT_TRUE(o.error_flag == 0); // Successful Termination
 
@@ -72,9 +72,9 @@ TEST(cuba_wrapper, vegas_gaussian) { // NOLINT
     auto o = cuba.get_output();
 
     // Basic Sanity Checks
-    EXPECT_EQ(o.n_regions, 0);  // No Regions in Vegas algorithm
-    EXPECT_GE(o.n_eval, p.min_number_evaluations); 
-    EXPECT_GE(o.chi_sq_prob, 0.0); 
+    EXPECT_EQ(o.n_regions, 0); // No Regions in Vegas algorithm
+    EXPECT_GE(o.n_eval, p.min_number_evaluations);
+    EXPECT_GE(o.chi_sq_prob, 0.0);
 
     EXPECT_TRUE(o.error_flag == 0); // Successful Termination
 
@@ -108,9 +108,9 @@ TEST(cuba_wrapper, suave_gaussian) { // NOLINT
     auto o = cuba.get_output();
 
     // Basic Sanity Checks
-    EXPECT_GE(o.n_regions, 1); 
-    EXPECT_GE(o.n_eval, p.min_number_evaluations); 
-    EXPECT_GE(o.chi_sq_prob, 0.0); 
+    EXPECT_GE(o.n_regions, 1);
+    EXPECT_GE(o.n_eval, p.min_number_evaluations);
+    EXPECT_GE(o.chi_sq_prob, 0.0);
 
     ASSERT_TRUE(o.error_flag == 0); // Successful Termination
 

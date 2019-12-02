@@ -71,7 +71,7 @@ dcomplex integrand_g_direct::operator()(std::vector<double> const &times) const 
   std::vector<gf_index_t> all_config_1(2 * order_n);
   std::vector<gf_index_t> all_config_2(2 * order_n);
 
-  #pragma omp parallel for
+#pragma omp parallel for
   for (int i = 0; i < order_n; i++) {
     all_config_1[i] = gf_index_t{times[i], a.spin, forward, i};
     all_config_1[i + order_n] = gf_index_t{times[i], a.spin, backward, i};
@@ -83,7 +83,7 @@ dcomplex integrand_g_direct::operator()(std::vector<double> const &times) const 
   int external_idx = 2 * order_n;
 
   wick_matrix_s1(external_idx, external_idx) = g0(a, b, false);
-  #pragma omp parallel for
+#pragma omp parallel for
   for (int i = 0; i < 2 * order_n; i++) {
     wick_matrix_s1(external_idx, i) = g0(a, all_config_1[i]);
     wick_matrix_s1(i, external_idx) = g0(all_config_1[i], b);
@@ -100,7 +100,7 @@ dcomplex integrand_g_direct::operator()(std::vector<double> const &times) const 
 
   // Iterate over other Keldysh index configurations. Splict smaller determinant from precomuted matrix
 
-  #pragma omp parallel for reduction(+:integrand_result)
+#pragma omp parallel for reduction(+ : integrand_result)
   for (uint64_t idx_kel = 0; idx_kel < nr_keldysh_configs; idx_kel++) {
     // Indices of Rows / Cols to pick. Cycle through and shift by (0/1) * order_n depending on idx_kel configuration
     std::vector<int> col_pick_s2(order_n);
@@ -148,7 +148,7 @@ dcomplex integrand_g_direct::operator()(std::vector<double> const &times) const 
 // Old Method Based on Sequential Constructions
 // Copy a,b as need to modify time-splitting
 dcomplex integrand_g_direct_grey(gf_index_t a, gf_index_t b, g0_keldysh_contour_t const &g0,
-                                      std::vector<double> const &times) {
+                                 std::vector<double> const &times) {
 
   // TODO: should we sort times?
 

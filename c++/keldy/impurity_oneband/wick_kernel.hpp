@@ -45,10 +45,10 @@ class sparse_kernel_binner {
  public:
   std::vector<std::pair<gf_index_t, dcomplex>> data{};
 
-  void bin_data(std::pair<gf_index_t, dcomplex> const & in){
-    auto loc = std::find_if(std::begin(data), std::end(data), [&in](auto& el){return el.first == in.first;});
+  void bin_data(std::pair<gf_index_t, dcomplex> const &in) {
+    auto loc = std::find_if(std::begin(data), std::end(data), [&in](auto &el) { return el.first == in.first; });
     if (loc != std::end(data)) {
-        (*loc).second += in.second;
+      (*loc).second += in.second;
     } else {
       data.push_back(in);
     }
@@ -88,7 +88,7 @@ class kernel_binner {
   array<double, 1> bin_times;
 
  public:
-  kernel_binner() : kernel_binner(0.0, 1.0, 100) {};
+  kernel_binner() : kernel_binner(0.0, 1.0, 100){};
   kernel_binner(double t_min_, double t_max_, int n_bins_)
      : t_min(t_min_),
        t_max(t_max_),
@@ -145,11 +145,9 @@ class kernel_binner {
   friend kernel_binner mpi_reduce(kernel_binner const &a, mpi::communicator c, int root, bool all, MPI_Op op);
 };
 
-
-
 inline kernel_binner mpi_reduce(kernel_binner const &in, mpi::communicator c = {}, int root = 0, bool all = false,
-                         MPI_Op op = MPI_SUM) {
-  if(op != MPI_SUM){
+                                MPI_Op op = MPI_SUM) {
+  if (op != MPI_SUM) {
     TRIQS_RUNTIME_ERROR << "mpi_reduce of kernel_binner can only be performed with op = MPI_SUM";
   }
 
@@ -161,7 +159,7 @@ inline kernel_binner mpi_reduce(kernel_binner const &in, mpi::communicator c = {
   all_eq = all_eq && std::equal(t_max_vec.begin() + 1, t_max_vec.end(), t_max_vec.begin());
   all_eq = all_eq && std::equal(n_bins_vec.begin() + 1, n_bins_vec.end(), n_bins_vec.begin());
 
-  if(!all_eq){
+  if (!all_eq) {
     TRIQS_RUNTIME_ERROR << "kernel_binner to mpi_reduce are not defined with same bins. This is not supported!";
   }
 
@@ -185,7 +183,6 @@ inline kernel_binner mpi_reduce(kernel_binner const &in, mpi::communicator c = {
   }
   return out;
 }
-
 
 // template<kernel_binner>
 // constexpr bool is_binned_variable = true;

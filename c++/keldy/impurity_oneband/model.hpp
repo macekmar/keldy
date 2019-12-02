@@ -70,12 +70,12 @@ class gf_index_t {
 bool operator<(gf_index_t const &a, gf_index_t const &b);
 
 // no time-split comparison in equality
-inline bool operator==(const gf_index_t& lhs, const gf_index_t& rhs){
+inline bool operator==(const gf_index_t &lhs, const gf_index_t &rhs) {
   return (lhs.time == rhs.time) && (lhs.k_idx == rhs.k_idx) && (lhs.spin == rhs.spin);
 }
 
-inline std::ostream &operator<<(std::ostream &os, gf_index_t const &m) { 
-    return os << "{" << m.time << ", " << m.k_idx << ", " << m.spin << "}";
+inline std::ostream &operator<<(std::ostream &os, gf_index_t const &m) {
+  return os << "{" << m.time << ", " << m.k_idx << ", " << m.spin << "}";
 }
 
 /// Defines model throuh non-interacting Green function g_lesser / g_greater

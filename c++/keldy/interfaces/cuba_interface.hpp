@@ -170,9 +170,8 @@ class cuba_wrapper {
   //           &out.result, &out.error, &out.chi_sq_prob);
   // }
 
-
-  // key_integration_order: 
-  //      k = 7,9,11,13 else defaults. Degree of cubature rule. 
+  // key_integration_order:
+  //      k = 7,9,11,13 else defaults. Degree of cubature rule.
   //      k = 13 only for dim = 2, k = 11 only for dim = 3
   //      defaults to max key available for given dim
   void run_cuhre(int key_integration_order) {

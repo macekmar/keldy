@@ -116,7 +116,7 @@ sparse_kernel_binner integrand_g_kernel::operator()(std::vector<double> const &t
         g_mat_s2(i, j) = wick_matrix_s2(col_pick_s2[i], col_pick_s2[j]);
       }
     }
-    
+
     for (int i = 0; i < order_n + 1; ++i) {
       for (int j = 0; j < order_n + 1; ++j) {
         g_mat_s1(i, j) = wick_matrix_s1(col_pick_s1[i], col_pick_s1[j]);

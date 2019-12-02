@@ -89,7 +89,7 @@ class gsl_vegas_wrapper_t {
   }
 
   void set_params(gsl_monte_vegas_params_wrap p) CPP2PY_ARG_AS_DICT {
-     auto params_tmp = gsl_monte_vegas_params{p.alpha, p.iterations, p.mode, p.stage, p.verbose, nullptr};
+    auto params_tmp = gsl_monte_vegas_params{p.alpha, p.iterations, p.mode, p.stage, p.verbose, nullptr};
     gsl_monte_vegas_params_set(mc_state, &params_tmp);
   }
 

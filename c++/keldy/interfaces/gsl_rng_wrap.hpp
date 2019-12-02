@@ -31,7 +31,7 @@ class gsl_rng_wrapper_t {
   gsl_rng *rng;
 
  public:
-  gsl_rng_wrapper_t(std::string const & gsl_rng_name) {
+  gsl_rng_wrapper_t(std::string const &gsl_rng_name) {
     if (gsl_rng_name == "mt") {
       rng = gsl_rng_alloc(gsl_rng_mt19937);
     }
@@ -57,4 +57,4 @@ class gsl_rng_wrapper_t {
   ~gsl_rng_wrapper_t() { gsl_rng_free(rng); }
 };
 
-} // namespace keldy::details
+} // namespace keldy

@@ -30,7 +30,6 @@ double gsl_vegas_wrapper_t_f_wrap(double x[], size_t dim, void *p) {
   auto this_ptr = (gsl_vegas_wrapper_t *)p;
   return this_ptr->f_(std::vector(x, x + dim));
 }
-
 }
 
-} // namespace keldy::details::extern_c
+} // namespace keldy::extern_c

@@ -58,4 +58,4 @@ class CPP2PY_IGNORE gsl_interp_wrapper_t {
   }
 };
 
-} // namespace keldy
+} // namespace keldy::details
