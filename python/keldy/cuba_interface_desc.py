@@ -19,10 +19,10 @@ module.add_preamble("""
 """)
 
 
-# The class cuba_vegas_wrapper
+# The class cuba_wrapper
 c = class_(
-        py_type = "CubaVegasWrapper",  # name of the python class
-        c_type = "keldy::cuba_vegas_wrapper",   # name of the C++ class
+        py_type = "CubaWrapper",  # name of the python class
+        c_type = "keldy::cuba_wrapper",   # name of the C++ class
         doc = r"""""",   # doc of the C++ class
         hdf5 = False,
 )
@@ -32,9 +32,15 @@ c.add_member(c_name = "f",
              read_only= False,
              doc = r"""""")
 
-c.add_constructor("""(std::function<double(std::vector<double>)> f_, int dim, keldy::cuba_common_param in_, keldy::cuba_vegas_param in_v_)""", doc = r"""""")
+c.add_constructor("""(std::function<double(std::vector<double>)> f_, int dim, keldy::cuba_common_param in_)""", doc = r"""""")
 
-c.add_method("""void run ()""",
+c.add_method("""void run_vegas (keldy::cuba_vegas_param in_v)""",
+             doc = r"""""")
+
+c.add_method("""void run_suave (keldy::cuba_suave_param in_s)""",
+             doc = r"""""")
+
+c.add_method("""void run_cuhre (int key_integratio_order)""",
              doc = r"""""")
 
 c.add_method("""keldy::cuba_output get_output ()""",
@@ -42,7 +48,7 @@ c.add_method("""keldy::cuba_output get_output ()""",
 
 module.add_class(c)
 
-module.add_function ("void keldy::fake1 (**keldy::cuba_output)", doc = r"""
+module.add_function ("void keldy::fake_output (**keldy::cuba_output)", doc = r"""
 
 
 
@@ -63,7 +69,7 @@ module.add_function ("void keldy::fake1 (**keldy::cuba_output)", doc = r"""
 +----------------+--------+---------+---------------+
 """)
 
-module.add_function ("void keldy::fake2 (**keldy::cuba_common_param)", doc = r"""
+module.add_function ("void keldy::fake_common (**keldy::cuba_common_param)", doc = r"""
 
 
 
@@ -102,21 +108,36 @@ module.add_function ("void keldy::fake2 (**keldy::cuba_common_param)", doc = r""
 +-------------------------------+-------------+-----------+---------------+
 """)
 
-module.add_function ("void keldy::fake3 (**keldy::cuba_vegas_param)", doc = r"""
+module.add_function ("void keldy::fake_vegas (**keldy::cuba_vegas_param)", doc = r"""
 
 
 
-+----------------+------+---------+---------------+
-| Parameter Name | Type | Default | Documentation |
-+================+======+=========+===============+
-| n_start        | int  | 1000    |               |
-+----------------+------+---------+---------------+
-| n_increase     | int  | 1000    |               |
-+----------------+------+---------+---------------+
-| n_batch        | int  | 500     |               |
-+----------------+------+---------+---------------+
-| gridno         | int  | 0       |               |
-+----------------+------+---------+---------------+
++--------------------------------+------+---------+---------------+
+| Parameter Name                 | Type | Default | Documentation |
++================================+======+=========+===============+
+| n_evals_per_iteration_start    | int  | 1000    |               |
++--------------------------------+------+---------+---------------+
+| n_evals_per_iteration_increase | int  | 1000    |               |
++--------------------------------+------+---------+---------------+
+| n_samples_per_batch            | int  | 500     |               |
++--------------------------------+------+---------+---------------+
+| internal_store_grid_nr         | int  | 0       |               |
++--------------------------------+------+---------+---------------+
+""")
+
+module.add_function ("void keldy::fake_suave (**keldy::cuba_suave_param)", doc = r"""
+
+
+
++---------------------------------+--------+---------+---------------+
+| Parameter Name                  | Type   | Default | Documentation |
++=================================+========+=========+===============+
+| n_new_evals_each_subdivision    | int    | 1000    |               |
++---------------------------------+--------+---------+---------------+
+| n_min_samples_region_threashold | int    | 1000    |               |
++---------------------------------+--------+---------+---------------+
+| flatness_parameter_p            | double | 10.0    |               |
++---------------------------------+--------+---------+---------------+
 """)
 
 
@@ -244,24 +265,46 @@ c = converter_(
         c_type = "keldy::cuba_vegas_param",
         doc = r"""""",
 )
-c.add_member(c_name = "n_start",
+c.add_member(c_name = "n_evals_per_iteration_start",
              c_type = "int",
              initializer = """ 1000 """,
              doc = r"""""")
 
-c.add_member(c_name = "n_increase",
+c.add_member(c_name = "n_evals_per_iteration_increase",
              c_type = "int",
              initializer = """ 1000 """,
              doc = r"""""")
 
-c.add_member(c_name = "n_batch",
+c.add_member(c_name = "n_samples_per_batch",
              c_type = "int",
              initializer = """ 500 """,
              doc = r"""""")
 
-c.add_member(c_name = "gridno",
+c.add_member(c_name = "internal_store_grid_nr",
              c_type = "int",
              initializer = """ 0 """,
+             doc = r"""""")
+
+module.add_converter(c)
+
+# Converter for cuba_suave_param
+c = converter_(
+        c_type = "keldy::cuba_suave_param",
+        doc = r"""""",
+)
+c.add_member(c_name = "n_new_evals_each_subdivision",
+             c_type = "int",
+             initializer = """ 1000 """,
+             doc = r"""""")
+
+c.add_member(c_name = "n_min_samples_region_threashold",
+             c_type = "int",
+             initializer = """ 1000 """,
+             doc = r"""""")
+
+c.add_member(c_name = "flatness_parameter_p",
+             c_type = "double",
+             initializer = """ 10.0 """,
              doc = r"""""")
 
 module.add_converter(c)

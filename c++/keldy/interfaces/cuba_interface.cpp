@@ -27,7 +27,7 @@ namespace keldy::extern_c {
 extern "C" {
 
 int cuba_f_wrap(const int *ndim, const cubareal x[], const int *ncomp, cubareal f[], void *userdata) {
-  auto this_ptr = (cuba_vegas_wrapper *)userdata;
+  auto this_ptr = (cuba_wrapper *)userdata;
   f[0] = this_ptr->f(std::vector(x, x + *ndim));
   return 0;
 }

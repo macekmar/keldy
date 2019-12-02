@@ -72,24 +72,46 @@ class compute_charge_Q_direct : public integrator<dcomplex, integrand_g_direct, 
   }
 };
 
+// class CPP2PY_IGNORE adapt_integrand {
+//   double time_max_;
+//   integrand_g_direct integrand_;
+
+//  public:
+//   adapt_integrand(double time_max, integrand_g_direct integrand)
+//      : time_max_(time_max), integrand_(std::move(integrand)){};
+
+//   double operator()(std::vector<double> const &times_norm) {
+//     if (!std::is_sorted(std::begin(times_norm), std::end(times_norm))) {
+//       return 0.0;
+//     }
+//     auto times = times_norm;
+//     for (auto &t : times) {
+//       t *= time_max_;
+//     }
+//     int order = times.size();
+//     return std::real(-std::pow(1_j, 1 + order) * integrand_(times) * std::pow(time_max_, order));
+//   }
+// };
+
 class CPP2PY_IGNORE adapt_integrand {
   double time_max_;
   integrand_g_direct integrand_;
+  warper_plasma_simple_t pre_warper;
 
  public:
   adapt_integrand(double time_max, integrand_g_direct integrand)
-     : time_max_(time_max), integrand_(std::move(integrand)){};
+     : time_max_(time_max),
+       integrand_(std::move(integrand)),
+       pre_warper{scalar_warper_function_factory("lorentzian", integrand_, time_max), time_max, int(1e6)} {};
 
-  double operator()(std::vector<double> const &times_norm) {
-    if (!std::is_sorted(std::begin(times_norm), std::end(times_norm))) {
-      return 0.0;
-    }
-    auto times = times_norm;
-    for (auto &t : times) {
-      t *= time_max_;
-    }
-    int order = times.size();
-    return std::real(-std::pow(1_j, 1 + order) * integrand_(times) * std::pow(time_max_, order));
+  double operator()(std::vector<double> const &li_vec) {
+    std::vector<double> ui_vec = pre_warper.ui_from_li(li_vec);
+
+    auto eval = integrand_(ui_vec);
+    eval *= pre_warper.jacobian(li_vec);
+
+    int order = li_vec.size();
+    return std::real(-std::pow(1_j, 1 + order) * eval);
   }
 };
 
@@ -105,15 +127,13 @@ class compute_charge_Q_direct_gsl_vegas : public gsl_vegas_wrapper_t {
 };
 
 // Class to compute charge = G^{lesser}_{up,up}(t).
-class compute_charge_Q_direct_cuba_vegas : public cuba_vegas_wrapper {
+class compute_charge_Q_direct_cuba : public cuba_wrapper {
  public:
-  compute_charge_Q_direct_cuba_vegas(model_param_t params, double time, int order, cuba_common_param in,
-                                     cuba_vegas_param in_v)
-     : cuba_vegas_wrapper{
-        adapt_integrand{time,
-                        integrand_g_direct{g0_keldysh_contour_t{g0_model{params}}, gf_index_t{time, up, forward},
-                                           gf_index_t{time, up, backward}}},
-        order, std::move(in), std::move(in_v)} {}
+  compute_charge_Q_direct_cuba(model_param_t params, double time, int order, cuba_common_param in)
+     : cuba_wrapper{adapt_integrand{time,
+                                    integrand_g_direct{g0_keldysh_contour_t{g0_model{params}},
+                                                       gf_index_t{time, up, forward}, gf_index_t{time, up, backward}}},
+                    order, std::move(in)} {}
 };
 
 // ******************************************************************************************************************************************************

@@ -389,8 +389,8 @@ c.add_member(c_name = "verbose",
 module.add_converter(c)
 
 c = class_(
-        py_type = "ComputeChargeQDirectCubaVegas",  # name of the python class
-        c_type = "keldy::impurity_oneband::compute_charge_Q_direct_cuba_vegas",   # name of the C++ class
+        py_type = "ComputeChargeQDirectCuba",  # name of the python class
+        c_type = "keldy::impurity_oneband::compute_charge_Q_direct_cuba",   # name of the C++ class
         doc = r"""""",   # doc of the C++ class
         hdf5 = False,
 )
@@ -400,9 +400,15 @@ c.add_member(c_name = "f",
              read_only= False,
              doc = r"""""")
 
-c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, keldy::cuba_common_param in, keldy::cuba_vegas_param in_v)""", doc = r"""""")
+c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, keldy::cuba_common_param in)""", doc = r"""""")
 
-c.add_method("""void run ()""",
+c.add_method("""void run_vegas (keldy::cuba_vegas_param in_v)""",
+             doc = r"""""")
+
+c.add_method("""void run_suave (keldy::cuba_suave_param in_s)""",
+             doc = r"""""")
+
+c.add_method("""void run_cuhre (int key_integratio_order)""",
              doc = r"""""")
 
 c.add_method("""keldy::cuba_output get_output ()""",
@@ -513,8 +519,6 @@ c.add_member(c_name = "bath_type",
              doc = r"""""")
 
 module.add_converter(c)
-
-
 
 # Converter for cuba_output
 c = converter_(
@@ -640,24 +644,46 @@ c = converter_(
         c_type = "keldy::cuba_vegas_param",
         doc = r"""""",
 )
-c.add_member(c_name = "n_start",
+c.add_member(c_name = "n_evals_per_iteration_start",
              c_type = "int",
              initializer = """ 1000 """,
              doc = r"""""")
 
-c.add_member(c_name = "n_increase",
+c.add_member(c_name = "n_evals_per_iteration_increase",
              c_type = "int",
              initializer = """ 1000 """,
              doc = r"""""")
 
-c.add_member(c_name = "n_batch",
+c.add_member(c_name = "n_samples_per_batch",
              c_type = "int",
              initializer = """ 500 """,
              doc = r"""""")
 
-c.add_member(c_name = "gridno",
+c.add_member(c_name = "internal_store_grid_nr",
              c_type = "int",
              initializer = """ 0 """,
+             doc = r"""""")
+
+module.add_converter(c)
+
+# Converter for cuba_suave_param
+c = converter_(
+        c_type = "keldy::cuba_suave_param",
+        doc = r"""""",
+)
+c.add_member(c_name = "n_new_evals_each_subdivision",
+             c_type = "int",
+             initializer = """ 1000 """,
+             doc = r"""""")
+
+c.add_member(c_name = "n_min_samples_region_threashold",
+             c_type = "int",
+             initializer = """ 1000 """,
+             doc = r"""""")
+
+c.add_member(c_name = "flatness_parameter_p",
+             c_type = "double",
+             initializer = """ 10.0 """,
              doc = r"""""")
 
 module.add_converter(c)

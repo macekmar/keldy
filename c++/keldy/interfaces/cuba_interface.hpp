@@ -68,30 +68,54 @@ struct CPP2PY_IGNORE cuba_common_param {
 };
 
 struct CPP2PY_IGNORE cuba_vegas_param {
-  int n_start = 1000;
-  int n_increase = 1000;
-  int n_batch = 500;
-  int gridno = 0;
+  int n_evals_per_iteration_start = 1000;
+  int n_evals_per_iteration_increase = 1000;
+  int n_samples_per_batch = 500;
+  int internal_store_grid_nr = 0;
+  // iter
+  // weight
 };
 
-CPP2PY_ARG_AS_DICT inline void fake1(cuba_output const &temp){};
-CPP2PY_ARG_AS_DICT inline void fake2(cuba_common_param const &temp){};
-CPP2PY_ARG_AS_DICT inline void fake3(cuba_vegas_param const &temp){};
+struct CPP2PY_IGNORE cuba_suave_param {
+  int n_new_evals_each_subdivision = 1000;
+  int n_min_samples_region_threashold = 1000;
+  double flatness_parameter_p = 10.0;
+  // iter
+  // weight
+};
+
+// struct CPP2PY_IGNORE cuba_divonne_param {
+//   int key_1_sampling_during_partition = -1;
+//   int key_2_sampling_during_final_integration = -1;
+//   int key_3_strategy_refinement = 1;
+//   int max_pass_partitioning = 5;
+//   double border_width = 0.0;
+//   double max_chi_sq_per_subregion = 5.0;
+//   double min_deviation = 1.0;
+//   // int n_points_given_array; 
+//   // iter
+//   // weight
+// };
+
+CPP2PY_ARG_AS_DICT inline void fake_output(cuba_output const &temp){};
+CPP2PY_ARG_AS_DICT inline void fake_common(cuba_common_param const &temp){};
+CPP2PY_ARG_AS_DICT inline void fake_vegas(cuba_vegas_param const &temp){};
+CPP2PY_ARG_AS_DICT inline void fake_suave(cuba_suave_param const &temp){};
+// CPP2PY_ARG_AS_DICT inline void fake_divonne(cuba_divonne_param const &temp){};
 
 // Do only for scalar functions
 
-class cuba_vegas_wrapper {
+class cuba_wrapper {
  public:
   std::function<double(std::vector<double>)> f; // must make public for c interface hack
 
  private:
   cuba_common_param in;
-  cuba_vegas_param in_v;
   cuba_output out{};
 
  public:
-  cuba_vegas_wrapper(std::function<double(std::vector<double>)> f_, int dim, cuba_common_param in_, cuba_vegas_param in_v_)
-     : f(std::move(f_)), in(std::move(in_)), in_v(std::move(in_v_)) {
+  cuba_wrapper(std::function<double(std::vector<double>)> f_, int dim, cuba_common_param in_)
+     : f(std::move(f_)), in(std::move(in_)) {
 
     in.n_dim = dim;
 
@@ -125,11 +149,34 @@ class cuba_vegas_wrapper {
        + (int(in.sample_function_smoothing_off) << 3) + (int(in.store_state_after_run) << 4) + (in.randlux_level << 8);
   }
 
-  void run() {
+  void run_vegas(cuba_vegas_param in_v) {
     Vegas(in.n_dim, in.n_components, extern_c::cuba_f_wrap, this, in.n_points_vectorization, in.error_eps_rel,
-          in.error_eps_abs, in.flags, in.seed, in.min_number_evaluations, in.max_number_evaluations, in_v.n_start,
-          in_v.n_increase, in_v.n_batch, in_v.gridno, nullptr, nullptr, &out.n_eval, &out.error_flag, &out.result,
-          &out.error, &out.chi_sq_prob);
+          in.error_eps_abs, in.flags, in.seed, in.min_number_evaluations, in.max_number_evaluations,
+          in_v.n_evals_per_iteration_start, in_v.n_evals_per_iteration_increase, in_v.n_samples_per_batch,
+          in_v.internal_store_grid_nr, nullptr, nullptr, &out.n_eval, &out.error_flag, &out.result, &out.error,
+          &out.chi_sq_prob);
+  }
+
+  void run_suave(cuba_suave_param in_s) {
+    Suave(in.n_dim, in.n_components, extern_c::cuba_f_wrap, this, in.n_points_vectorization, in.error_eps_rel,
+          in.error_eps_abs, in.flags, in.seed, in.min_number_evaluations, in.max_number_evaluations,
+          in_s.n_new_evals_each_subdivision, in_s.n_min_samples_region_threashold, in_s.flatness_parameter_p, nullptr,
+          nullptr, &out.n_regions, &out.n_eval, &out.error_flag, &out.result, &out.error, &out.chi_sq_prob);
+  }
+
+  // void run_divonne() {
+  //   Divonne(in.n_dim, in.n_components, extern_c::cuba_f_wrap, this, in.n_points_vectorization, in.error_eps_rel,
+  //           in.error_eps_abs, in.flags, in.seed, in.min_number_evaluations, in.max_number_evaluations, const int key1,
+  //           const int key2, const int key3, const int maxpass, const double border, const double maxchisq,
+  //           const double mindeviation, const int ngiven, const int ldxgiven, double xgiven[], const int nextra,
+  //           peakfinder_t peakfinder, const char *statefile, void *spin, &out.n_regions, &out.n_eval, &out.error_flag,
+  //           &out.result, &out.error, &out.chi_sq_prob);
+  // }
+
+  void run_cuhre(int key_integratio_order) {
+    Cuhre(in.n_dim, in.n_components, extern_c::cuba_f_wrap, this, in.n_points_vectorization, in.error_eps_rel,
+          in.error_eps_abs, in.flags, in.min_number_evaluations, in.max_number_evaluations, key_integratio_order, nullptr, nullptr,
+          &out.n_regions, &out.n_eval, &out.error_flag, &out.result, &out.error, &out.chi_sq_prob);
   }
 
   cuba_output get_output() { return out; }
