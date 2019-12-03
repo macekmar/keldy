@@ -386,10 +386,10 @@ c = class_(
         hdf5 = False,
 )
 
-c.add_member(c_name = "f",
-             c_type = "std::function<double (std::vector<double>)>",
-             read_only= False,
+c.add_method("""double operator() (std::vector<double> x)""",
+             name = "__call__",
              doc = r"""""")
+
 
 c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, keldy::cuba_common_param in)""", doc = r"""""")
 

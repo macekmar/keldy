@@ -32,7 +32,8 @@ TEST(cuba_wrapper, cuhre_gaussian) { // NOLINT
   p.error_eps_rel = 1e-3;
   p.error_eps_abs = 1e-4;
 
-  std::vector<int> dim_v{4, 6, 10};
+  std::vector<int> dim_v{2, 4, 6, 10};
+
   for (auto dim : dim_v) {
     auto analytic = gaussian_hypercube_analytic(dim);
 
@@ -65,7 +66,8 @@ TEST(cuba_wrapper, vegas_gaussian) { // NOLINT
 
   cuba_vegas_param p_v;
 
-  std::vector<int> dim_v{4, 6, 10};
+  std::vector<int> dim_v{1, 4, 6, 10};
+
   for (auto dim : dim_v) {
     auto analytic = gaussian_hypercube_analytic(dim);
 
@@ -101,7 +103,8 @@ TEST(cuba_wrapper, suave_gaussian) { // NOLINT
   p_s.n_min_samples_region_threashold = 500;
   p_s.flatness_parameter_p = 50.0;
 
-  std::vector<int> dim_v{4, 6, 10};
+  std::vector<int> dim_v{1, 4, 6, 10};
+
   for (auto dim : dim_v) {
     auto analytic = gaussian_hypercube_analytic(dim);
 

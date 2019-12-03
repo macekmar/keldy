@@ -30,12 +30,6 @@
 
 namespace keldy {
 
-namespace extern_c {
-extern "C" {
-int cuba_f_wrap(const int *ndim, const cubareal x[], const int *ncomp, cubareal f[], void *userdata);
-}
-} // namespace extern_c
-
 struct CPP2PY_IGNORE cuba_output {
   int n_regions = 0;
   int n_eval = 0;
@@ -47,7 +41,7 @@ struct CPP2PY_IGNORE cuba_output {
 };
 
 struct CPP2PY_IGNORE cuba_common_param {
-  int n_dim; // will be overwritten
+  int n_dim = 0; // will be overwritten
   int n_components = 1;
   int n_points_vectorization = 1;
   double error_eps_rel = 1e-12;
@@ -102,18 +96,26 @@ CPP2PY_ARG_AS_DICT inline void fake_suave(cuba_suave_param const &temp){};
 // Do only for scalar functions
 
 class cuba_wrapper {
- public:
-  std::function<double(std::vector<double>)> f; // must make public for c interface hack
-
  private:
+  integrand_t f_wrap = [](const int *ndim, const cubareal x[], const int *, cubareal result[], void *userdata) -> int {
+    auto this_ptr = static_cast<cuba_wrapper *>(userdata);
+    auto v = std::vector(x, x + *ndim);
+    result[0] = this_ptr->f(v);
+    return 0;
+  };
+  std::function<double(std::vector<double>)> f;
+
   cuba_common_param in;
   cuba_output out{};
 
  public:
+  double operator()(std::vector<double> x) { return f(x); }
+
   cuba_wrapper(std::function<double(std::vector<double>)> f_, int dim, cuba_common_param in_)
      : f(std::move(f_)), in(std::move(in_)) {
 
     in.n_dim = dim;
+    in.n_components = 1;
 
     if (in.rng_type == "sobol") {
       in.seed = 0;
@@ -146,18 +148,17 @@ class cuba_wrapper {
   }
 
   void run_vegas(cuba_vegas_param in_v) {
-    Vegas(in.n_dim, in.n_components, extern_c::cuba_f_wrap, this, in.n_points_vectorization, in.error_eps_rel,
-          in.error_eps_abs, in.flags, in.seed, in.min_number_evaluations, in.max_number_evaluations,
-          in_v.n_evals_per_iteration_start, in_v.n_evals_per_iteration_increase, in_v.n_samples_per_batch,
-          in_v.internal_store_grid_nr, nullptr, nullptr, &out.n_eval, &out.error_flag, &out.result, &out.error,
-          &out.chi_sq_prob);
+    Vegas(in.n_dim, in.n_components, f_wrap, this, in.n_points_vectorization, in.error_eps_rel, in.error_eps_abs,
+          in.flags, in.seed, in.min_number_evaluations, in.max_number_evaluations, in_v.n_evals_per_iteration_start,
+          in_v.n_evals_per_iteration_increase, in_v.n_samples_per_batch, in_v.internal_store_grid_nr, nullptr, nullptr,
+          &out.n_eval, &out.error_flag, &out.result, &out.error, &out.chi_sq_prob);
   }
 
   void run_suave(cuba_suave_param in_s) {
-    Suave(in.n_dim, in.n_components, extern_c::cuba_f_wrap, this, in.n_points_vectorization, in.error_eps_rel,
-          in.error_eps_abs, in.flags, in.seed, in.min_number_evaluations, in.max_number_evaluations,
-          in_s.n_new_evals_each_subdivision, in_s.n_min_samples_region_threashold, in_s.flatness_parameter_p, nullptr,
-          nullptr, &out.n_regions, &out.n_eval, &out.error_flag, &out.result, &out.error, &out.chi_sq_prob);
+    Suave(in.n_dim, in.n_components, f_wrap, this, in.n_points_vectorization, in.error_eps_rel, in.error_eps_abs,
+          in.flags, in.seed, in.min_number_evaluations, in.max_number_evaluations, in_s.n_new_evals_each_subdivision,
+          in_s.n_min_samples_region_threashold, in_s.flatness_parameter_p, nullptr, nullptr, &out.n_regions,
+          &out.n_eval, &out.error_flag, &out.result, &out.error, &out.chi_sq_prob);
   }
 
   // TODO: Wrapper
@@ -175,9 +176,12 @@ class cuba_wrapper {
   //      k = 13 only for dim = 2, k = 11 only for dim = 3
   //      defaults to max key available for given dim
   void run_cuhre(int key_integration_order) {
-    Cuhre(in.n_dim, in.n_components, extern_c::cuba_f_wrap, this, in.n_points_vectorization, in.error_eps_rel,
-          in.error_eps_abs, in.flags, in.min_number_evaluations, in.max_number_evaluations, key_integration_order,
-          nullptr, nullptr, &out.n_regions, &out.n_eval, &out.error_flag, &out.result, &out.error, &out.chi_sq_prob);
+    if(in.n_dim <= 1){
+      TRIQS_RUNTIME_ERROR << "Chure only works for n_dim >= 2."
+    }
+    Cuhre(in.n_dim, in.n_components, f_wrap, this, in.n_points_vectorization, in.error_eps_rel, in.error_eps_abs,
+          in.flags, in.min_number_evaluations, in.max_number_evaluations, key_integration_order, nullptr, nullptr,
+          &out.n_regions, &out.n_eval, &out.error_flag, &out.result, &out.error, &out.chi_sq_prob);
   }
 
   cuba_output get_output() { return out; }

@@ -27,12 +27,11 @@ c = class_(
         hdf5 = False,
 )
 
-c.add_member(c_name = "f",
-             c_type = "std::function<double (std::vector<double>)>",
-             read_only= False,
-             doc = r"""""")
-
 c.add_constructor("""(std::function<double(std::vector<double>)> f_, int dim, keldy::cuba_common_param in_)""", doc = r"""""")
+
+c.add_method("""double operator() (std::vector<double> x)""",
+             name = "__call__",
+             doc = r"""""")
 
 c.add_method("""void run_vegas (keldy::cuba_vegas_param in_v)""",
              doc = r"""""")
@@ -73,39 +72,39 @@ module.add_function ("void keldy::fake_common (**keldy::cuba_common_param)", doc
 
 
 
-+-------------------------------+-------------+-----------+---------------+
-| Parameter Name                | Type        | Default   | Documentation |
-+===============================+=============+===========+===============+
-| n_dim                         | int         | --        |               |
-+-------------------------------+-------------+-----------+---------------+
-| n_components                  | int         | 1         |               |
-+-------------------------------+-------------+-----------+---------------+
-| n_points_vectorization        | int         | 1         |               |
-+-------------------------------+-------------+-----------+---------------+
-| error_eps_rel                 | double      | 1e-12     |               |
-+-------------------------------+-------------+-----------+---------------+
-| error_eps_abs                 | double      | 1e-12     |               |
-+-------------------------------+-------------+-----------+---------------+
-| flags                         | int         | 0         |               |
-+-------------------------------+-------------+-----------+---------------+
-| verbosity                     | int         | 0         |               |
-+-------------------------------+-------------+-----------+---------------+
-| use_last_sampleset_only       | bool        | false     |               |
-+-------------------------------+-------------+-----------+---------------+
-| sample_function_smoothing_off | bool        | false     |               |
-+-------------------------------+-------------+-----------+---------------+
-| store_state_after_run         | bool        | false     |               |
-+-------------------------------+-------------+-----------+---------------+
-| rng_type                      | std::string | "sobol"   |               |
-+-------------------------------+-------------+-----------+---------------+
-| seed                          | int         | 1         |               |
-+-------------------------------+-------------+-----------+---------------+
-| randlux_level                 | int         | 0         |               |
-+-------------------------------+-------------+-----------+---------------+
-| min_number_evaluations        | int         | 1000      |               |
-+-------------------------------+-------------+-----------+---------------+
-| max_number_evaluations        | int         | int(1e10) |               |
-+-------------------------------+-------------+-----------+---------------+
++-------------------------------+-------------+----------+---------------+
+| Parameter Name                | Type        | Default  | Documentation |
++===============================+=============+==========+===============+
+| n_dim                         | int         | --       |               |
++-------------------------------+-------------+----------+---------------+
+| n_components                  | int         | 1        |               |
++-------------------------------+-------------+----------+---------------+
+| n_points_vectorization        | int         | 1        |               |
++-------------------------------+-------------+----------+---------------+
+| error_eps_rel                 | double      | 1e-12    |               |
++-------------------------------+-------------+----------+---------------+
+| error_eps_abs                 | double      | 1e-12    |               |
++-------------------------------+-------------+----------+---------------+
+| flags                         | int         | 0        |               |
++-------------------------------+-------------+----------+---------------+
+| verbosity                     | int         | 0        |               |
++-------------------------------+-------------+----------+---------------+
+| use_last_sampleset_only       | bool        | false    |               |
++-------------------------------+-------------+----------+---------------+
+| sample_function_smoothing_off | bool        | false    |               |
++-------------------------------+-------------+----------+---------------+
+| store_state_after_run         | bool        | false    |               |
++-------------------------------+-------------+----------+---------------+
+| rng_type                      | std::string | "sobol"  |               |
++-------------------------------+-------------+----------+---------------+
+| seed                          | int         | 1        |               |
++-------------------------------+-------------+----------+---------------+
+| randlux_level                 | int         | 0        |               |
++-------------------------------+-------------+----------+---------------+
+| min_number_evaluations        | int         | 1000     |               |
++-------------------------------+-------------+----------+---------------+
+| max_number_evaluations        | int         | int(1e9) |               |
++-------------------------------+-------------+----------+---------------+
 """)
 
 module.add_function ("void keldy::fake_vegas (**keldy::cuba_vegas_param)", doc = r"""
@@ -117,9 +116,9 @@ module.add_function ("void keldy::fake_vegas (**keldy::cuba_vegas_param)", doc =
 +================================+======+=========+===============+
 | n_evals_per_iteration_start    | int  | 1000    |               |
 +--------------------------------+------+---------+---------------+
-| n_evals_per_iteration_increase | int  | 1000    |               |
+| n_evals_per_iteration_increase | int  | 500     |               |
 +--------------------------------+------+---------+---------------+
-| n_samples_per_batch            | int  | 500     |               |
+| n_samples_per_batch            | int  | 1000    |               |
 +--------------------------------+------+---------+---------------+
 | internal_store_grid_nr         | int  | 0       |               |
 +--------------------------------+------+---------+---------------+
@@ -132,11 +131,11 @@ module.add_function ("void keldy::fake_suave (**keldy::cuba_suave_param)", doc =
 +---------------------------------+--------+---------+---------------+
 | Parameter Name                  | Type   | Default | Documentation |
 +=================================+========+=========+===============+
-| n_new_evals_each_subdivision    | int    | 1000    |               |
+| n_new_evals_each_subdivision    | int    | 5000    |               |
 +---------------------------------+--------+---------+---------------+
-| n_min_samples_region_threashold | int    | 1000    |               |
+| n_min_samples_region_threashold | int    | 500     |               |
 +---------------------------------+--------+---------+---------------+
-| flatness_parameter_p            | double | 10.0    |               |
+| flatness_parameter_p            | double | 50.0    |               |
 +---------------------------------+--------+---------+---------------+
 """)
 
@@ -255,7 +254,7 @@ c.add_member(c_name = "min_number_evaluations",
 
 c.add_member(c_name = "max_number_evaluations",
              c_type = "int",
-             initializer = """ int(1e10) """,
+             initializer = """ int(1e9) """,
              doc = r"""""")
 
 module.add_converter(c)
@@ -272,12 +271,12 @@ c.add_member(c_name = "n_evals_per_iteration_start",
 
 c.add_member(c_name = "n_evals_per_iteration_increase",
              c_type = "int",
-             initializer = """ 1000 """,
+             initializer = """ 500 """,
              doc = r"""""")
 
 c.add_member(c_name = "n_samples_per_batch",
              c_type = "int",
-             initializer = """ 500 """,
+             initializer = """ 1000 """,
              doc = r"""""")
 
 c.add_member(c_name = "internal_store_grid_nr",
@@ -294,17 +293,17 @@ c = converter_(
 )
 c.add_member(c_name = "n_new_evals_each_subdivision",
              c_type = "int",
-             initializer = """ 1000 """,
+             initializer = """ 5000 """,
              doc = r"""""")
 
 c.add_member(c_name = "n_min_samples_region_threashold",
              c_type = "int",
-             initializer = """ 1000 """,
+             initializer = """ 500 """,
              doc = r"""""")
 
 c.add_member(c_name = "flatness_parameter_p",
              c_type = "double",
-             initializer = """ 10.0 """,
+             initializer = """ 50.0 """,
              doc = r"""""")
 
 module.add_converter(c)

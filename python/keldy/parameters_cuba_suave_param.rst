@@ -1,9 +1,9 @@
 +---------------------------------+--------+---------+---------------+
 | Parameter Name                  | Type   | Default | Documentation |
 +=================================+========+=========+===============+
-| n_new_evals_each_subdivision    | int    | 1000    |               |
+| n_new_evals_each_subdivision    | int    | 5000    |               |
 +---------------------------------+--------+---------+---------------+
-| n_min_samples_region_threashold | int    | 1000    |               |
+| n_min_samples_region_threashold | int    | 500     |               |
 +---------------------------------+--------+---------+---------------+
-| flatness_parameter_p            | double | 10.0    |               |
+| flatness_parameter_p            | double | 50.0    |               |
 +---------------------------------+--------+---------+---------------+
