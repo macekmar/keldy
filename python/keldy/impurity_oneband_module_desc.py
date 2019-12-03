@@ -203,15 +203,6 @@ c.add_method("""keldy::impurity_oneband::integrand_g_kernel::result_t operator()
 
 module.add_class(c)
 
-# The class new_class
-c = class_(
-        py_type = "NewClass",  # name of the python class
-        c_type = "keldy::new_class",   # name of the C++ class
-        doc = r"""""",   # doc of the C++ class
-        hdf5 = False,
-)
-
-module.add_class(c)
 
 # The class sobol
 c = class_(
