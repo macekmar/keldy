@@ -3,16 +3,18 @@
 #include <triqs/test_tools/gfs.hpp>
 #include <itertools/itertools.hpp>
 #include <boost/math/special_functions/erf.hpp>
+#include <boost/math/constants/constants.hpp>
 
 using namespace keldy;
 
 // Note: These are just tests of the wrapping, not integragtor benchmarks.
 
 double gaussian(std::vector<double> times) {
+  using namespace boost::math::double_constants;
   double result = 1.0;
   for (auto const &[i, t] : itertools::enumerate(times)) {
     double two_var = 2.0 / std::pow(2, i);
-    result *= std::exp(-std::pow(t - 0.5, 2) / two_var) / std::sqrt(M_PI * two_var);
+    result *= std::exp(-std::pow(t - 0.5, 2) / two_var) / std::sqrt(pi * two_var);
   }
   return result;
 }

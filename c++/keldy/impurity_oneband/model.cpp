@@ -24,7 +24,7 @@
 #include <triqs/gfs.hpp>
 #include <boost/math/special_functions/expint.hpp>
 
-double const pi = 3.1415926535897932384626433832795028841971693993751058209749;
+// double const pi = 3.1415926535897932384626433832795028841971693993751058209749;
 
 namespace keldy::impurity_oneband {
 
@@ -174,6 +174,8 @@ void g0_model::make_flat_band_analytic() {
   gf<retime, scalar_valued> g0_greater_up{time_mesh};
 
   auto const g0_lesser_values = [this](time_real_t time) -> dcomplex {
+    using namespace boost::math::double_constants;
+
     auto const Gt = param_.Gamma * time;
     auto const real_part =
        (Gt == 0) ? 0.0 : (std::exp(Gt) * boost::math::expint(-Gt) - std::exp(-Gt) * boost::math::expint(Gt)) / (2 * pi);

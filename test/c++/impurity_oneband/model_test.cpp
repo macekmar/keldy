@@ -2,11 +2,12 @@
 #include <triqs/test_tools/gfs.hpp>
 //#include <cmath>
 #include <boost/math/special_functions/expint.hpp>
+#include <boost/math/constants/constants.hpp>
 
 using namespace keldy;
 using namespace keldy::impurity_oneband;
 
-double const pi = 3.1415926535897932384626433832795028841971693993751058209749;
+// double const pi = 3.1415926535897932384626433832795028841971693993751058209749;
 
 TEST(g0_model, Initialize_flatband) { // NOLINT
   model_param_t params;
@@ -49,6 +50,7 @@ TEST(g0_model, Values) { // NOLINT
   g0_model g0{params};
 
   auto g0_less_expected = [](double t1, double t2) -> dcomplex {
+    using namespace boost::math::double_constants;
     auto Gt = 1.0 * (t1 - t2); // = Gamma * (t1 - t2)
     auto real_part =
        (Gt == 0) ? 0.0 : (std::exp(Gt) * boost::math::expint(-Gt) - std::exp(-Gt) * boost::math::expint(Gt)) / (2 * pi);
