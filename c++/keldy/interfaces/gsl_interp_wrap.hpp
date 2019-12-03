@@ -24,6 +24,7 @@
 
 #include <gsl/gsl_interp.h>
 #include <gsl/gsl_spline.h>
+#include <triqs/utility/first_include.hpp>
 #include <triqs/gfs.hpp>
 
 namespace keldy::details {

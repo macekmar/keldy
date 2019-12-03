@@ -24,10 +24,11 @@
 
 #include <string>
 #include <gsl/gsl_rng.h>
+#include <triqs/utility/first_include.hpp>
 
 namespace keldy {
 
-class gsl_rng_wrapper_t {
+class CPP2PY_IGNORE gsl_rng_wrapper_t {
   gsl_rng *rng;
 
  public:
