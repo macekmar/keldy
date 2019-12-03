@@ -100,19 +100,19 @@ class cuba_wrapper {
   integrand_t f_wrap = [](const int *ndim, const cubareal x[], const int *, cubareal result[], void *userdata) -> int {
     auto this_ptr = static_cast<cuba_wrapper *>(userdata);
     auto v = std::vector(x, x + *ndim);
-    result[0] = this_ptr->f(v);
+    result[0] = this_ptr->f_(v);
     return 0;
   };
-  std::function<double(std::vector<double>)> f;
+  std::function<double(std::vector<double>)> f_;
 
   cuba_common_param in;
   cuba_output out{};
 
  public:
-  double operator()(std::vector<double> x) { return f(x); }
+  double operator()(std::vector<double> x) { return f_(x); }
 
-  cuba_wrapper(std::function<double(std::vector<double>)> f_, int dim, cuba_common_param in_)
-     : f(std::move(f_)), in(std::move(in_)) {
+  cuba_wrapper(std::function<double(std::vector<double>)> f, int dim, cuba_common_param in_)
+     : f_(std::move(f)), in(std::move(in_)) {
 
     in.n_dim = dim;
     in.n_components = 1;
@@ -176,8 +176,8 @@ class cuba_wrapper {
   //      k = 13 only for dim = 2, k = 11 only for dim = 3
   //      defaults to max key available for given dim
   void run_cuhre(int key_integration_order) {
-    if(in.n_dim <= 1){
-      TRIQS_RUNTIME_ERROR << "Chure only works for n_dim >= 2."
+    if (in.n_dim <= 1) {
+      TRIQS_RUNTIME_ERROR << "Chure only works for n_dim >= 2.";
     }
     Cuhre(in.n_dim, in.n_components, f_wrap, this, in.n_points_vectorization, in.error_eps_rel, in.error_eps_abs,
           in.flags, in.min_number_evaluations, in.max_number_evaluations, key_integration_order, nullptr, nullptr,
