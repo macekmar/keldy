@@ -97,9 +97,14 @@ class g0_model {
 
   explicit g0_model(model_param_t const &parameters, bool with_leads);
 
+  /// make dot g0
   void make_semicircular_model();
   void make_flat_band();
   void make_flat_band_analytic();
+
+  /// make dot-lead g0
+  void make_semicircular_hybrid();
+  void make_flat_band_hybrid();
 
   model_param_t param_; // g0_keldysh_contour_t will need access to alpha
   bool const contain_leads;

@@ -136,6 +136,22 @@ class compute_charge_Q_direct_cuba : public cuba_wrapper {
                     order, std::move(in)} {}
 };
 
+// Class to compute the current = hbar*i / (2*m*a) * < d^\dagger_{up}(t) c_{up}(t) > + c.c.
+class compute_current_J_direct : public integrator<dcomplex, integrand_g_direct, warper_plasma_simple_t> {
+ public:
+  compute_current_J_direct(model_param_t params, double time, int order, std::string warper_function_name,
+                           int nr_sample_points_warper)
+     : integrator{dcomplex{0},
+                  integrand_g_direct{g0_keldysh_contour_t{g0_model{params, true}}, gf_index_t{time, up, forward, 0, 1},
+                                     gf_index_t{time, up, backward, 0, 0}},
+                  warper_plasma_simple_t{time},
+                  order,
+                  "sobol",
+                  0} {
+    warper = {scalar_warper_function_factory(warper_function_name, integrand, time), time, nr_sample_points_warper};
+  }
+};
+
 // ******************************************************************************************************************************************************
 // Kernal Method
 

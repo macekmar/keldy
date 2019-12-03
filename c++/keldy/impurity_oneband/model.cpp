@@ -103,11 +103,33 @@ void g0_model::make_semicircular_model() {
     return array<dcomplex, 2>{{gr + temp, temp}, {temp2, -conj(gr) + temp}};
   };
 
+  // For one lead
+  auto G0_dc_w = [&](double omega, double mu) {
+    auto g = G0_dd_w(omega);                                 // dot free function at omega.
+    auto delta_r = param_.Gamma * sigma_linear_chain(omega); // both chains are the same
+    auto delta_01 = -2_j * imag(delta_r) * nFermi(omega - mu);
+    auto delta_10 = 2_j * imag(delta_r) * (1 - nFermi(omega - mu));
+    auto delta_00 = delta_r + delta_01;
+    auto delta_11 = delta_10 - delta_r;
+    auto gdc00 = (g(0, 0) * delta_00 - g(0, 1) * delta_10);
+    auto gdc01 = (g(0, 0) * delta_01 - g(0, 1) * delta_11);
+    auto gdc10 = (g(1, 0) * delta_00 - g(1, 1) * delta_10);
+    auto gdc11 = (g(1, 0) * delta_01 - g(1, 1) * delta_11);
+    return array<dcomplex, 2>{{0_j, gdc01}, {gdc10, 0_j}};
+    //  return array<dcomplex, 2>{{gdc00, gdc01}, {gdc10, gdc11}};
+  };
+
   for (auto w : freq_mesh) {
     auto g0_dd = G0_dd_w(w);
 
     g0_lesser_omega[w](0, 0) = g0_dd(0, 1);
     g0_greater_omega[w](0, 0) = g0_dd(1, 0);
+
+    auto g0_dc = G0_dc_w(w, param_.bias_V / 2); // we only need the left lead GF to calculate the current
+    g0_lesser_omega[w](0, 1) = g0_dc(0, 1);
+    g0_greater_omega[w](0, 1) = g0_dc(1, 0);
+    g0_lesser_omega[w](1, 0) = -std::conj(g0_lesser_omega[w](0, 1));
+    g0_greater_omega[w](1, 0) = -std::conj(g0_greater_omega[w](0, 1));
   }
 
   gf<retime, matrix_valued> g0_lesser_up = make_gf_from_fourier(g0_lesser_omega, time_mesh);
@@ -127,8 +149,8 @@ void g0_model::make_flat_band() {
   gf<refreq, matrix_valued> g0_lesser_omega{freq_mesh, {2, 2}};
   gf<refreq, matrix_valued> g0_greater_omega{freq_mesh, {2, 2}};
 
-  // Define local Fermi funciton; reads in beta
-  auto nFermi = [&](double omega) {
+  // Define local Fermi function; reads in beta
+  auto nFermi = [this](double omega) {
     if (omega > 0) {
       auto y = std::exp(-param_.beta * omega);
       return y / (1. + y);
@@ -136,38 +158,39 @@ void g0_model::make_flat_band() {
     return 1.0 / (std::exp(param_.beta * omega) + 1);
   };
 
-  auto G0_dd_w = [&](double w) {
+  auto g0_reta_dot = [this](double omega) { return 1.0 / (omega - param_.eps_d + 1_j * param_.Gamma); };
+
+  auto g0_kine_dot = [this, &nFermi, &g0_reta_dot](double omega) {
+    auto R = g0_reta_dot(omega);
+    return 2_j * R * (nFermi(omega - param_.bias_V / 2) + nFermi(omega + param_.bias_V / 2) - 1.) * param_.Gamma
+       * std::conj(R);
+  };
+
+  // For one lead
+  auto G0_dc_w = [this, &nFermi](double w) {
     double we = w - param_.eps_d;
-    auto R = 0.5 / (we + 1_j * param_.Gamma);
-    auto A = 0.5 / (we - 1_j * param_.Gamma);
+    auto R = -0.5_j * param_.Gamma / (we + 1_j * param_.Gamma);
+    auto A = 0.5_j * param_.Gamma / (we - 1_j * param_.Gamma);
     auto K = 1_j * param_.Gamma / (we * we + param_.Gamma * param_.Gamma)
-       * (nFermi(w - param_.bias_V / 2) + nFermi(w + param_.bias_V / 2) - 1.);
+       * (we * (2 * nFermi(w - param_.bias_V / 2) - 1)
+          + 1_j * param_.Gamma * (nFermi(w + param_.bias_V / 2) - nFermi(w - param_.bias_V / 2)));
     return array<dcomplex, 2>{{K + R + A, K - R + A}, {K + R - A, K - R - A}};
   };
 
-  //// For one lead
-  //auto G0_dc_w = [&](double w) {
-  // double we = w - epsilon_d;
-  // auto R = -0.5_j * Gamma / (we + 1_j * Gamma);
-  // auto A = 0.5_j * Gamma / (we - 1_j * Gamma);
-  // auto K = 1_j * Gamma / (we * we + Gamma * Gamma) *
-  //          (we * (2 * nf(w - muL) - 1) + 1_j * Gamma * (nf(w - muR) - nf(w - muL)));
-  // return array<dcomplex, 2>{{K + R + A, K - R + A}, {K + R - A, K - R - A}};
-  //};
-
   for (auto w : freq_mesh) {
-    auto g0_dd = G0_dd_w(w);
+    auto R = g0_reta_dot(w);
+    auto A = std::conj(R);
+    auto K = g0_kine_dot(w);
 
-    g0_lesser_omega[w](0, 0) = g0_dd(0, 1);
-    g0_greater_omega[w](0, 0) = g0_dd(1, 0);
+    g0_lesser_omega[w](0, 0) = (K - R + A) / 2;
+    g0_greater_omega[w](0, 0) = (K + R - A) / 2;
 
-    // g0_lesser_omega[w] = 1_j * param_.Gamma * (nFermi(w + param_.bias_V / 2) + nFermi(w - param_.bias_V / 2))
-    //    / ((w - param_.eps_d) * (w - param_.eps_d) + std::pow(param_.Gamma, 2));
-    // // g0_lesser_omega()[down] = g0_lesser_omega()[up];
-
-    // g0_greater_omega[w] = 1_j * param_.Gamma * (nFermi(w + param_.bias_V / 2) + nFermi(w - param_.bias_V / 2) - 2)
-    //    / ((w - param_.eps_d) * (w - param_.eps_d) + std::pow(param_.Gamma, 2));
-    // // g0_greater_omega(w)[down] = g0_lesser_omega(w)[up];
+    if (contain_leads) {
+      g0_lesser_omega[w](0, 1) = G0_dc_w(w)(0, 1);
+      g0_greater_omega[w](0, 1) = G0_dc_w(w)(1, 0);
+      g0_lesser_omega[w](1, 0) = -std::conj(g0_lesser_omega[w](0, 1));
+      g0_greater_omega[w](1, 0) = -std::conj(g0_greater_omega[w](0, 1));
+    }
   }
 
   gf<retime, matrix_valued> g0_lesser_up = make_gf_from_fourier(g0_lesser_omega, time_mesh);
@@ -183,6 +206,10 @@ void g0_model::make_flat_band_analytic() {
   if (param_.beta >= 0 || param_.bias_V != 0. || param_.eps_d != 0. || param_.alpha != 0.) {
     TRIQS_RUNTIME_ERROR
        << "Analytic flatband covers only the following parameters: beta=-1 (zero temperature), bias_V=0, eps_d=0, alpha=0.";
+  }
+
+  if (contain_leads) {
+    TRIQS_RUNTIME_ERROR << "No analytic formula for dot-lead Green's functions.";
   }
 
   auto const time_mesh = gf_mesh<retime>({-param_.time_max, param_.time_max, param_.nr_time_points_gf});
