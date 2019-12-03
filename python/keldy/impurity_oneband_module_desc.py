@@ -304,6 +304,10 @@ c = class_(
 
 c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, std::string gsl_rng_name)""", doc = r"""""")
 
+c.add_method("""double operator() (std::vector<double> x)""",
+             name = "__call__",
+             doc = r"""""")
+
 c.add_method("""double get_result ()""",
              doc = r"""""")
 

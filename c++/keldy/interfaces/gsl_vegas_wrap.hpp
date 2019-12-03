@@ -29,12 +29,6 @@
 
 namespace keldy {
 
-namespace extern_c {
-extern "C" {
-double gsl_vegas_wrapper_t_f_wrap(double x[], size_t dim, void *p);
-}
-} // namespace extern_c
-
 struct gsl_monte_vegas_params_wrap {
   double alpha;
   size_t iterations;
@@ -44,10 +38,17 @@ struct gsl_monte_vegas_params_wrap {
 };
 
 class gsl_vegas_wrapper_t {
- public:
-  std::function<double(std::vector<double>)> f_; // must make public for c interface hack
-
  private:
+  using gsl_integrand_t = double (*)(double *, size_t, void *);
+
+  gsl_integrand_t f_wrap = [](double x[], size_t dim, void *p) -> double {
+    auto this_ptr = static_cast<gsl_vegas_wrapper_t *>(p);
+    auto v = std::vector(x, x + dim);
+    return this_ptr->f_(v);
+  };
+
+  std::function<double(std::vector<double>)> f_;
+
   int dim_;
 
   gsl_monte_vegas_state *mc_state;
@@ -69,10 +70,12 @@ class gsl_vegas_wrapper_t {
     mc_state = gsl_monte_vegas_alloc(dim_);
 
     // Defines Interface for function
-    gsl_func.f = &extern_c::gsl_vegas_wrapper_t_f_wrap;
+    gsl_func.f = f_wrap;
     gsl_func.dim = dim_;
     gsl_func.params = (void *)this;
   }
+
+  double operator()(std::vector<double> x) { return f_(x); }
 
   double get_result() { return result; }
 

@@ -27,12 +27,11 @@ c = class_(
         hdf5 = False,
 )
 
-c.add_member(c_name = "f_",
-             c_type = "std::function<double (std::vector<double>)>",
-             read_only= False,
-             doc = r"""""")
-
 c.add_constructor("""(std::function<double(std::vector<double>)> f, int dim, double hypercube_extent, std::string gsl_rng_name)""", doc = r"""""")
+
+c.add_method("""double operator() (std::vector<double> x)""",
+             name = "__call__",
+             doc = r"""""")
 
 c.add_method("""double get_result ()""",
              doc = r"""""")
