@@ -37,6 +37,21 @@ TEST(ComputeObs, Initialize2) { // NOLINT
   std::cout << computer.reduce_nr_points_run() << std::endl;
 }
 
+TEST(ComputeObs, Initialize_current) { // NOLINT
+  model_param_t params;
+  // TRIQS_PRINT(params.bath_type);
+  compute_current_J_direct computer(params, 10.0, 4, "first_order", 1000);
+
+  // tests
+  // model_param_t params, double time, int order, std::string const &warper_function_name, int nr_sample_points_ansatz
+  // run
+  computer.run(10);
+  //
+
+  std::cout << computer.reduce_result() << std::endl;
+  std::cout << computer.reduce_nr_points_run() << std::endl;
+}
+
 auto i_to_the_n = std::vector<dcomplex>{1, 1_j, -1, -1_j};
 
 TEST(ComputeObs, Value1) { // NOLINT
