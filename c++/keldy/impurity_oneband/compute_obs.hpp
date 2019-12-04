@@ -121,7 +121,7 @@ class compute_charge_Q_direct_gsl_vegas : public gsl_vegas_wrapper_t {
   compute_charge_Q_direct_gsl_vegas(model_param_t params, double time, int order, std::string gsl_rng_name)
      : gsl_vegas_wrapper_t{
         adapt_integrand{time,
-                        integrand_g_direct{g0_keldysh_contour_t{g0_model{params}}, gf_index_t{time, up, forward},
+                        integrand_g_direct{g0_keldysh_contour_t{g0_model{params, false}}, gf_index_t{time, up, forward},
                                            gf_index_t{time, up, backward}}},
         order, 1.0, gsl_rng_name} {}
 };
@@ -131,7 +131,7 @@ class compute_charge_Q_direct_cuba : public cuba_wrapper {
  public:
   compute_charge_Q_direct_cuba(model_param_t params, double time, int order, cuba_common_param in)
      : cuba_wrapper{adapt_integrand{time,
-                                    integrand_g_direct{g0_keldysh_contour_t{g0_model{params}},
+                                    integrand_g_direct{g0_keldysh_contour_t{g0_model{params, false}},
                                                        gf_index_t{time, up, forward}, gf_index_t{time, up, backward}}},
                     order, std::move(in)} {}
 };
