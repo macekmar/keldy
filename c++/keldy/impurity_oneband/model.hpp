@@ -102,10 +102,6 @@ class g0_model {
   void make_flat_band();
   void make_flat_band_analytic();
 
-  /// make dot-lead g0
-  void make_semicircular_hybrid();
-  void make_flat_band_hybrid();
-
   model_param_t param_; // g0_keldysh_contour_t will need access to alpha
   bool const contain_leads;
 };
