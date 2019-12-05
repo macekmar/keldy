@@ -46,7 +46,7 @@ class sparse_kernel_binner {
   std::vector<std::pair<gf_index_t, dcomplex>> data{};
 
   void bin_data(std::pair<gf_index_t, dcomplex> const &in) {
-    auto loc = std::find_if(std::begin(data), std::end(data), [&in](auto &el) { return el.first == in.first; });
+    auto loc = std::find_if(std::begin(data), std::end(data), [&in](auto &el) { return equivalent_wihtout_timesplit(el.first, in.first); });
     if (loc != std::end(data)) {
       (*loc).second += in.second;
     } else {
@@ -117,13 +117,13 @@ class kernel_binner {
   /// Includes boundary points, so t_min <= t <= t_max. t_max gets put in last bin
   // CHECK THIS TO BE CORRECT!
   void accumulate(gf_index_t const &a, dcomplex value) {
-    if (t_min <= a.time && a.time < t_max) {
-      int bin = int((a.time - t_min) / bin_size);
-      values(bin, a.k_idx) += value;
-      nr_values(bin, a.k_idx)++;
-    } else if (a.time == t_max) {
-      values(n_bins - 1, a.k_idx) += value;
-      nr_values(n_bins - 1, a.k_idx)++;
+    if (t_min <= a.contour.time && a.contour.time < t_max) {
+      int bin = int((a.contour.time - t_min) / bin_size);
+      values(bin, a.contour.k_idx) += value;
+      nr_values(bin, a.contour.k_idx)++;
+    } else if (a.contour.time == t_max) {
+      values(n_bins - 1, a.contour.k_idx) += value;
+      nr_values(n_bins - 1, a.contour.k_idx)++;
     } else {
       nr_point_dropped++;
     }

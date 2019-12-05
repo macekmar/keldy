@@ -48,42 +48,48 @@ class CPP2PY_IGNORE model_param_t {
 // fake function to get cpp2py to create adaptor for model_param_t
 CPP2PY_ARG_AS_DICT inline void fake(model_param_t const &temp){};
 
-/// Point of the Contour Keldysh Green Function (time, spin, keldysh_idx)
-class gf_index_t {
+/// Point of the Keldysh Contour (time, keldysh_idx, timesplit)
+class contour_pt_t {
  public:
-  // time / contour related:
   time_real_t time{};
   keldysh_idx_t k_idx = forward;
   int timesplit_n = 0; // time-spliting order to dinstiguish vertices at equal times
 
+  [[nodiscard]] bool operator==(const contour_pt_t &other) const {
+    return (time == other.time) && (k_idx == other.k_idx) && (timesplit_n == other.timesplit_n);
+  }
+};
+
+[[nodiscard]] int compare_3way(const contour_pt_t &lhs, const contour_pt_t &rhs);
+
+/// Index of the Keldysh Green Function
+class gf_index_t {
+ public:
+  contour_pt_t contour{};
   spin_t spin = up;
   orbital_t orbital = 0;
 
   /// Constructor: (time, spin, keldysh_idx)
   //TODO: how to deal with optionnal parameters? (Corentin)
   gf_index_t() = default;
-  gf_index_t(time_real_t time_, int spin_, int k_idx_)
-     : time(time_), k_idx(keldysh_idx_t(k_idx_)), spin(spin_t(spin_)), orbital(0) {}
+  gf_index_t(time_real_t time_, int spin_, int k_idx_) : contour{time_, keldysh_idx_t(k_idx_)}, spin(spin_t(spin_)) {}
   gf_index_t(time_real_t time_, int spin_, int k_idx_, int timesplit_n_)
-     : time(time_), k_idx(keldysh_idx_t(k_idx_)), timesplit_n(timesplit_n_), spin(spin_t(spin_)) {}
+     : contour{time_, keldysh_idx_t(k_idx_), timesplit_n_}, spin(spin_t(spin_)) {}
   gf_index_t(time_real_t time_, int spin_, int k_idx_, int timesplit_n_, int orbital_)
-     : time(time_),
-       k_idx(keldysh_idx_t(k_idx_)),
-       timesplit_n(timesplit_n_),
-       spin(spin_t(spin_)),
-       orbital(orbital_t(orbital_)) {}
+     : contour{time_, keldysh_idx_t(k_idx_), timesplit_n_}, spin(spin_t(spin_)), orbital(orbital_t(orbital_)) {}
 };
 
 /// Define a total ordering over gf_index_t values. Useful for sorting.
 bool operator<(gf_index_t const &a, gf_index_t const &b);
 
 // no time-split comparison in equality
-inline bool operator==(const gf_index_t& lhs, const gf_index_t& rhs){
-  return (lhs.time == rhs.time) && (lhs.k_idx == rhs.k_idx) && (lhs.spin == rhs.spin) && (lhs.orbital == rhs.orbital);
+inline bool equivalent_wihtout_timesplit(const gf_index_t &lhs, const gf_index_t &rhs) {
+  return (lhs.contour.time == rhs.contour.time) && (lhs.contour.k_idx == rhs.contour.k_idx)
+     && (lhs.spin == rhs.spin) && (lhs.orbital == rhs.orbital);
 }
 
 inline std::ostream &operator<<(std::ostream &os, gf_index_t const &m) {
-  return os << "{" << m.time << ", " << m.k_idx << ", " << m.spin << ", " << m.orbital << "}";
+  return os << "{" << m.contour.time << ", " << m.contour.k_idx << ", " << m.spin << ", " << m.orbital << "}";
 }
 
 /// Defines model throuh non-interacting Green function g_lesser / g_greater

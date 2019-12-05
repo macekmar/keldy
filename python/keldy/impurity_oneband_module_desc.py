@@ -28,11 +28,11 @@ using namespace keldy::impurity_oneband;
 module.add_enum("spin_t", ['spin_t::up', 'spin_t::down'], "keldy", doc = r"""""")
 module.add_enum("keldysh_idx_t", ['keldysh_idx_t::forward', 'keldysh_idx_t::backward'], "keldy", doc = r"""""")
 
-# The class gf_index_t
+# The class contour_pt_t
 c = class_(
-        py_type = "GfIndexT",  # name of the python class
-        c_type = "keldy::impurity_oneband::gf_index_t",   # name of the C++ class
-        doc = r"""Point of the Contour Keldysh Green Function (time, spin, keldysh_idx)""",   # doc of the C++ class
+        py_type = "TimeIdxT",  # name of the python class
+        c_type = "keldy::impurity_oneband::contour_pt_t",   # name of the C++ class
+        doc = r"""""",   # doc of the C++ class
         hdf5 = False,
 )
 
@@ -48,6 +48,21 @@ c.add_member(c_name = "k_idx",
 
 c.add_member(c_name = "timesplit_n",
              c_type = "int",
+             read_only= True,
+             doc = r"""""")
+
+module.add_class(c)
+
+# The class gf_index_t
+c = class_(
+        py_type = "GfIndexT",  # name of the python class
+        c_type = "keldy::impurity_oneband::gf_index_t",   # name of the C++ class
+        doc = r"""Point of the Contour Keldysh Green Function (time, spin, keldysh_idx)""",   # doc of the C++ class
+        hdf5 = False,
+)
+
+c.add_member(c_name = "contour",
+             c_type = "keldy::impurity_oneband::contour_pt_t",
              read_only= True,
              doc = r"""""")
 
@@ -102,7 +117,7 @@ c.add_member(c_name = "contain_leads",
 c.add_constructor("""(keldy::impurity_oneband::model_param_t parameters, bool with_leads)""", doc = r"""""")
 
 c.add_method("""void make_semicircular_model ()""",
-             doc = r"""""")
+             doc = r"""make dot g0""")
 
 c.add_method("""void make_flat_band ()""",
              doc = r"""""")
@@ -220,7 +235,6 @@ c.add_method("""keldy::impurity_oneband::integrand_g_kernel::result_t operator()
              doc = r"""""")
 
 module.add_class(c)
-
 
 # The class sobol
 c = class_(
@@ -577,7 +591,7 @@ c = converter_(
 )
 c.add_member(c_name = "n_dim",
              c_type = "int",
-             initializer = """  """,
+             initializer = """ 0 """,
              doc = r"""""")
 
 c.add_member(c_name = "n_components",
@@ -647,7 +661,7 @@ c.add_member(c_name = "min_number_evaluations",
 
 c.add_member(c_name = "max_number_evaluations",
              c_type = "int",
-             initializer = """ int(1e10) """,
+             initializer = """ int(1e9) """,
              doc = r"""""")
 
 module.add_converter(c)
@@ -664,12 +678,12 @@ c.add_member(c_name = "n_evals_per_iteration_start",
 
 c.add_member(c_name = "n_evals_per_iteration_increase",
              c_type = "int",
-             initializer = """ 1000 """,
+             initializer = """ 500 """,
              doc = r"""""")
 
 c.add_member(c_name = "n_samples_per_batch",
              c_type = "int",
-             initializer = """ 500 """,
+             initializer = """ 1000 """,
              doc = r"""""")
 
 c.add_member(c_name = "internal_store_grid_nr",

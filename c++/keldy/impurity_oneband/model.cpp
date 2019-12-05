@@ -28,27 +28,72 @@
 
 namespace keldy::impurity_oneband {
 
+/// Time ordering along the Keldysh Basis:
+///
+/// 3-way compare (spaceship): a <=> b:
+/// (a <=> b) < 0  if a < b
+/// (a <=> b) > 0  if a > b
+/// (a <=> b) == 0 if a == b
+///
+/// Mapping takes care of correct keldysh ordering [0 = forward contour; 1 = backward contour]
+///  a    b    (a.time > b.time)   L/G      a <=> b
+///  0    0           1             G       a  >  b
+///  0    0           0             L       a  <  b
+///  1    1           1             L       a  >  b
+///  1    1           0             G       a  >  b
+///
+///  0    1           *             L       a  <  b
+///  1    0           *             G       a  >  b
+///
+/// At equal times and Keldysh index we need to point-split times according to external integer (time-ordering).
+/// For self contractions (no external ordering), use $g^< \sim c^\dag c$ since this is normal ordering defined by V
+int compare_3way(const contour_pt_t &a, const contour_pt_t &b) {
+  int k_idx_3way = a.k_idx - b.k_idx;
+  if (k_idx_3way != 0) {
+    return k_idx_3way;
+  }
+  auto time_3way = a.time - b.time;
+  if (time_3way != 0.0) {
+    return int(1 - 2 * int(a.k_idx)) * (2 * int(!std::signbit(time_3way)) - 1);
+  }
+  return (1 - 2 * int(a.k_idx)) * (a.timesplit_n - b.timesplit_n);
+}
+
 bool operator<(gf_index_t const &a, gf_index_t const &b) {
-  // First order on the time contour
-  if (a.k_idx != b.k_idx) {
-    return (a.k_idx < b.k_idx);
+  // First: order on the time contour
+  int contour_3way = compare_3way(a.contour, b.contour);
+  if (contour_3way != 0) {
+    return contour_3way < 0;
   }
-
-  if (a.time != b.time) {
-    return (a.k_idx == forward) ? a.time < b.time : -a.time < -b.time;
-  }
-
-  if (a.timesplit_n != b.timesplit_n) {
-    return (a.k_idx == forward) ? a.timesplit_n < b.timesplit_n : -a.timesplit_n < -b.timesplit_n;
-  }
-
-  // then use orbital indices
+  // Second: order orbital indices
   if (a.orbital != b.orbital) {
     return (a.orbital < b.orbital);
   }
-
+  // Third: order spin
   return a.spin < b.spin;
 }
+
+// bool operator<(gf_index_t const &a, gf_index_t const &b) {
+//   // First order on the time contour
+//   if (a.k_idx != b.k_idx) {
+//     return (a.k_idx < b.k_idx);
+//   }
+
+//   if (a.time != b.time) {
+//     return (a.k_idx == forward) ? a.time < b.time : -a.time < -b.time;
+//   }
+
+//   if (a.timesplit_n != b.timesplit_n) {
+//     return (a.k_idx == forward) ? a.timesplit_n < b.timesplit_n : -a.timesplit_n < -b.timesplit_n;
+//   }
+
+//   // then use orbital indices
+//   if (a.orbital != b.orbital) {
+//     return (a.orbital < b.orbital);
+//   }
+
+//   return a.spin < b.spin;
+// }
 
 g0_model::g0_model(model_param_t const &parameters, bool with_leads) : param_(parameters), contain_leads(with_leads) {
   if (param_.bath_type == "semicircle") {
@@ -240,44 +285,20 @@ void g0_model::make_flat_band_analytic() {
 // *****
 
 /// Adaptor: return $g^{ab}(t,t')$ in contour basis from $g^<, g^>$ functions
-/// Mapping takes care of correct keldysh ordering [0 = forward contour; 1 = backward contour]
-///  a    b    (a.time > b.time)   L/G ?
-///  0    0           1             G
-///  0    0           0             L
-///  1    1           1             L
-///  1    1           0             G
-///
-///  0    1           *             L
-///  1    0           *             G
-///
-/// At equal times and Keldysh index we need to point-split times according to external integer (time-ordering).
-/// For self contractions (no external ordering), use $g^< \sim c^\dag c$ since this is normal ordering defined by V
 dcomplex g0_keldysh_contour_t::operator()(gf_index_t const &a, gf_index_t const &b, bool internal_point) const {
   if (a.spin != b.spin) {
     return 0.0; //  g0 is diagonal in spin
   }
+  int time_order = compare_3way(a.contour, b.contour);
 
-  // Takes care of 01 & 10 case
-  bool is_greater = a.k_idx;
-
-  if (a.k_idx == b.k_idx) {
-    if (a.time != b.time) { // generic case (table above)
-      is_greater = a.k_idx xor (a.time > b.time);
-    } else {
-      // Need to time split from external ordering unless it is a self-contraction (tadpole)
-      if (a.timesplit_n != b.timesplit_n) {
-        is_greater = a.k_idx xor (a.timesplit_n > b.timesplit_n);
-      } else {
-        // if internal index use alpha. Else use from external
-        return model.g0_lesser[a.spin](0.0)(0, 0) - static_cast<long>(internal_point) * 1_j * model.param_.alpha;
-      }
-    }
+  if (time_order > 0) {
+    return model.g0_greater[a.spin](a.contour.time - b.contour.time)(0, 0);
   }
-
-  if (is_greater) {
-    return model.g0_greater[a.spin](a.time - b.time)(0, 0);
+  if (time_order < 0) {
+    return model.g0_lesser[a.spin](a.contour.time - b.contour.time)(0, 0);
   }
-  return model.g0_lesser[a.spin](a.time - b.time)(0, 0);
+  // if at equal contour points (incl. time-ss\plit)
+  return model.g0_lesser[a.spin](0.0)(0, 0) - static_cast<int>(internal_point) * 1_j * model.param_.alpha;
 }
 
 } // namespace keldy::impurity_oneband

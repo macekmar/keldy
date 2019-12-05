@@ -59,8 +59,8 @@ sparse_kernel_binner integrand_g_kernel::operator()(std::vector<double> const &t
   auto a = g_idx_X; // This is now a dummy index
   auto b = g_idx_X;
   // define time-splitting for external-points
-  a.timesplit_n = order_n;
-  b.timesplit_n = order_n;
+  a.contour.timesplit_n = order_n;
+  b.contour.timesplit_n = order_n;
 
   // Pre-Comute Large Matrix.
   // "s1": Same spin as external indices / "s2": Opposite spin

@@ -55,8 +55,8 @@ dcomplex integrand_g_direct::operator()(std::vector<double> const &times) const 
   auto a = external_A;
   auto b = external_B;
   // define time-splitting for external-points
-  a.timesplit_n = order_n;
-  b.timesplit_n = order_n;
+  a.contour.timesplit_n = order_n;
+  b.contour.timesplit_n = order_n;
 
   if (order_n == 0) {
     return g0(a, b, false);
@@ -162,8 +162,8 @@ dcomplex integrand_g_direct_grey(gf_index_t a, gf_index_t b, g0_keldysh_contour_
   }
 
   // define time-splitting for external-points
-  a.timesplit_n = order_n;
-  b.timesplit_n = order_n;
+  a.contour.timesplit_n = order_n;
+  b.contour.timesplit_n = order_n;
 
   if (order_n == 0) {
     return g0(a, b, false);
@@ -212,8 +212,8 @@ dcomplex integrand_g_direct_grey(gf_index_t a, gf_index_t b, g0_keldysh_contour_
     parity = -parity;
 
     // implicit cast
-    current_config_1[nlc].k_idx = keldysh_idx_t(1 - current_config_1[nlc].k_idx);
-    current_config_2[nlc].k_idx = keldysh_idx_t(1 - current_config_2[nlc].k_idx);
+    current_config_1[nlc].contour.k_idx = keldysh_idx_t(1 - current_config_1[nlc].contour.k_idx);
+    current_config_2[nlc].contour.k_idx = keldysh_idx_t(1 - current_config_2[nlc].contour.k_idx);
 
     // Connect to External Vertices
     wick_matrix_s1(order_n, nlc) = g0(a, current_config_1[nlc]);
