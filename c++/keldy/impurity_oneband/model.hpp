@@ -69,7 +69,7 @@ class gf_index_t {
 bool operator<(gf_index_t const &a, gf_index_t const &b);
 
 // no time-split comparison in equality
-inline bool equivalent_wihtout_timesplit(const gf_index_t &lhs, const gf_index_t &rhs) {
+inline bool equivalent_without_timesplit(const gf_index_t &lhs, const gf_index_t &rhs) {
   return (lhs.contour.time == rhs.contour.time) && (lhs.contour.k_idx == rhs.contour.k_idx) && (lhs.spin == rhs.spin)
      && (lhs.orbital == rhs.orbital);
 }
