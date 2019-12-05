@@ -31,7 +31,7 @@ module.add_enum("keldysh_idx_t", ['keldysh_idx_t::forward', 'keldysh_idx_t::back
 # The class contour_pt_t
 c = class_(
         py_type = "TimeIdxT",  # name of the python class
-        c_type = "keldy::impurity_oneband::contour_pt_t",   # name of the C++ class
+        c_type = "keldy::contour_pt_t",   # name of the C++ class
         doc = r"""""",   # doc of the C++ class
         hdf5 = False,
 )
@@ -62,7 +62,7 @@ c = class_(
 )
 
 c.add_member(c_name = "contour",
-             c_type = "keldy::impurity_oneband::contour_pt_t",
+             c_type = "keldy::contour_pt_t",
              read_only= True,
              doc = r"""""")
 

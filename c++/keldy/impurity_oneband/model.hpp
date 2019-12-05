@@ -48,20 +48,6 @@ class CPP2PY_IGNORE model_param_t {
 // fake function to get cpp2py to create adaptor for model_param_t
 CPP2PY_ARG_AS_DICT inline void fake(model_param_t const &temp){};
 
-/// Point of the Keldysh Contour (time, keldysh_idx, timesplit)
-class contour_pt_t {
- public:
-  time_real_t time{};
-  keldysh_idx_t k_idx = forward;
-  int timesplit_n = 0; // time-spliting order to dinstiguish vertices at equal times
-
-  bool operator==(const contour_pt_t &other) const {
-    return (time == other.time) && (k_idx == other.k_idx) && (timesplit_n == other.timesplit_n);
-  }
-};
-
-int compare_3way(const contour_pt_t &a, const contour_pt_t &b) ;
-
 /// Index of the Keldysh Green Function
 class gf_index_t {
  public:

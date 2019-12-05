@@ -32,8 +32,21 @@ using time_real_t = double;
 using time_imag_t = double;
 using orbital_t = int;
 
-enum spin_t { up = 0, down = 1};
-enum keldysh_idx_t { forward = 0, backward = 1};
+enum spin_t { up = 0, down = 1 };
+enum keldysh_idx_t { forward = 0, backward = 1 };
 
+/// Point of the Keldysh Contour (time, keldysh_idx, timesplit)
+class contour_pt_t {
+ public:
+  time_real_t time{};
+  keldysh_idx_t k_idx = forward;
+  int timesplit_n = 0; // time-spliting order to dinstiguish vertices at equal times
+
+  bool operator==(const contour_pt_t &other) const {
+    return (time == other.time) && (k_idx == other.k_idx) && (timesplit_n == other.timesplit_n);
+  }
+};
+
+int compare_3way(const contour_pt_t &a, const contour_pt_t &b);
 
 } // namespace keldy

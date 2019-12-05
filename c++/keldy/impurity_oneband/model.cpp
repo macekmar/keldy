@@ -26,37 +26,6 @@
 
 namespace keldy::impurity_oneband {
 
-/// Time ordering along the Keldysh Basis:
-///
-/// 3-way compare (spaceship): a <=> b:
-/// (a <=> b) < 0  if a < b
-/// (a <=> b) > 0  if a > b
-/// (a <=> b) == 0 if a == b
-///
-/// Mapping takes care of correct keldysh ordering [0 = forward contour; 1 = backward contour]
-///  a    b    (a.time > b.time)   L/G      a <=> b
-///  0    0           1             G       a  >  b
-///  0    0           0             L       a  <  b
-///  1    1           1             L       a  >  b
-///  1    1           0             G       a  >  b
-///
-///  0    1           *             L       a  <  b
-///  1    0           *             G       a  >  b
-///
-/// At equal times and Keldysh index we need to point-split times according to external integer (time-ordering).
-/// For self contractions (no external ordering), use $g^< \sim c^\dag c$ since this is normal ordering defined by V
-int compare_3way(const contour_pt_t &a, const contour_pt_t &b) {
-  int k_idx_3way = a.k_idx - b.k_idx;
-  if (k_idx_3way != 0) {
-    return k_idx_3way;
-  }
-  auto time_3way = a.time - b.time;
-  if (time_3way != 0.0) {
-    return int(1 - 2 * int(a.k_idx)) * (2 * int(!std::signbit(time_3way)) - 1);
-  }
-  return (1 - 2 * int(a.k_idx)) * (a.timesplit_n - b.timesplit_n);
-}
-
 bool operator<(gf_index_t const &a, gf_index_t const &b) {
   // First: order on the time contour
   int contour_3way = compare_3way(a.contour, b.contour);

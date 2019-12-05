@@ -1,11 +1,9 @@
 #include "keldy/common.hpp"
-#include "keldy/impurity_oneband/model.hpp"
 #include <gtest/gtest.h>
 #include <itertools/itertools.hpp>
 #include <triqs/test_tools/gfs.hpp>
 
 using namespace keldy;
-using namespace keldy::impurity_oneband;
 
 TEST(contour_pt_test, compare_equality) { // NOLINT
   contour_pt_t a{1.0, forward, 0};
