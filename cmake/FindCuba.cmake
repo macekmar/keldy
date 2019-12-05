@@ -59,6 +59,6 @@ mark_as_advanced(CUBA_INCLUDE_DIR CUBA_LIBRARIES)
 
 # Interface target
 # We refrain from creating an imported target since those cannot be exported
-add_library(cuba INTERFACE)
-target_link_libraries(cuba INTERFACE ${CUBA_LIBRARIES})
-target_include_directories(cuba SYSTEM INTERFACE ${CUBA_INCLUDE_DIR})
+add_library(Cuba INTERFACE)
+target_link_libraries(Cuba INTERFACE ${CUBA_LIBRARIES})
+target_include_directories(Cuba SYSTEM INTERFACE ${CUBA_INCLUDE_DIR})

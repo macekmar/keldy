@@ -93,8 +93,8 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 find_package(GSL REQUIRED)
 
-find_package(cuba REQUIRED)
-install(TARGETS cuba EXPORT keldy-targets)
+find_package(Cuba REQUIRED)
+install(TARGETS Cuba EXPORT keldy-targets)
 
 # Find OpenMP
 if(APPLE AND USE_OpenMP)
