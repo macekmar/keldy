@@ -90,12 +90,20 @@ class g0_model {
   explicit g0_model(model_param_t const &parameters, bool with_leads);
 
   /// make dot g0
+  void make_g0_by_fft();
   void make_semicircular_model();
   void make_flat_band();
   void make_flat_band_analytic();
 
   model_param_t param_; // g0_keldysh_contour_t will need access to alpha
   bool const contain_leads;
+
+  std::function<dcomplex(double)> get_bath_hybrid_left() { return bath_hybrid_left; };
+  std::function<dcomplex(double)> get_bath_hybrid_right() { return bath_hybrid_right; };
+
+ private:
+  std::function<dcomplex(double)> bath_hybrid_left = [](double omega) { return 0_j; };
+  std::function<dcomplex(double)> bath_hybrid_right = [](double omega) { return 0_j; };
 };
 
 /// Adapt g0_lesser and g0_greater into Green function on Keldysh contour

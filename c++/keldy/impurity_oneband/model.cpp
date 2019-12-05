@@ -44,14 +44,90 @@ bool operator<(gf_index_t const &a, gf_index_t const &b) {
 
 g0_model::g0_model(model_param_t const &parameters, bool with_leads) : param_(parameters), contain_leads(with_leads) {
   if (param_.bath_type == "semicircle") {
-    make_semicircular_model();
+    bath_hybrid_left = [this](double omega) -> dcomplex {
+      omega = omega / 2.;
+      if (std::abs(omega) < 1) {
+        return param_.Gamma * dcomplex{omega, -std::sqrt(1 - omega * omega)};
+      }
+      if (omega > 1) {
+        return param_.Gamma * (omega - std::sqrt(omega * omega - 1));
+      }
+      return param_.Gamma * (omega + std::sqrt(omega * omega - 1));
+    };
+    bath_hybrid_right = bath_hybrid_left;
+    make_g0_by_fft();
   } else if (param_.bath_type == "flatband") {
-    make_flat_band();
+    bath_hybrid_left = [this](double omega) { return -1_j * param_.Gamma / 2.; };
+    bath_hybrid_right = bath_hybrid_left;
+    make_g0_by_fft();
   } else if (param_.bath_type == "flatband_analytic") {
     make_flat_band_analytic();
   } else {
     TRIQS_RUNTIME_ERROR << "bath_type not defined";
   }
+}
+
+void g0_model::make_g0_by_fft() {
+  using namespace triqs::gfs;
+
+  auto time_mesh = gf_mesh<retime>({-param_.time_max, param_.time_max, param_.nr_time_points_gf});
+  auto freq_mesh = make_adjoint_mesh(time_mesh);
+
+  gf<refreq, matrix_valued> g0_lesser_omega{freq_mesh, {2, 2}};
+  gf<refreq, matrix_valued> g0_greater_omega{freq_mesh, {2, 2}};
+
+  // Define local Fermi function; reads in beta
+  auto nFermi = [this](double omega) {
+    if (omega > 0) {
+      auto y = std::exp(-param_.beta * omega);
+      return y / (1. + y);
+    }
+    return 1.0 / (std::exp(param_.beta * omega) + 1);
+  };
+
+  auto bath_hybrid_left_K = [this, nFermi](double omega) {
+    return -2_j * (2 * nFermi(omega + param_.bias_V / 2) - 1.) * std::imag(bath_hybrid_left(omega));
+  };
+
+  auto bath_hybrid_right_K = [this, nFermi](double omega) {
+    return -2_j * (2 * nFermi(omega - param_.bias_V / 2) - 1.) * std::imag(bath_hybrid_right(omega));
+  };
+
+  auto g0_reta_dot = [this](double omega) {
+    return 1.0 / (omega - param_.eps_d - bath_hybrid_left(omega) - bath_hybrid_right(omega));
+  };
+
+  auto g0_kine_dot = [&bath_hybrid_left_K, &bath_hybrid_right_K, &g0_reta_dot](double omega) {
+    auto R = g0_reta_dot(omega);
+    return R * (bath_hybrid_left_K(omega) + bath_hybrid_right_K(omega)) * std::conj(R);
+  };
+
+  for (auto omega : freq_mesh) {
+    auto R = g0_reta_dot(omega);
+    auto A = std::conj(R);
+    auto K = g0_kine_dot(omega);
+
+    g0_lesser_omega[omega](0, 0) = (K - R + A) / 2;
+    g0_greater_omega[omega](0, 0) = (K + R - A) / 2;
+
+    if (contain_leads) {
+      /// right lead only
+      K = bath_hybrid_right_K(omega) * A + bath_hybrid_right(omega) * K;
+      R = bath_hybrid_right(omega) * g0_reta_dot(omega);
+      A = std::conj(R);
+      g0_lesser_omega[omega](1, 0) = (K - R + A) / 2;
+      g0_greater_omega[omega](1, 0) = (K + R - A) / 2;
+      g0_lesser_omega[omega](0, 1) = -std::conj(g0_lesser_omega[omega](1, 0));
+      g0_greater_omega[omega](0, 1) = -std::conj(g0_greater_omega[omega](1, 0));
+    }
+  }
+
+  gf<retime, matrix_valued> g0_lesser_up = make_gf_from_fourier(g0_lesser_omega, time_mesh);
+  gf<retime, matrix_valued> g0_greater_up = make_gf_from_fourier(g0_greater_omega, time_mesh);
+
+  // Since Spin up and down are currently identical
+  g0_lesser = make_block_gf<retime, matrix_valued>({"up", "down"}, {g0_lesser_up, g0_lesser_up});
+  g0_greater = make_block_gf<retime, matrix_valued>({"up", "down"}, {g0_greater_up, g0_greater_up});
 }
 
 void g0_model::make_semicircular_model() {
@@ -132,6 +208,7 @@ void g0_model::make_semicircular_model() {
   g0_greater = make_block_gf<retime, matrix_valued>({"up", "down"}, {g0_greater_up, g0_greater_up});
 }
 
+/// deprecated
 void g0_model::make_flat_band() {
   using namespace triqs::gfs;
 
