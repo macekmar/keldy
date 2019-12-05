@@ -99,7 +99,7 @@ class cuba_wrapper {
  private:
   integrand_t f_wrap = [](const int *ndim, const cubareal x[], const int *, cubareal result[], void *userdata) -> int {
     auto this_ptr = static_cast<cuba_wrapper *>(userdata);
-    auto v = std::vector(x, x + *ndim);
+    auto v = std::vector<double>(x, x + *ndim);
     result[0] = this_ptr->f_(v);
     return 0;
   };

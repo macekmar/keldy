@@ -43,7 +43,7 @@ class gsl_vegas_wrapper_t {
 
   gsl_integrand_t f_wrap = [](double x[], size_t dim, void *p) -> double {
     auto this_ptr = static_cast<gsl_vegas_wrapper_t *>(p);
-    auto v = std::vector(x, x + dim);
+    auto v = std::vector<double>(x, x + dim);
     return this_ptr->f_(v);
   };
 
