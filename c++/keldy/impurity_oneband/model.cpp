@@ -24,8 +24,6 @@
 #include <triqs/gfs.hpp>
 #include <boost/math/special_functions/expint.hpp>
 
-// double const pi = 3.1415926535897932384626433832795028841971693993751058209749;
-
 namespace keldy::impurity_oneband {
 
 /// Time ordering along the Keldysh Basis:
@@ -73,27 +71,7 @@ bool operator<(gf_index_t const &a, gf_index_t const &b) {
   return a.spin < b.spin;
 }
 
-// bool operator<(gf_index_t const &a, gf_index_t const &b) {
-//   // First order on the time contour
-//   if (a.k_idx != b.k_idx) {
-//     return (a.k_idx < b.k_idx);
-//   }
-
-//   if (a.time != b.time) {
-//     return (a.k_idx == forward) ? a.time < b.time : -a.time < -b.time;
-//   }
-
-//   if (a.timesplit_n != b.timesplit_n) {
-//     return (a.k_idx == forward) ? a.timesplit_n < b.timesplit_n : -a.timesplit_n < -b.timesplit_n;
-//   }
-
-//   // then use orbital indices
-//   if (a.orbital != b.orbital) {
-//     return (a.orbital < b.orbital);
-//   }
-
-//   return a.spin < b.spin;
-// }
+// *****
 
 g0_model::g0_model(model_param_t const &parameters, bool with_leads) : param_(parameters), contain_leads(with_leads) {
   if (param_.bath_type == "semicircle") {
@@ -289,7 +267,7 @@ dcomplex g0_keldysh_contour_t::operator()(gf_index_t const &a, gf_index_t const 
   if (a.spin != b.spin) {
     return 0.0; //  g0 is diagonal in spin
   }
-  int time_order = compare_3way(a.contour, b.contour);
+  int time_order = compare_3way(a.contour, b.contour); // Orders on Keldysh Contour
 
   if (time_order > 0) {
     return model.g0_greater[a.spin](a.contour.time - b.contour.time)(0, 0);
@@ -297,7 +275,7 @@ dcomplex g0_keldysh_contour_t::operator()(gf_index_t const &a, gf_index_t const 
   if (time_order < 0) {
     return model.g0_lesser[a.spin](a.contour.time - b.contour.time)(0, 0);
   }
-  // if at equal contour points (incl. time-ss\plit)
+  // if at equal contour points (incl. time-split)
   return model.g0_lesser[a.spin](0.0)(0, 0) - static_cast<int>(internal_point) * 1_j * model.param_.alpha;
 }
 

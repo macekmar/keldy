@@ -55,12 +55,12 @@ class contour_pt_t {
   keldysh_idx_t k_idx = forward;
   int timesplit_n = 0; // time-spliting order to dinstiguish vertices at equal times
 
-  [[nodiscard]] bool operator==(const contour_pt_t &other) const {
+  bool operator==(const contour_pt_t &other) const {
     return (time == other.time) && (k_idx == other.k_idx) && (timesplit_n == other.timesplit_n);
   }
 };
 
-[[nodiscard]] int compare_3way(const contour_pt_t &lhs, const contour_pt_t &rhs);
+int compare_3way(const contour_pt_t &a, const contour_pt_t &b) ;
 
 /// Index of the Keldysh Green Function
 class gf_index_t {
@@ -84,8 +84,8 @@ bool operator<(gf_index_t const &a, gf_index_t const &b);
 
 // no time-split comparison in equality
 inline bool equivalent_wihtout_timesplit(const gf_index_t &lhs, const gf_index_t &rhs) {
-  return (lhs.contour.time == rhs.contour.time) && (lhs.contour.k_idx == rhs.contour.k_idx)
-     && (lhs.spin == rhs.spin) && (lhs.orbital == rhs.orbital);
+  return (lhs.contour.time == rhs.contour.time) && (lhs.contour.k_idx == rhs.contour.k_idx) && (lhs.spin == rhs.spin)
+     && (lhs.orbital == rhs.orbital);
 }
 
 inline std::ostream &operator<<(std::ostream &os, gf_index_t const &m) {
@@ -119,11 +119,5 @@ struct g0_keldysh_contour_t {
   dcomplex operator()(gf_index_t const &a, gf_index_t const &b, bool internal_point = true) const;
   g0_keldysh_contour_t(g0_model model_) : model(std::move(model_)){};
 };
-
-// class g0_keldysh_LO_t {
-//   // g_ai_t g0_retarded()
-//   // g_ai_t g0_advanced()
-//   // g_ai_t g0_keldysh()
-// };
 
 } // namespace keldy::impurity_oneband

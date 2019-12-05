@@ -30,7 +30,7 @@
 
 namespace {
 
-inline int GetBit(int in, int offset) { return (in & (1 << offset)) != 0; }
+inline int GetBit(int in, int offset) { return static_cast<int>((in & (1 << offset)) != 0); }
 
 inline int GetBitParity(unsigned int in) { return 1 - 2 * __builtin_parity(in); }
 
