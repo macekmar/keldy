@@ -1,3 +1,7 @@
+#include "keldy/common.hpp"
+#include "keldy/impurity_oneband/model.hpp"
+#include <gtest/gtest.h>
+#include <itertools/itertools.hpp>
 #include <keldy/impurity_oneband/compute_obs.hpp>
 #include <triqs/test_tools/gfs.hpp>
 //#include <cmath>
@@ -6,8 +10,6 @@
 
 using namespace keldy;
 using namespace keldy::impurity_oneband;
-
-// double const pi = 3.1415926535897932384626433832795028841971693993751058209749;
 
 TEST(g0_model, Initialize_flatband) { // NOLINT
   model_param_t params;
@@ -37,19 +39,19 @@ TEST(g0_model, Initialize_semicircle) { // NOLINT
 TEST(g0_model, Flatband_sym) { // NOLINT
 
   model_param_t params;
-  params.beta=100000.0;
-  params.bias_V=0.0;
-  params.eps_d=0.0;
+  params.beta = 100000.0;
+  params.bias_V = 0.0;
+  params.eps_d = 0.0;
   params.Gamma = 1.5;
-  params.time_max=1000.0;
-  params.nr_time_points_gf=100000;
-  params.alpha=0.0;
-  params.bath_type="flatband";
+  params.time_max = 1000.0;
+  params.nr_time_points_gf = 100000;
+  params.alpha = 0.0;
+  params.bath_type = "flatband";
 
   // TODO: copy params ?
   g0_model g0{params, false};
 
-  auto g0_less_expected = [Gamma=params.Gamma](double t1, double t2) -> dcomplex {
+  auto g0_less_expected = [Gamma = params.Gamma](double t1, double t2) -> dcomplex {
     using namespace boost::math::double_constants;
     auto Gt = Gamma * (t1 - t2); // = Gamma * (t1 - t2)
     auto real_part =
