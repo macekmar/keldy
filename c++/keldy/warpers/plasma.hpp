@@ -23,9 +23,34 @@
 #pragma once
 
 #include "../common.hpp"
+#include <numeric>
+#include <vector>
+#include <algorithm>
 
 namespace keldy {
 
+  // Coordinate Transforms (ui <-> vi):
+  inline std::vector<double> vi_from_ui(double t_max, std::vector<double> const &u_times) {
+    std::vector<double> v_times = u_times;
+    std::sort(v_times.begin(), v_times.end(), std::greater<>());
+    int n = v_times.size();
+    for (int i = n - 1; i > 0; i--) {
+      v_times[i] = (v_times[i - 1] - v_times[i]);
+    }
+    v_times[0] = t_max - v_times[0];
+    return v_times;
+  }
+
+  inline std::vector<double> ui_from_vi(double t_max, std::vector<double> const &v_times) {
+    std::vector<double> u_times = v_times;
+    u_times[0] = t_max - u_times[0];
+    std::partial_sum(u_times.begin(), u_times.end(), u_times.begin(), std::minus<>());
+    return u_times;
+  }
+
+  struct idenity_function {
+  double operator()(double t) { return 1.0; }
+  };
 // class warper_plasma_t {
 // };
 

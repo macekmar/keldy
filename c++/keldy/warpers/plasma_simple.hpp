@@ -24,6 +24,7 @@
 
 #include "../common.hpp"
 #include "warpers_common.hpp"
+#include "plasma.hpp"
 #include "../interfaces/gsl_interp_wrap.hpp"
 #include <algorithm>
 #include <any>

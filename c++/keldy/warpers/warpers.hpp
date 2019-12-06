@@ -25,3 +25,4 @@
 #include "warpers_common.hpp"
 #include "plasma.hpp"
 #include "plasma_simple.hpp"
+#include "plasma_1D.hpp"

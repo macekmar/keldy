@@ -361,6 +361,33 @@ c.add_method("""double operator() (std::vector<double> ui_vec)""",
 
 module.add_class(c)
 
+# The class warper_plasma_1D_t
+c = class_(
+        py_type = "WarperPlasma1DT",  # name of the python class
+        c_type = "keldy::warper_plasma_1D_t",   # name of the C++ class
+        doc = r"""""",   # doc of the C++ class
+        hdf5 = False,
+)
+
+c.add_constructor("""(double t_max_)""", doc = r"""""")
+
+c.add_constructor("""(std::vector<std::function<double(double)>> fn_, double t_max_, int nr_function_sample_points)""", doc = r"""""")
+
+c.add_method("""std::vector<double> ui_from_li (std::vector<double> li_vec)""",
+             doc = r"""""")
+
+c.add_method("""std::vector<double> li_from_ui (std::vector<double> ui_vec)""",
+             doc = r"""""")
+
+c.add_method("""double jacobian (std::vector<double> li_vec)""",
+             doc = r"""""")
+
+c.add_method("""double evaluate_warping_function (std::vector<double> ui_vec)""",
+             doc = r"""""")
+
+module.add_class(c)
+
+
 # The class compute_charge_Q_direct
 c = class_(
         py_type = "ComputeChargeQDirect",  # name of the python class
@@ -386,6 +413,33 @@ c.add_method("""uint64_t reduce_nr_points_in_domain ()""",
              doc = r"""""")
 
 c.add_method("""keldy::warper_plasma_simple_t get_warper ()""",
+             doc = r"""""")
+
+c.add_method("""keldy::impurity_oneband::integrand_g_direct get_integrand ()""",
+             doc = r"""""")
+
+module.add_class(c)
+
+# The class compute_charge_Q_direct_plasma_1D
+c = class_(
+        py_type = "ComputeChargeQDirectPlasma1D",  # name of the python class
+        c_type = "keldy::impurity_oneband::compute_charge_Q_direct_plasma_1D",   # name of the C++ class
+        doc = r"""""",   # doc of the C++ class
+        hdf5 = False,
+)
+
+c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, std::vector<std::function<double(double)>> fn_, int nr_sample_points_warper)""", doc = r"""""")
+
+c.add_method("""void run (int nr_steps)""",
+             doc = r"""""")
+
+c.add_method("""keldy::dcomplex reduce_result ()""",
+             doc = r"""""")
+
+c.add_method("""uint64_t reduce_nr_points_run ()""",
+             doc = r"""""")
+
+c.add_method("""keldy::warper_plasma_1D_t get_warper ()""",
              doc = r"""""")
 
 c.add_method("""keldy::impurity_oneband::integrand_g_direct get_integrand ()""",

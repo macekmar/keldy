@@ -95,6 +95,21 @@ class compute_charge_Q_direct : public integrator<dcomplex, integrand_g_direct, 
                                warper_scale} {};
 };
 
+class compute_charge_Q_direct_plasma_1D : public integrator<dcomplex, integrand_g_direct, warper_plasma_1D_t> {
+ public:
+  compute_charge_Q_direct_plasma_1D(model_param_t params, double time, int order,
+                                    std::vector<std::function<double(double)>> fn_, int nr_sample_points_warper)
+     : integrator{dcomplex{0},
+                  integrand_g_direct{g0_keldysh_contour_t{g0_model{params, false}}, gf_index_t{time, up, forward},
+                                     gf_index_t{time, up, backward}},
+                  warper_plasma_1D_t{time},
+                  order,
+                  "sobol",
+                  0} {
+    warper = {fn_, time, nr_sample_points_warper};
+  }
+};
+
 class CPP2PY_IGNORE adapt_integrand {
   // double time_max_;
   integrand_g_direct integrand_;
