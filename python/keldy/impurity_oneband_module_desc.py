@@ -217,7 +217,7 @@ c = class_(
 
 c.add_constructor("""(keldy::impurity_oneband::g0_keldysh_contour_t g0_, keldy::impurity_oneband::gf_index_t external_A_, keldy::impurity_oneband::gf_index_t external_B_, double cutoff_ = 0.)""", doc = r"""""")
 
-c.add_method("""keldy::impurity_oneband::integrand_g_direct::result_t operator() (std::vector<double> times)""",
+c.add_method("""keldy::impurity_oneband::integrand_g_direct::result_t operator() (std::vector<double> times, bool keep_u_hypercube = true)""",
              name = "__call__",
              doc = r"""Returns integrand for the specified times""")
 
