@@ -74,14 +74,19 @@ TEST(ComputeObs, Value1) { // NOLINT
                                           0.0071422698935926388204,
                                           0.0016484718800775438296};
 
-  //TODO: fix pb with OpenMP when order >= 5
-  for (int order = 1; order <= 4; ++order) {
+  double tol = 1e-3;
+
+  for (int order = 1; order <= 6; ++order) {
     std::cout << "Order " << order << std::endl;
     compute_charge_Q_direct computer(params, 20.0, order, "lorentzian", 1e5);
     computer.run(1e4);
 
+    if (order >= 5) {
+      tol = 1e-2;
+    }
+
     EXPECT_COMPLEX_NEAR(-1_j * i_to_the_n[order % 4] * computer.reduce_result(), HZ_charge_series[order],
-                        1e-3 * std::abs(HZ_charge_series[order]));
+                        tol * std::abs(HZ_charge_series[order]));
   }
 }
 
