@@ -130,10 +130,10 @@ TEST(g0_model, Flatband_3) { // NOLINT
 
   g0_model g0{params, true};
 
-  /// values from ctint_keldysh
+  /// values from ctint_keldysh (dot-lead terms have an extra factor 1/2, mistake in the original code)
   EXPECT_COMPLEX_NEAR(-0.218086 + 0.0265308_j, g0.g0_lesser[up](1.0)(0, 0), 1e-3);
-  EXPECT_COMPLEX_NEAR(0.258951 + 0.423124_j, g0.g0_lesser[up](1.0)(0, 1), 1e-3);
-  EXPECT_COMPLEX_NEAR(-0.107289 + 0.350721_j, g0.g0_lesser[up](1.0)(1, 0), 1e-3);
+  EXPECT_COMPLEX_NEAR((0.258951 + 0.423124_j) / 2, g0.g0_lesser[up](1.0)(0, 1), 1e-3);
+  EXPECT_COMPLEX_NEAR((-0.107289 + 0.350721_j) / 2, g0.g0_lesser[up](1.0)(1, 0), 1e-3);
 }
 
 /*
@@ -154,9 +154,9 @@ TEST(g0_model, Semicirc) { // NOLINT
   g0_model g0{params, true};
 
   /// values from ctint_keldysh
-  EXPECT_COMPLEX_NEAR(-0.0711555 + 0.172427_j, g0.g0_lesser[up](1.0)(0, 0), 1e-3);
-  EXPECT_COMPLEX_NEAR(0.0550718 + 0.0854342_j, g0.g0_lesser[up](1.0)(0, 1), 1e-4);
-  EXPECT_COMPLEX_NEAR(0.0550718 + 0.0854342_j, g0.g0_lesser[up](1.0)(1, 0), 1e-4);
+  EXPECT_COMPLEX_NEAR(-0.23107349410223865 + 0.13213346415985422_j, g0.g0_lesser[up](1.0)(0, 0), 1e-3);
+  EXPECT_COMPLEX_NEAR(0.17154101374667907 + 0.13375649387573293_j, g0.g0_lesser[up](1.0)(0, 1), 1e-4);
+  EXPECT_COMPLEX_NEAR(-0.0066645142937036958 + 0.12215571972575601_j, g0.g0_lesser[up](1.0)(1, 0), 1e-4);
 }
 
 TEST(g0_keldysh_adaptor, Initialize) { // NOLINT

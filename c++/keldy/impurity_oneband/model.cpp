@@ -44,15 +44,17 @@ bool operator<(gf_index_t const &a, gf_index_t const &b) {
 
 g0_model::g0_model(model_param_t const &parameters, bool with_leads) : param_(parameters), contain_leads(with_leads) {
   if (param_.bath_type == "semicircle") {
+    //TODO: check formulas
     bath_hybrid_left = [this](double omega) -> dcomplex {
       omega = omega / 2.;
+      auto Gamma = param_.Gamma / 2;
       if (std::abs(omega) < 1) {
-        return param_.Gamma * dcomplex{omega, -std::sqrt(1 - omega * omega)};
+        return Gamma * dcomplex{omega, -std::sqrt(1 - omega * omega)};
       }
       if (omega > 1) {
-        return param_.Gamma * (omega - std::sqrt(omega * omega - 1));
+        return Gamma * (omega - std::sqrt(omega * omega - 1));
       }
-      return param_.Gamma * (omega + std::sqrt(omega * omega - 1));
+      return Gamma * (omega + std::sqrt(omega * omega - 1));
     };
     bath_hybrid_right = bath_hybrid_left;
     make_g0_by_fft();
@@ -160,13 +162,15 @@ void g0_model::make_semicircular_model() {
     return omega + std::sqrt(omega * omega - 1);
   };
 
+  auto Gamma = param_.Gamma / 2;
+
   // The non interacting dot GF's in frequency (2*2 matrix with Keldysh indices)
   // From XW computation
   auto G0_dd_w = [&](double omega) {
-    dcomplex gr = 1 / (omega - param_.eps_d - 2 * param_.Gamma * sigma_linear_chain(omega));
+    dcomplex gr = 1 / (omega - param_.eps_d - 2 * Gamma * sigma_linear_chain(omega));
     dcomplex fac = 2_j * gr * conj(gr);
-    dcomplex gam_gg = -1 * param_.Gamma * imag(sigma_linear_chain(omega)) * fac;
-    dcomplex temp = (nFermi(omega - param_.bias_V / 2) + nFermi(omega - param_.bias_V / 2)) * gam_gg;
+    dcomplex gam_gg = -1 * Gamma * imag(sigma_linear_chain(omega)) * fac;
+    dcomplex temp = (nFermi(omega - param_.bias_V / 2) + nFermi(omega + param_.bias_V / 2)) * gam_gg;
     dcomplex temp2 = temp - 2 * gam_gg;
     return array<dcomplex, 2>{{gr + temp, temp}, {temp2, -conj(gr) + temp}};
   };
@@ -174,7 +178,7 @@ void g0_model::make_semicircular_model() {
   // For one lead
   auto G0_dc_w = [&](double omega, double mu) {
     auto g = G0_dd_w(omega);                                 // dot free function at omega.
-    auto delta_r = param_.Gamma * sigma_linear_chain(omega); // both chains are the same
+    auto delta_r = Gamma * sigma_linear_chain(omega);        // both chains are the same
     auto delta_01 = -2_j * imag(delta_r) * nFermi(omega - mu);
     auto delta_10 = 2_j * imag(delta_r) * (1 - nFermi(omega - mu));
     auto delta_00 = delta_r + delta_01;
@@ -255,8 +259,8 @@ void g0_model::make_flat_band() {
     g0_greater_omega[w](0, 0) = (K + R - A) / 2;
 
     if (contain_leads) {
-      g0_lesser_omega[w](0, 1) = G0_dc_w(w)(0, 1);
-      g0_greater_omega[w](0, 1) = G0_dc_w(w)(1, 0);
+      g0_lesser_omega[w](0, 1) = G0_dc_w(w)(0, 1) / 2;  // mistake in the original code
+      g0_greater_omega[w](0, 1) = G0_dc_w(w)(1, 0) / 2; // mistake in the original code
       g0_lesser_omega[w](1, 0) = -std::conj(g0_lesser_omega[w](0, 1));
       g0_greater_omega[w](1, 0) = -std::conj(g0_greater_omega[w](0, 1));
     }
