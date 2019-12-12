@@ -21,6 +21,7 @@
 //******************************************************************************
 
 #include "model.hpp"
+#include "../interfaces/gsl_integration_wrap.hpp"
 #include <triqs/gfs.hpp>
 #include <boost/math/special_functions/expint.hpp>
 
@@ -44,24 +45,39 @@ bool operator<(gf_index_t const &a, gf_index_t const &b) {
 
 g0_model::g0_model(model_param_t const &parameters, bool with_leads) : param_(parameters), contain_leads(with_leads) {
   if (param_.bath_type == "semicircle") {
-    //TODO: check formulas
-    bath_hybrid_left = [this](double omega) -> dcomplex {
+    bath_hybrid_R_left = [this](dcomplex omega) -> dcomplex {
       omega = omega / 2.;
       auto Gamma = param_.Gamma / 2;
       if (std::abs(omega) < 1) {
-        return Gamma * dcomplex{omega, -std::sqrt(1 - omega * omega)};
+        return Gamma * (omega - 1_j * std::sqrt(1 - omega * omega));
       }
-      if (omega > 1) {
+      if (std::real(omega) > 1) {
         return Gamma * (omega - std::sqrt(omega * omega - 1));
       }
       return Gamma * (omega + std::sqrt(omega * omega - 1));
     };
-    bath_hybrid_right = bath_hybrid_left;
+    bath_hybrid_R_right = bath_hybrid_R_left;
     make_g0_by_fft();
+
   } else if (param_.bath_type == "flatband") {
-    bath_hybrid_left = [this](double omega) { return -1_j * param_.Gamma / 2.; };
-    bath_hybrid_right = bath_hybrid_left;
+    bath_hybrid_R_left = [this](dcomplex omega) { return -1_j * param_.Gamma / 2.; };
+    bath_hybrid_A_left = [this](dcomplex omega) { return 1_j * param_.Gamma / 2.; };
+    bath_hybrid_R_right = bath_hybrid_R_left;
+    bath_hybrid_A_right = bath_hybrid_A_left;
     make_g0_by_fft();
+
+  } else if (param_.bath_type == "flatband_contour") {
+    bath_hybrid_R_left = [this](dcomplex omega) { return -1_j * param_.Gamma / 2.; };
+    bath_hybrid_A_left = [this](dcomplex omega) { return 1_j * param_.Gamma / 2.; };
+    bath_hybrid_R_right = bath_hybrid_R_left;
+    bath_hybrid_A_right = bath_hybrid_A_left;
+
+    double margin = std::abs(std::max(param_.Gamma, 1. / param_.beta));
+    double left_turn_pt = std::min(-std::abs(param_.bias_V / 2), param_.eps_d) - margin;
+    double right_turn_pt = std::max(std::abs(param_.bias_V / 2), param_.eps_d) + margin;
+
+    make_g0_by_contour(left_turn_pt, right_turn_pt);
+
   } else if (param_.bath_type == "flatband_analytic") {
     make_flat_band_analytic();
   } else {
@@ -79,43 +95,43 @@ void g0_model::make_g0_by_fft() {
   gf<refreq, matrix_valued> g0_greater_omega{freq_mesh, {2, 2}};
 
   // Define local Fermi function; reads in beta
-  auto nFermi = [this](double omega) {
-    if (omega > 0) {
+  auto nFermi = [this](dcomplex omega) {
+    if (std::real(omega) > 0) {
       auto y = std::exp(-param_.beta * omega);
       return y / (1. + y);
     }
     return 1.0 / (std::exp(param_.beta * omega) + 1);
   };
 
-  auto bath_hybrid_left_K = [this, nFermi](double omega) {
-    return -2_j * (2 * nFermi(omega + param_.bias_V / 2) - 1.) * std::imag(bath_hybrid_left(omega));
+  auto bath_hybrid_left_K = [this, nFermi](dcomplex omega) {
+    return -(2 * nFermi(omega + param_.bias_V / 2) - 1.) * (bath_hybrid_R_left(omega) - bath_hybrid_A_left(omega));
   };
 
-  auto bath_hybrid_right_K = [this, nFermi](double omega) {
-    return -2_j * (2 * nFermi(omega - param_.bias_V / 2) - 1.) * std::imag(bath_hybrid_right(omega));
+  auto bath_hybrid_right_K = [this, nFermi](dcomplex omega) {
+    return -(2 * nFermi(omega - param_.bias_V / 2) - 1.) * (bath_hybrid_R_right(omega) - bath_hybrid_A_right(omega));
   };
 
-  auto g0_reta_dot = [this](double omega) {
-    return 1.0 / (omega - param_.eps_d - bath_hybrid_left(omega) - bath_hybrid_right(omega));
+  auto g0_reta_dot = [this](dcomplex omega) {
+    return 1.0 / (omega - param_.eps_d - bath_hybrid_R_left(omega) - bath_hybrid_R_right(omega));
   };
 
-  auto g0_kine_dot = [&bath_hybrid_left_K, &bath_hybrid_right_K, &g0_reta_dot](double omega) {
-    auto R = g0_reta_dot(omega);
-    return R * (bath_hybrid_left_K(omega) + bath_hybrid_right_K(omega)) * std::conj(R);
+  auto g0_adva_dot = [this](dcomplex omega) {
+    return 1.0 / (omega - param_.eps_d - bath_hybrid_A_left(omega) - bath_hybrid_A_right(omega));
   };
 
   for (auto omega : freq_mesh) {
-    auto R = g0_reta_dot(omega);
-    auto A = std::conj(R);
-    auto K = g0_kine_dot(omega);
+    dcomplex omegaj = omega + 0_j;
+    auto R = g0_reta_dot(omegaj);
+    auto A = g0_adva_dot(omegaj);
+    auto K = R * (bath_hybrid_left_K(omegaj) + bath_hybrid_right_K(omegaj)) * A;
 
     g0_lesser_omega[omega](0, 0) = (K - R + A) / 2;
     g0_greater_omega[omega](0, 0) = (K + R - A) / 2;
 
     if (contain_leads) {
       /// right lead only
-      K = bath_hybrid_right_K(omega) * A + bath_hybrid_right(omega) * K;
-      R = bath_hybrid_right(omega) * g0_reta_dot(omega);
+      K = bath_hybrid_right_K(omegaj) * A + bath_hybrid_R_right(omegaj) * K;
+      R = bath_hybrid_R_right(omegaj) * g0_reta_dot(omegaj);
       A = std::conj(R);
       g0_lesser_omega[omega](1, 0) = (K - R + A) / 2;
       g0_greater_omega[omega](1, 0) = (K + R - A) / 2;
@@ -130,6 +146,185 @@ void g0_model::make_g0_by_fft() {
   // Since Spin up and down are currently identical
   g0_lesser = make_block_gf<retime, matrix_valued>({"up", "down"}, {g0_lesser_up, g0_lesser_up});
   g0_greater = make_block_gf<retime, matrix_valued>({"up", "down"}, {g0_greater_up, g0_greater_up});
+}
+
+/*
+ * Compute the integral along a contour in the complex plane made of three straight lines.
+ *
+ * The middle segment is [left_turn_pt, right_turn_pt] on the real axis. The
+ * two other are semi-infinite lines starting on each end of the middle
+ * segment.
+ *
+ * If zero_temp = true, the integration is not performed on the rhs segment,
+ * and the middle segment is limited to [left_turn_pt, zero_temp_stop]. This is
+ * used to ignore the part of the integrand equal to zero at zero temperature.
+ */
+class CPP2PY_IGNORE contour_integration_t {
+
+ private:
+  details::gsl_integration_cpx_wrapper_t worker;
+  double const abstol = 1e-14;
+  double const reltol = 1e-8;
+
+ public:
+  dcomplex result = 0;
+  double abserr_sqr = 0;
+
+  contour_integration_t() : worker{1000} {};
+
+  void integrate(std::function<dcomplex(dcomplex)> func, dcomplex left_dir, double left_turn_pt, double right_turn_pt,
+                 dcomplex right_dir, bool zero_temp = false, double zero_temp_stop = 0) {
+
+    result = 0;
+    abserr_sqr = 0;
+
+    auto f1 = [&](double x) -> dcomplex {
+      dcomplex omega = left_dir * x + left_turn_pt;
+      return -left_dir * func(omega);
+    };
+    worker.integrate_qagiu(f1, 0, abstol, reltol);
+    result += worker.get_result();
+    abserr_sqr +=
+       worker.get_abserr_real() * worker.get_abserr_real() + worker.get_abserr_imag() * worker.get_abserr_imag();
+
+    auto f2 = [&](double x) -> dcomplex { return func(x); };
+    worker.integrate_qag(f2, left_turn_pt, (zero_temp) ? zero_temp_stop : right_turn_pt, abstol, reltol,
+                         GSL_INTEG_GAUSS61);
+    result += worker.get_result();
+    abserr_sqr +=
+       worker.get_abserr_real() * worker.get_abserr_real() + worker.get_abserr_imag() * worker.get_abserr_imag();
+
+    if (not zero_temp) {
+      auto f3 = [&](double x) -> dcomplex {
+        dcomplex omega = right_turn_pt + right_dir * x;
+        return right_dir * func(omega);
+      };
+      worker.integrate_qagiu(f3, 0, abstol, reltol);
+      result += worker.get_result();
+      abserr_sqr +=
+         worker.get_abserr_real() * worker.get_abserr_real() + worker.get_abserr_imag() * worker.get_abserr_imag();
+    }
+  };
+};
+
+/*
+ * Compute the Fourier transform of g^{</>}(\omega) by integrating along a suitable contour in the complex plane.
+ *
+ * Use std::imag and std::conj carefully, omega is complex here!!
+ */
+void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
+  using namespace triqs::gfs;
+  using namespace boost::math::double_constants;
+
+  if (not(left_turn_pt < -std::abs(param_.bias_V / 2) && right_turn_pt > std::abs(param_.bias_V / 2))) {
+    TRIQS_RUNTIME_ERROR << "Contour is wrong regarding Fermi functions poles.";
+  }
+
+  if (contain_leads) {
+    //TODO: Implement support for leads
+    TRIQS_RUNTIME_ERROR << "Lead-dot Green's functions are not supported for this method.";
+  }
+
+  if (param_.bias_V != 0) {
+    // TODO
+    TRIQS_RUNTIME_ERROR << "Non zero bias is not supported yet.";
+  }
+
+  auto time_mesh = gf_mesh<retime>({-param_.time_max, param_.time_max, param_.nr_time_points_gf});
+
+  gf<retime, matrix_valued> g0_lesser_time{time_mesh, {2, 2}};
+  gf<retime, matrix_valued> g0_greater_time{time_mesh, {2, 2}};
+
+  // Define local Fermi function; reads in beta
+  auto nFermi = [this](dcomplex omega) -> dcomplex {
+    if (std::real(omega) > 0) {
+      if (param_.beta < 0) return 0.;
+
+      auto y = std::exp(-param_.beta * omega);
+      return y / (1. + y);
+    }
+    if (param_.beta < 0) return 1.;
+
+    return 1.0 / (std::exp(param_.beta * omega) + 1);
+  };
+
+  auto bath_hybrid_left_K = [this, nFermi](dcomplex omega) {
+    return -(2 * nFermi(omega + param_.bias_V / 2) - 1.) * (bath_hybrid_R_left(omega) - bath_hybrid_A_left(omega));
+  };
+
+  auto bath_hybrid_right_K = [this, nFermi](dcomplex omega) {
+    return -(2 * nFermi(omega - param_.bias_V / 2) - 1.) * (bath_hybrid_R_right(omega) - bath_hybrid_A_right(omega));
+  };
+
+  auto g0_reta_dot = [this](dcomplex omega) {
+    return 1.0 / (omega - param_.eps_d - bath_hybrid_R_left(omega) - bath_hybrid_R_right(omega));
+  };
+
+  auto g0_adva_dot = [this](dcomplex omega) {
+    return 1.0 / (omega - param_.eps_d - bath_hybrid_A_left(omega) - bath_hybrid_A_right(omega));
+  };
+
+  auto g0_omega = [&g0_reta_dot, &g0_adva_dot, &bath_hybrid_left_K, &bath_hybrid_right_K](dcomplex omega,
+                                                                                          bool is_lesser) {
+    auto R = g0_reta_dot(omega);
+    auto A = g0_adva_dot(omega);
+    auto K = R * (bath_hybrid_left_K(omega) + bath_hybrid_right_K(omega)) * A;
+
+    if (is_lesser) {
+      return (K - R + A) / 2;
+    }
+    // else it is greater:
+    return (K + R - A) / 2;
+  };
+
+  contour_integration_t worker;
+  auto gsl_default_handler = gsl_set_error_handler_off();
+
+  for (const auto t : time_mesh) {
+    int sign_of_t = (t > 0) - (t < 0);
+    dcomplex direc_1 = (t == 0) ? -1 : -1_j * sign_of_t;
+    dcomplex direc_2 = (param_.beta < 0) ? 1. : param_.beta - t * 1_j;
+    direc_2 /= std::abs(direc_2);
+
+    for (const bool is_lesser : {true, false}) {
+
+      auto integrand = [t, &g0_omega, is_lesser](dcomplex omega) {
+        if (not is_lesser) omega = -omega;
+        return std::exp(-1_j * omega * t) * g0_omega(omega, is_lesser) / (2 * pi);
+      };
+
+      if (is_lesser) {
+        worker.integrate(integrand, direc_1, left_turn_pt, right_turn_pt, direc_2, (param_.beta < 0),
+                         std::abs(param_.bias_V / 2));
+        g0_lesser_time[t](0, 0) = worker.result;
+        lesser_ft_error += worker.abserr_sqr;
+      } else {
+        worker.integrate(integrand, std::conj(direc_1), left_turn_pt, right_turn_pt, std::conj(direc_2),
+                         (param_.beta < 0), std::abs(param_.bias_V / 2));
+        g0_greater_time[t](0, 0) = worker.result;
+        greater_ft_error += worker.abserr_sqr;
+      }
+
+      // TODO: make use of t <-> -t symmetry to reduce calculations
+
+      //if (t == 0.) std::cout << "Left: " << worker_tails.get_result() << std::endl;
+
+      //  if (t == 0.) std::cout << "Right: " << worker_tails.get_result() << std::endl;
+
+      //if (t == 0.) std::cout << "Middle: " << worker_middle.get_result() << std::endl;
+    }
+  }
+
+  // GSL error estimations
+  lesser_ft_error = std::sqrt(lesser_ft_error / time_mesh.size());
+  greater_ft_error = std::sqrt(greater_ft_error / time_mesh.size());
+
+  // reset default GSL error handler
+  gsl_set_error_handler(gsl_default_handler);
+
+  // Spin up and down are currently identical
+  g0_lesser = make_block_gf<retime, matrix_valued>({"up", "down"}, {g0_lesser_time, g0_lesser_time});
+  g0_greater = make_block_gf<retime, matrix_valued>({"up", "down"}, {g0_greater_time, g0_greater_time});
 }
 
 void g0_model::make_semicircular_model() {

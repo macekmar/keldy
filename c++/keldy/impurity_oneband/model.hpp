@@ -83,14 +83,17 @@ class g0_model {
  public:
   /// Lesser Green function $G^{<}_{\sigma}(t)$; block spin $\sigma$ {up, down}
   block_gf<retime, matrix_valued> g0_lesser;
+  double lesser_ft_error = 0.;
 
   /// Greater Green function $G^{>}_{\sigma}(t)$; block spin $\sigma$ {up, down}
   block_gf<retime, matrix_valued> g0_greater;
+  double greater_ft_error = 0.;
 
   explicit g0_model(model_param_t const &parameters, bool with_leads);
 
   /// make dot g0
   void make_g0_by_fft();
+  void make_g0_by_contour(double left_turn_pt, double right_turn_pt);
   void make_semicircular_model();
   void make_flat_band();
   void make_flat_band_analytic();
@@ -98,12 +101,18 @@ class g0_model {
   model_param_t param_; // g0_keldysh_contour_t will need access to alpha
   bool const contain_leads;
 
-  std::function<dcomplex(double)> get_bath_hybrid_left() { return bath_hybrid_left; };
-  std::function<dcomplex(double)> get_bath_hybrid_right() { return bath_hybrid_right; };
+  std::function<dcomplex(dcomplex)> get_bath_hybrid_R_left() { return bath_hybrid_R_left; };
+  std::function<dcomplex(dcomplex)> get_bath_hybrid_R_right() { return bath_hybrid_R_right; };
+
+  std::function<dcomplex(dcomplex)> get_bath_hybrid_A_left() { return bath_hybrid_A_left; };
+  std::function<dcomplex(dcomplex)> get_bath_hybrid_A_right() { return bath_hybrid_A_right; };
 
  private:
-  std::function<dcomplex(double)> bath_hybrid_left = [](double omega) { return 0_j; };
-  std::function<dcomplex(double)> bath_hybrid_right = [](double omega) { return 0_j; };
+  std::function<dcomplex(dcomplex)> bath_hybrid_R_left = [](dcomplex omega) { return 0; };
+  std::function<dcomplex(dcomplex)> bath_hybrid_R_right = [](dcomplex omega) { return 0; };
+
+  std::function<dcomplex(dcomplex)> bath_hybrid_A_left = [](dcomplex omega) { return 0; };
+  std::function<dcomplex(dcomplex)> bath_hybrid_A_right = [](dcomplex omega) { return 0; };
 };
 
 /// Adapt g0_lesser and g0_greater into Green function on Keldysh contour
