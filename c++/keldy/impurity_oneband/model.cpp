@@ -471,9 +471,9 @@ void g0_model::make_flat_band() {
 
 void g0_model::make_flat_band_analytic() {
 
-  if (param_.beta >= 0 || param_.bias_V != 0. || param_.eps_d != 0. || param_.alpha != 0.) {
+  if (param_.beta >= 0 || param_.bias_V != 0. || param_.eps_d != 0.) {
     TRIQS_RUNTIME_ERROR
-       << "Analytic flatband covers only the following parameters: beta=-1 (zero temperature), bias_V=0, eps_d=0, alpha=0.";
+       << "Analytic flatband covers only the following parameters: beta=-1 (zero temperature), bias_V=0, eps_d=0.";
   }
 
   if (contain_leads) {
