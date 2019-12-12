@@ -6,6 +6,7 @@ using namespace keldy::details;
 
 TEST(gsl_integration, real_integral) { // NOLINT
 
+  auto gsl_default_handler = gsl_set_error_handler_off();
   gsl_integration_wrapper_t worker(100);
 
   auto function1 = [](double t) -> double { return t * t; };
@@ -17,10 +18,13 @@ TEST(gsl_integration, real_integral) { // NOLINT
   worker.integrate_qag(function2, 1, 2, 1e-10, 1e-7, GSL_INTEG_GAUSS31);
   std::cout << "Result = " << worker.get_result() << " +- " << worker.get_abserr() << std::endl;
   EXPECT_NEAR(worker.get_result(), 1. / 2., 1e-6);
+
+  gsl_set_error_handler(gsl_default_handler);
 }
 
 TEST(gsl_integration, complex_integral) { // NOLINT
 
+  auto gsl_default_handler = gsl_set_error_handler_off();
   gsl_integration_cpx_wrapper_t worker(100);
 
   auto function1 = [](double t) -> dcomplex { return t * t + 1_j * t; };
@@ -36,9 +40,11 @@ TEST(gsl_integration, complex_integral) { // NOLINT
   EXPECT_COMPLEX_NEAR(worker.get_result(), 1. / 2. + 1_j * 3. / 2., 1e-6);
 
   auto function3 = [](double t) -> dcomplex { return ((t < 0.) ? 1. : 2.) * std::exp(-(1. + 1_j) * t * t); };
-  worker.integrate_qagi(function1, 1e-10, 1e-7);
+  worker.integrate_qagi(function3, 1e-10, 1e-7);
   std::cout << "Result = " << worker.get_result() << " +- " << worker.get_abserr_real() << ", "
             << worker.get_abserr_imag() << std::endl;
+
+  gsl_set_error_handler(gsl_default_handler);
 }
 
 MAKE_MAIN; // NOLINT
