@@ -43,7 +43,7 @@ class CPP2PY_IGNORE model_param_t {
   double time_max = +100.0; // (time_limit_min = - time_limit_max)
   int nr_time_points_gf = 1000;
   double alpha = 0.0;
-  std::string bath_type = "flatband";
+  std::string bath_type = "flatband_fft";
 };
 
 // fake function to get cpp2py to create adaptor for model_param_t

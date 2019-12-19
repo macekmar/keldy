@@ -14,7 +14,7 @@ using namespace keldy::impurity_oneband;
 
 TEST(g0_model, Initialize_flatband) { // NOLINT
   model_param_t params;
-  params.bath_type = "flatband";
+  params.bath_type = "flatband_fft";
   g0_model g0{params, true};
 }
 
@@ -47,7 +47,7 @@ TEST(g0_model, Initialize_flatband_analytic) { // NOLINT
 
 TEST(g0_model, Initialize_semicircle) { // NOLINT
   model_param_t params;
-  params.bath_type = "semicircle";
+  params.bath_type = "semicircle_fft";
   g0_model g0{params, true};
 }
 
@@ -89,7 +89,7 @@ TEST(g0_model, Flatband_sym) { // NOLINT
   params.time_max = 1000.0;
   params.nr_time_points_gf = 100001;
   params.alpha = 0.0;
-  params.bath_type = "flatband";
+  params.bath_type = "flatband_fft";
 
   // TODO: copy params ?
   g0_model g0{params, false};
@@ -181,7 +181,7 @@ TEST(g0_model, Flatband_asym_1) { // NOLINT
   params.time_max = 100.0;
   params.nr_time_points_gf = 10001;
   params.alpha = 0.0;
-  params.bath_type = "flatband";
+  params.bath_type = "flatband_fft";
 
   g0_model g0_fft{params, false};
 
@@ -212,7 +212,7 @@ TEST(g0_model, Flatband_asym_2) { // NOLINT
   params.time_max = 100.0;
   params.nr_time_points_gf = 10001;
   params.alpha = 0.0;
-  params.bath_type = "flatband";
+  params.bath_type = "flatband_fft";
 
   g0_model g0_fft{params, false};
 
@@ -243,7 +243,7 @@ TEST(g0_model, Flatband_3) { // NOLINT
   params.time_max = 100.0;
   params.nr_time_points_gf = 10001;
   params.alpha = 0.0;
-  params.bath_type = "flatband";
+  params.bath_type = "flatband_fft";
 
   g0_model g0_fft{params, true};
 
@@ -295,7 +295,7 @@ TEST(g0_model, Semicirc) { // NOLINT
   params.time_max = 100.0;
   params.nr_time_points_gf = 10000;
   params.alpha = 0.0;
-  params.bath_type = "semicircle";
+  params.bath_type = "semicircle_fft";
 
   g0_model g0{params, true};
 

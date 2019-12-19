@@ -43,7 +43,7 @@ bool operator<(gf_index_t const &a, gf_index_t const &b) {
 // *****
 
 g0_model::g0_model(model_param_t const &parameters, bool with_leads) : param_(parameters), contain_leads(with_leads) {
-  if (param_.bath_type == "semicircle") {
+  if (param_.bath_type == "semicircle_fft") {
     bath_hybrid_R_left = [this](dcomplex omega) -> dcomplex {
       omega = omega / 2.;
       auto Gamma = param_.Gamma / 2;
@@ -58,7 +58,7 @@ g0_model::g0_model(model_param_t const &parameters, bool with_leads) : param_(pa
     bath_hybrid_R_right = bath_hybrid_R_left;
     make_g0_by_fft();
 
-  } else if (param_.bath_type == "flatband") {
+  } else if (param_.bath_type == "flatband_fft") {
     bath_hybrid_R_left = [this](dcomplex omega) { return -1_j * param_.Gamma / 2.; };
     bath_hybrid_A_left = [this](dcomplex omega) { return 1_j * param_.Gamma / 2.; };
     bath_hybrid_R_right = bath_hybrid_R_left;
