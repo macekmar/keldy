@@ -23,6 +23,7 @@
 #pragma once
 
 #include "../common.hpp"
+#include "../interfaces/gsl_integration_wrap.hpp"
 
 #include <triqs/gfs.hpp>
 #include <triqs/utility/first_include.hpp>
@@ -113,6 +114,40 @@ class g0_model {
 
   std::function<dcomplex(dcomplex)> bath_hybrid_A_left = [](dcomplex omega) { return 0; };
   std::function<dcomplex(dcomplex)> bath_hybrid_A_right = [](dcomplex omega) { return 0; };
+};
+
+/*
+ * Compute the integral along a contour in the complex plane made of three straight lines.
+ *
+ * The middle segment is [left_turn_pt, right_turn_pt] on the real axis, it is
+ * itselfcut at each Fermi level. The two other are semi-infinite lines
+ * starting on each end of the middle segment.
+ *
+ */
+class CPP2PY_IGNORE contour_integration_t {
+
+ private:
+  details::gsl_integration_cpx_wrapper_t worker;
+  double const abstol = 1e-14;
+  double const reltol = 1e-8;
+  double const left_turn_pt;
+  double const right_turn_pt;
+  dcomplex result = 0;
+  double abserr_sqr = 0;
+
+ public:
+  contour_integration_t(double left_turn_pt_, double right_turn_pt_)
+     : worker{1000}, left_turn_pt(left_turn_pt_), right_turn_pt(right_turn_pt_) {
+    if (not(left_turn_pt < right_turn_pt)) {
+      TRIQS_RUNTIME_ERROR << "The order left_turn_pt(" << left_turn_pt << ") < right_turn_pt(" << right_turn_pt
+                          << ") should be respected.";
+    }
+  };
+
+  dcomplex get_result() const { return result; };
+  double get_abserr_sqr() const { return abserr_sqr; };
+
+  void integrate(std::function<dcomplex(dcomplex)> func, dcomplex left_dir, dcomplex right_dir);
 };
 
 /// Adapt g0_lesser and g0_greater into Green function on Keldysh contour

@@ -26,24 +26,9 @@
 #include <gsl/gsl_integration.h>
 #include <gsl/gsl_errno.h>
 #include <triqs/utility/first_include.hpp>
-#include <triqs/utility/exceptions.hpp>
 #include <functional>
 
 namespace keldy::details {
-
-// Propagates GSL error codes into triqs errors
-void error_handler(int err_code, double result, double abserr) {
-  if (err_code) {
-    // rounding and maxiter errors should only be warnings
-    if (err_code == GSL_EROUND || err_code == GSL_EMAXITER) {
-      std::cout << "GSL error " << err_code << " : " << gsl_strerror(err_code) << " (value = " << result
-                << ", error = " << abserr << ")" << std::endl;
-    } else {
-      TRIQS_RUNTIME_ERROR << "GSL error " << err_code << " : " << gsl_strerror(err_code) << " (value = " << result
-                          << ", error = " << abserr << ")";
-    }
-  }
-}
 
 class CPP2PY_IGNORE gsl_integration_wrapper_t {
 
@@ -61,30 +46,9 @@ class CPP2PY_IGNORE gsl_integration_wrapper_t {
   double get_result() { return result; }
   double get_abserr() { return abserr; }
 
-  void integrate_qag(std::function<double(double)> const &f, double a, double b, double epsabs, double epsrel,
-                     int key) {
-    gsl_function f_gsl;
-    f_gsl.function = [](double x, void *param) { return (*static_cast<std::function<double(double)> *>(param))(x); };
-    f_gsl.params = (void *)&f;
-    auto err_code = gsl_integration_qag(&f_gsl, a, b, epsabs, epsrel, max_nb_inter, key, wsp, &result, &abserr);
-    error_handler(err_code, result, abserr);
-  }
-
-  void integrate_qagi(std::function<double(double)> const &f, double epsabs, double epsrel) {
-    gsl_function f_gsl;
-    f_gsl.function = [](double x, void *param) { return (*static_cast<std::function<double(double)> *>(param))(x); };
-    f_gsl.params = (void *)&f;
-    auto err_code = gsl_integration_qagi(&f_gsl, epsabs, epsrel, max_nb_inter, wsp, &result, &abserr);
-    error_handler(err_code, result, abserr);
-  }
-
-  void integrate_qagiu(std::function<double(double)> const &f, double a, double epsabs, double epsrel) {
-    gsl_function f_gsl;
-    f_gsl.function = [](double x, void *param) { return (*static_cast<std::function<double(double)> *>(param))(x); };
-    f_gsl.params = (void *)&f;
-    auto err_code = gsl_integration_qagiu(&f_gsl, a, epsabs, epsrel, max_nb_inter, wsp, &result, &abserr);
-    error_handler(err_code, result, abserr);
-  }
+  void integrate_qag(std::function<double(double)> const &f, double a, double b, double epsabs, double epsrel, int key);
+  void integrate_qagi(std::function<double(double)> const &f, double epsabs, double epsrel);
+  void integrate_qagiu(std::function<double(double)> const &f, double a, double epsabs, double epsrel);
 };
 
 // Integration of complex valued functions
@@ -104,47 +68,9 @@ class CPP2PY_IGNORE gsl_integration_cpx_wrapper_t {
   double get_abserr_imag() { return abserr_imag; }
 
   void integrate_qag(std::function<dcomplex(double)> const &f, double a, double b, double epsabs, double epsrel,
-                     int key) {
-    // real part
-    auto f_real = [&f](double t) { return std::real(f(t)); };
-    worker.integrate_qag(f_real, a, b, epsabs, epsrel, key);
-    result = worker.get_result();
-    abserr_real = worker.get_abserr();
-
-    // imaginary part
-    auto f_imag = [&f](double t) { return std::imag(f(t)); };
-    worker.integrate_qag(f_imag, a, b, epsabs, epsrel, key);
-    result += 1_j * worker.get_result();
-    abserr_imag = worker.get_abserr();
-  }
-
-  void integrate_qagi(std::function<dcomplex(double)> const &f, double epsabs, double epsrel) {
-    // real part
-    auto f_real = [&f](double t) { return std::real(f(t)); };
-    worker.integrate_qagi(f_real, epsabs, epsrel);
-    result = worker.get_result();
-    abserr_real = worker.get_abserr();
-
-    // imaginary part
-    auto f_imag = [&f](double t) { return std::imag(f(t)); };
-    worker.integrate_qagi(f_imag, epsabs, epsrel);
-    result += 1_j * worker.get_result();
-    abserr_imag = worker.get_abserr();
-  }
-
-  void integrate_qagiu(std::function<dcomplex(double)> const &f, double a, double epsabs, double epsrel) {
-    // real part
-    auto f_real = [&f](double t) { return std::real(f(t)); };
-    worker.integrate_qagiu(f_real, a, epsabs, epsrel);
-    result = worker.get_result();
-    abserr_real = worker.get_abserr();
-
-    // imaginary part
-    auto f_imag = [&f](double t) { return std::imag(f(t)); };
-    worker.integrate_qagiu(f_imag, a, epsabs, epsrel);
-    result += 1_j * worker.get_result();
-    abserr_imag = worker.get_abserr();
-  }
+                     int key);
+  void integrate_qagi(std::function<dcomplex(double)> const &f, double epsabs, double epsrel);
+  void integrate_qagiu(std::function<dcomplex(double)> const &f, double a, double epsabs, double epsrel);
 };
 
 } // namespace keldy::details

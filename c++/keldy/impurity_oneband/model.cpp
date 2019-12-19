@@ -21,7 +21,6 @@
 //******************************************************************************
 
 #include "model.hpp"
-#include "../interfaces/gsl_integration_wrap.hpp"
 #include <triqs/gfs.hpp>
 #include <boost/math/special_functions/expint.hpp>
 
@@ -148,63 +147,37 @@ void g0_model::make_g0_by_fft() {
   g0_greater = make_block_gf<retime, matrix_valued>({"up", "down"}, {g0_greater_up, g0_greater_up});
 }
 
-/*
- * Compute the integral along a contour in the complex plane made of three straight lines.
- *
- * The middle segment is [left_turn_pt, right_turn_pt] on the real axis. The
- * two other are semi-infinite lines starting on each end of the middle
- * segment.
- *
- * If zero_temp = true, the integration is not performed on the rhs segment,
- * and the middle segment is limited to [left_turn_pt, zero_temp_stop]. This is
- * used to ignore the part of the integrand equal to zero at zero temperature.
- */
-class CPP2PY_IGNORE contour_integration_t {
+void contour_integration_t::integrate(std::function<dcomplex(dcomplex)> func, dcomplex left_dir, dcomplex right_dir) {
 
- private:
-  details::gsl_integration_cpx_wrapper_t worker;
-  double const abstol = 1e-14;
-  double const reltol = 1e-8;
+  result = 0;
+  abserr_sqr = 0;
 
- public:
-  dcomplex result = 0;
-  double abserr_sqr = 0;
-
-  contour_integration_t() : worker{1000} {};
-
-  void integrate(std::function<dcomplex(dcomplex)> func, dcomplex left_dir, double left_turn_pt, double right_turn_pt,
-                 dcomplex right_dir, bool zero_temp = false, double zero_temp_stop = 0) {
-
-    result = 0;
-    abserr_sqr = 0;
-
-    auto f1 = [&](double x) -> dcomplex {
-      dcomplex omega = left_dir * x + left_turn_pt;
-      return -left_dir * func(omega);
-    };
-    worker.integrate_qagiu(f1, 0, abstol, reltol);
-    result += worker.get_result();
-    abserr_sqr +=
-       worker.get_abserr_real() * worker.get_abserr_real() + worker.get_abserr_imag() * worker.get_abserr_imag();
-
-    auto f2 = [&](double x) -> dcomplex { return func(x); };
-    worker.integrate_qag(f2, left_turn_pt, (zero_temp) ? zero_temp_stop : right_turn_pt, abstol, reltol,
-                         GSL_INTEG_GAUSS61);
-    result += worker.get_result();
-    abserr_sqr +=
-       worker.get_abserr_real() * worker.get_abserr_real() + worker.get_abserr_imag() * worker.get_abserr_imag();
-
-    if (not zero_temp) {
-      auto f3 = [&](double x) -> dcomplex {
-        dcomplex omega = right_turn_pt + right_dir * x;
-        return right_dir * func(omega);
-      };
-      worker.integrate_qagiu(f3, 0, abstol, reltol);
-      result += worker.get_result();
-      abserr_sqr +=
-         worker.get_abserr_real() * worker.get_abserr_real() + worker.get_abserr_imag() * worker.get_abserr_imag();
-    }
+  // left tail
+  auto f1 = [&](double x) -> dcomplex {
+    dcomplex omega = left_dir * x + left_turn_pt;
+    return -left_dir * func(omega);
   };
+  worker.integrate_qagiu(f1, 0, abstol, reltol);
+  result += worker.get_result();
+  abserr_sqr +=
+     worker.get_abserr_real() * worker.get_abserr_real() + worker.get_abserr_imag() * worker.get_abserr_imag();
+
+  // middle segment
+  auto f2 = [&](double x) -> dcomplex { return func(x); };
+  worker.integrate_qag(f2, left_turn_pt, right_turn_pt, abstol, reltol, GSL_INTEG_GAUSS61);
+  result += worker.get_result();
+  abserr_sqr +=
+     worker.get_abserr_real() * worker.get_abserr_real() + worker.get_abserr_imag() * worker.get_abserr_imag();
+
+  // right tail
+  auto f3 = [&](double x) -> dcomplex {
+    dcomplex omega = right_turn_pt + right_dir * x;
+    return right_dir * func(omega);
+  };
+  worker.integrate_qagiu(f3, 0, abstol, reltol);
+  result += worker.get_result();
+  abserr_sqr +=
+     worker.get_abserr_real() * worker.get_abserr_real() + worker.get_abserr_imag() * worker.get_abserr_imag();
 };
 
 /*
