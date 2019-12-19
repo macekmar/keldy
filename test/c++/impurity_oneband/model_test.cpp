@@ -21,7 +21,7 @@ TEST(g0_model, Initialize_flatband) { // NOLINT
 TEST(g0_model, Initialize_flatband_contour) { // NOLINT
   model_param_t params;
   params.beta = 1.0;
-  params.bias_V = 0.0;
+  params.bias_V = 0.3;
   params.eps_d = -1.0;
   params.Gamma = 1.5;
   params.time_max = 100.0;
@@ -241,16 +241,45 @@ TEST(g0_model, Flatband_3) { // NOLINT
   params.eps_d = -1.0;
   params.Gamma = 1.5;
   params.time_max = 100.0;
-  params.nr_time_points_gf = 10000;
+  params.nr_time_points_gf = 10001;
   params.alpha = 0.0;
   params.bath_type = "flatband";
 
-  g0_model g0{params, true};
+  g0_model g0_fft{params, true};
+
+  std::cout << "t=0: " << g0_fft.g0_lesser[up](0.0) << std::endl;
+  std::cout << "t=0: " << g0_fft.g0_lesser[up](0.0)(1, 0) << std::endl;
+  std::cout << "t=0.1: " << g0_fft.g0_lesser[up](0.1) << std::endl;
 
   /// values from ctint_keldysh (dot-lead terms have an extra factor 1/2, mistake in the original code)
-  EXPECT_COMPLEX_NEAR(-0.218086 + 0.0265308_j, g0.g0_lesser[up](1.0)(0, 0), 1e-3);
-  EXPECT_COMPLEX_NEAR((0.258951 + 0.423124_j) / 2, g0.g0_lesser[up](1.0)(0, 1), 1e-3);
-  EXPECT_COMPLEX_NEAR((-0.107289 + 0.350721_j) / 2, g0.g0_lesser[up](1.0)(1, 0), 1e-3);
+  EXPECT_COMPLEX_NEAR(-0.218086 + 0.0265308_j, g0_fft.g0_lesser[up](1.0)(0, 0), 1e-3);
+  EXPECT_COMPLEX_NEAR((0.258951 + 0.423124_j) / 2, g0_fft.g0_lesser[up](1.0)(0, 1), 1e-3);
+  EXPECT_COMPLEX_NEAR((-0.107289 + 0.350721_j) / 2, g0_fft.g0_lesser[up](1.0)(1, 0), 1e-3);
+
+  /// check t <-> -t symmetry
+  EXPECT_COMPLEX_NEAR(g0_fft.g0_lesser[up](1.0)(0, 0), -std::conj(g0_fft.g0_lesser[up](-1.0)(0, 0)), 1e-8);
+  EXPECT_COMPLEX_NEAR(g0_fft.g0_lesser[up](1.0)(0, 1), -std::conj(g0_fft.g0_lesser[up](-1.0)(1, 0)), 1e-8);
+  EXPECT_COMPLEX_NEAR(g0_fft.g0_greater[up](1.0)(0, 0), -std::conj(g0_fft.g0_greater[up](-1.0)(0, 0)), 1e-8);
+  EXPECT_COMPLEX_NEAR(g0_fft.g0_greater[up](1.0)(0, 1), -std::conj(g0_fft.g0_greater[up](-1.0)(1, 0)), 1e-8);
+
+  params.bath_type = "flatband_contour";
+
+  g0_model g0_ctr{params, true};
+
+  std::cout << "t=0: " << g0_ctr.g0_lesser[up](0.0) << std::endl;
+  std::cout << "t=0: " << g0_ctr.g0_lesser[up](0.0)(1, 0) << std::endl;
+  std::cout << "t=0.1: " << g0_ctr.g0_lesser[up](0.1) << std::endl;
+
+  /// values from ctint_keldysh (dot-lead terms have an extra factor 1/2, mistake in the original code)
+  EXPECT_COMPLEX_NEAR(-0.218086 + 0.0265308_j, g0_ctr.g0_lesser[up](1.0)(0, 0), 1e-3);
+  //EXPECT_COMPLEX_NEAR((0.258951 + 0.423124_j) / 2, g0_ctr.g0_lesser[up](1.0)(0, 1), 1e-3);
+  EXPECT_COMPLEX_NEAR((-0.107289 + 0.350721_j) / 2, g0_ctr.g0_lesser[up](1.0)(1, 0), 1e-3);
+
+  /// check t <-> -t symmetry
+  EXPECT_COMPLEX_NEAR(g0_ctr.g0_lesser[up](1.0)(0, 0), -std::conj(g0_ctr.g0_lesser[up](-1.0)(0, 0)), 1e-8);
+  //EXPECT_COMPLEX_NEAR(g0_ctr.g0_lesser[up](1.0)(0, 1), -std::conj(g0_ctr.g0_lesser[up](-1.0)(1, 0)), 1e-8);
+  EXPECT_COMPLEX_NEAR(g0_ctr.g0_greater[up](1.0)(0, 0), -std::conj(g0_ctr.g0_greater[up](-1.0)(0, 0)), 1e-8);
+  //EXPECT_COMPLEX_NEAR(g0_ctr.g0_greater[up](1.0)(0, 1), -std::conj(g0_ctr.g0_greater[up](-1.0)(1, 0)), 1e-8);
 }
 
 /*

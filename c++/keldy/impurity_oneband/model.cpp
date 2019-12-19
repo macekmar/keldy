@@ -193,16 +193,6 @@ void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
     TRIQS_RUNTIME_ERROR << "Contour is wrong regarding Fermi functions poles.";
   }
 
-  if (contain_leads) {
-    //TODO: Implement support for leads
-    TRIQS_RUNTIME_ERROR << "Lead-dot Green's functions are not supported for this method.";
-  }
-
-  if (param_.bias_V != 0) {
-    // TODO
-    TRIQS_RUNTIME_ERROR << "Non zero bias is not supported yet.";
-  }
-
   auto time_mesh = gf_mesh<retime>({-param_.time_max, param_.time_max, param_.nr_time_points_gf});
 
   gf<retime, matrix_valued> g0_lesser_time{time_mesh, {2, 2}};
@@ -249,6 +239,11 @@ void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
        * g0_adva_dot(omega);
   };
 
+  auto g0_rightlead_dot_omega = [&](dcomplex omega, bool is_lesser) {
+    auto bath_hybrid_right = bath_hybrid_R_right(omega) - bath_hybrid_A_right(omega);
+    int sign = (is_lesser) ? +1 : -1;
+    return -sign * nFermi(sign * (omega - mu_right)) * bath_hybrid_right * g0_adva_dot(omega)
+       + bath_hybrid_R_right(omega) * g0_omega(omega, is_lesser);
   };
 
   contour_integration_t worker(left_turn_pt, right_turn_pt);
@@ -266,16 +261,30 @@ void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
         return std::exp(-1_j * omega * t) * g0_omega(omega, is_lesser) / (2 * pi);
       };
 
+      auto integrand_lead = [t, &g0_rightlead_dot_omega, is_lesser](dcomplex omega) {
+        return std::exp(-1_j * omega * t) * g0_rightlead_dot_omega(omega, is_lesser) / (2 * pi);
+      };
+
       if (is_lesser) {
-        worker.integrate(integrand, direc_1, left_turn_pt, right_turn_pt, direc_2, (param_.beta < 0),
-                         std::abs(param_.bias_V / 2));
-        g0_lesser_time[t](0, 0) = worker.result;
-        lesser_ft_error += worker.abserr_sqr;
+        worker.integrate(integrand, direc_1, direc_2);
+        g0_lesser_time[t](0, 0) = worker.get_result();
+        lesser_ft_error(0, 0) += worker.get_abserr_sqr();
+
+        if (contain_leads) {
+          worker.integrate(integrand_lead, direc_1, direc_2);
+          g0_lesser_time[t](1, 0) = worker.get_result();
+          lesser_ft_error(1, 0) += worker.get_abserr_sqr();
+        }
       } else {
-        worker.integrate(integrand, std::conj(direc_1), left_turn_pt, right_turn_pt, std::conj(direc_2),
-                         (param_.beta < 0), std::abs(param_.bias_V / 2));
-        g0_greater_time[t](0, 0) = worker.result;
-        greater_ft_error += worker.abserr_sqr;
+        worker.integrate(integrand, -std::conj(direc_2), -std::conj(direc_1));
+        g0_greater_time[t](0, 0) = worker.get_result();
+        greater_ft_error(0, 0) += worker.get_abserr_sqr();
+
+        if (contain_leads) {
+          worker.integrate(integrand_lead, -std::conj(direc_2), -std::conj(direc_1));
+          g0_greater_time[t](1, 0) = worker.get_result();
+          greater_ft_error(1, 0) += worker.get_abserr_sqr();
+        }
       }
 
       // TODO: make use of t <-> -t symmetry to reduce calculations
@@ -284,8 +293,10 @@ void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
   }
 
   // GSL error estimations
-  lesser_ft_error = std::sqrt(lesser_ft_error / time_mesh.size());
-  greater_ft_error = std::sqrt(greater_ft_error / time_mesh.size());
+  //lesser_ft_error(0, 1) = lesser_ft_error(1, 0);
+  lesser_ft_error = sqrt(lesser_ft_error / time_mesh.size());
+  //greater_ft_error(0, 1) = greater_ft_error(1, 0);
+  greater_ft_error = sqrt(greater_ft_error / time_mesh.size());
 
   // reset default GSL error handler
   gsl_set_error_handler(gsl_default_handler);

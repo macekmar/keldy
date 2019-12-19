@@ -84,11 +84,11 @@ class g0_model {
  public:
   /// Lesser Green function $G^{<}_{\sigma}(t)$; block spin $\sigma$ {up, down}
   block_gf<retime, matrix_valued> g0_lesser;
-  double lesser_ft_error = 0.;
+  array<double, 2> lesser_ft_error = {{0, 0}, {0, 0}};
 
   /// Greater Green function $G^{>}_{\sigma}(t)$; block spin $\sigma$ {up, down}
   block_gf<retime, matrix_valued> g0_greater;
-  double greater_ft_error = 0.;
+  array<double, 2> greater_ft_error = {{0, 0}, {0, 0}};
 
   explicit g0_model(model_param_t const &parameters, bool with_leads);
 
