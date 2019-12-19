@@ -221,6 +221,9 @@ void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
     return 1.0 / (std::exp(param_.beta * omega) + 1);
   };
 
+  double const mu_left = -param_.bias_V / 2;
+  double const mu_right = +param_.bias_V / 2;
+
   auto bath_hybrid_left_K = [this, nFermi](dcomplex omega) {
     return -(2 * nFermi(omega + param_.bias_V / 2) - 1.) * (bath_hybrid_R_left(omega) - bath_hybrid_A_left(omega));
   };
@@ -237,20 +240,18 @@ void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
     return 1.0 / (omega - param_.eps_d - bath_hybrid_A_left(omega) - bath_hybrid_A_right(omega));
   };
 
-  auto g0_omega = [&g0_reta_dot, &g0_adva_dot, &bath_hybrid_left_K, &bath_hybrid_right_K](dcomplex omega,
-                                                                                          bool is_lesser) {
-    auto R = g0_reta_dot(omega);
-    auto A = g0_adva_dot(omega);
-    auto K = R * (bath_hybrid_left_K(omega) + bath_hybrid_right_K(omega)) * A;
-
-    if (is_lesser) {
-      return (K - R + A) / 2;
-    }
-    // else it is greater:
-    return (K + R - A) / 2;
+  auto g0_omega = [&](dcomplex omega, bool is_lesser) {
+    auto bath_hybrid_left = bath_hybrid_R_left(omega) - bath_hybrid_A_left(omega);
+    auto bath_hybrid_right = bath_hybrid_R_right(omega) - bath_hybrid_A_right(omega);
+    int sign = (is_lesser) ? +1 : -1;
+    return -sign * g0_reta_dot(omega)
+       * (nFermi(sign * (omega - mu_left)) * bath_hybrid_left + nFermi(sign * (omega - mu_right)) * bath_hybrid_right)
+       * g0_adva_dot(omega);
   };
 
-  contour_integration_t worker;
+  };
+
+  contour_integration_t worker(left_turn_pt, right_turn_pt);
   auto gsl_default_handler = gsl_set_error_handler_off();
 
   for (const auto t : time_mesh) {
@@ -262,7 +263,6 @@ void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
     for (const bool is_lesser : {true, false}) {
 
       auto integrand = [t, &g0_omega, is_lesser](dcomplex omega) {
-        if (not is_lesser) omega = -omega;
         return std::exp(-1_j * omega * t) * g0_omega(omega, is_lesser) / (2 * pi);
       };
 
@@ -280,11 +280,6 @@ void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
 
       // TODO: make use of t <-> -t symmetry to reduce calculations
 
-      //if (t == 0.) std::cout << "Left: " << worker_tails.get_result() << std::endl;
-
-      //  if (t == 0.) std::cout << "Right: " << worker_tails.get_result() << std::endl;
-
-      //if (t == 0.) std::cout << "Middle: " << worker_middle.get_result() << std::endl;
     }
   }
 
