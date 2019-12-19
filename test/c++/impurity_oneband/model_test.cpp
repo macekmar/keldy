@@ -87,7 +87,7 @@ TEST(g0_model, Flatband_sym) { // NOLINT
   params.eps_d = 0.0;
   params.Gamma = 1.5;
   params.time_max = 1000.0;
-  params.nr_time_points_gf = 100000;
+  params.nr_time_points_gf = 100001;
   params.alpha = 0.0;
   params.bath_type = "flatband";
 
