@@ -77,6 +77,8 @@ g0_model::g0_model(model_param_t const &parameters, bool with_leads) : param_(pa
 
     make_g0_by_contour(left_turn_pt, right_turn_pt);
 
+    //FIXME: the lead-dot green's functions at t=0 is infinite (logarithmic singularity) for flatband. How to treat it correctly?
+
   } else if (param_.bath_type == "flatband_analytic") {
     make_flat_band_analytic();
   } else {
