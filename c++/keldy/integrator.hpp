@@ -80,6 +80,9 @@ class integrator {
 
   integrator(R result_, I integrand_, W warper_, int dimension, const std::string &rng_name, int rng_seed)
      : result(std::move(result_)), integrand(std::move(integrand_)), warper(std::move(warper_)) {
+    if (dimension <= 0) {
+      TRIQS_RUNTIME_ERROR << "Dimension of the integration space must be > 0.";
+    }
     if (rng_name == "sobol") {
       rng = sobol(dimension, rng_seed);
     } else {
