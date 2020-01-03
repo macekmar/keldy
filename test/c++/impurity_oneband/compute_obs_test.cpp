@@ -52,9 +52,10 @@ TEST(ComputeObs, Initialize_current) { // NOLINT
   std::cout << computer.reduce_nr_points_run() << std::endl;
 }
 
-auto i_to_the_n = std::vector<dcomplex>{1, 1_j, -1, -1_j};
+TEST(ComputeChargeQDirect, FlatbandAnalyticCompare) { // NOLINT
 
-TEST(ComputeObs, Value1) { // NOLINT
+  auto i_to_the_n = std::vector<dcomplex>{1, 1_j, -1, -1_j};
+
   model_param_t params;
   params.beta = -1.0; // zero temperature
   params.bias_V = 0.0;
@@ -65,7 +66,7 @@ TEST(ComputeObs, Value1) { // NOLINT
   params.alpha = 0.0;
   params.bath_type = "flatband_analytic";
 
-  // Series computed for epsilon_d=0, alpha=0, from Horvatic & Zlatic in J. Physique 46 (1985) 1459-1467.
+  // Series computed for epsilon_d=0, alpha=0, from Horvatic, Zlatic. J. Physique 46 (1985) 1459-1467.
   std::vector<double> HZ_charge_series = {0.5,
                                           -0.15915494309189533577,
                                           0.050660591821168885722,
@@ -75,10 +76,11 @@ TEST(ComputeObs, Value1) { // NOLINT
                                           0.0016484718800775438296};
 
   double tol = 1e-3;
+  double t_max = 20.0; 
 
   for (int order = 1; order <= 6; ++order) {
-    std::cout << "Order " << order << std::endl;
-    compute_charge_Q_direct computer(params, 20.0, order, "lorentzian", 1e5);
+    // std::cout << "Order " << order << std::endl;
+    compute_charge_Q_direct computer(params, t_max, order, "lorentzian", 1e5);
     computer.run(1e4);
 
     if (order >= 5) {
