@@ -91,7 +91,6 @@ sparse_kernel_binner integrand_g_kernel::operator()(std::vector<double> const &t
     }
   }
 
-  dcomplex integrand_result = 0.0;
   uint64_t nr_keldysh_configs = (uint64_t(1) << order_n);
 
   // Iterate over other Keldysh index configurations. Splict smaller determinant from precomuted matrix

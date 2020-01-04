@@ -63,7 +63,7 @@ inline std::vector<double> ui_from_vi(double t_max, std::vector<double> const &v
 // * OP: wrapping of constructor with funciton for cpp2py. No templating?
 
 struct idenity_function {
-  double operator()(double t) { return 1.0; }
+  double operator()([[maybe_unused]] double t) { return 1.0; }
 };
 
 // std::function<dcomplex(double)>;

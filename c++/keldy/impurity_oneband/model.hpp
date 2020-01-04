@@ -47,7 +47,7 @@ class CPP2PY_IGNORE model_param_t {
 };
 
 // fake function to get cpp2py to create adaptor for model_param_t
-CPP2PY_ARG_AS_DICT inline void fake(model_param_t const &temp){};
+CPP2PY_ARG_AS_DICT inline void fake([[maybe_unused]] model_param_t const &temp){};
 
 /// Index of the Keldysh Green Function
 class gf_index_t {
@@ -109,11 +109,11 @@ class g0_model {
   std::function<dcomplex(dcomplex)> get_bath_hybrid_A_right() { return bath_hybrid_A_right; };
 
  private:
-  std::function<dcomplex(dcomplex)> bath_hybrid_R_left = [](dcomplex omega) { return 0; };
-  std::function<dcomplex(dcomplex)> bath_hybrid_R_right = [](dcomplex omega) { return 0; };
+  std::function<dcomplex(dcomplex)> bath_hybrid_R_left = []([[maybe_unused]] dcomplex omega) { return 0; };
+  std::function<dcomplex(dcomplex)> bath_hybrid_R_right = []([[maybe_unused]] dcomplex omega) { return 0; };
 
-  std::function<dcomplex(dcomplex)> bath_hybrid_A_left = [](dcomplex omega) { return 0; };
-  std::function<dcomplex(dcomplex)> bath_hybrid_A_right = [](dcomplex omega) { return 0; };
+  std::function<dcomplex(dcomplex)> bath_hybrid_A_left = []([[maybe_unused]] dcomplex omega) { return 0; };
+  std::function<dcomplex(dcomplex)> bath_hybrid_A_right = []([[maybe_unused]] dcomplex omega) { return 0; };
 };
 
 /*

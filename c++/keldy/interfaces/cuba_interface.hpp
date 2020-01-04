@@ -87,10 +87,10 @@ struct CPP2PY_IGNORE cuba_suave_param {
 //   // weight
 // };
 
-CPP2PY_ARG_AS_DICT inline void fake_output(cuba_output const &temp){};
-CPP2PY_ARG_AS_DICT inline void fake_common(cuba_common_param const &temp){};
-CPP2PY_ARG_AS_DICT inline void fake_vegas(cuba_vegas_param const &temp){};
-CPP2PY_ARG_AS_DICT inline void fake_suave(cuba_suave_param const &temp){};
+CPP2PY_ARG_AS_DICT inline void fake_output([[maybe_unused]] cuba_output const &temp){};
+CPP2PY_ARG_AS_DICT inline void fake_common([[maybe_unused]] cuba_common_param const &temp){};
+CPP2PY_ARG_AS_DICT inline void fake_vegas([[maybe_unused]] cuba_vegas_param const &temp){};
+CPP2PY_ARG_AS_DICT inline void fake_suave([[maybe_unused]] cuba_suave_param const &temp){};
 // CPP2PY_ARG_AS_DICT inline void fake_divonne(cuba_divonne_param const &temp){};
 
 // Do only for scalar functions

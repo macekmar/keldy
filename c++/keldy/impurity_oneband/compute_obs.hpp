@@ -51,7 +51,7 @@ scalar_warper_function_factory(std::string const &label, integrand_g_direct cons
     return [](double t) -> double { return 1.0 / ((1.0 + t) * (1.0 + t)); };
   }
   if (label == "identity") {
-    return [](double t) -> double { return 1.0; };
+    return []([[maybe_unused]] double t) -> double { return 1.0; };
   }
   TRIQS_RUNTIME_ERROR << "Warper function name is not defined.";
 }
@@ -94,13 +94,13 @@ class compute_charge_Q_direct : public integrator<dcomplex, integrand_g_direct, 
 // };
 
 class CPP2PY_IGNORE adapt_integrand {
-  double time_max_;
+  // double time_max_;
   integrand_g_direct integrand_;
   warper_plasma_simple_t pre_warper;
 
  public:
   adapt_integrand(double time_max, integrand_g_direct integrand)
-     : time_max_(time_max),
+     : //time_max_(time_max),
        integrand_(std::move(integrand)),
        pre_warper{scalar_warper_function_factory("lorentzian", integrand_, time_max), time_max, int(1e6)} {};
 
@@ -162,7 +162,7 @@ inline std::function<double(double)> scalar_warper_function_factory_kernel(std::
     return [time, &f](double t) -> double { return f(std::vector<double>{time - t}).sum_weights() + 1e-12; }; // refine
   }
   if (label == "identity") {
-    return [](double t) -> double { return 1.0; };
+    return []([[maybe_unused]] double t) -> double { return 1.0; };
   }
   TRIQS_RUNTIME_ERROR << "Warper function name is not defined.";
 }

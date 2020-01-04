@@ -60,15 +60,15 @@ g0_model::g0_model(model_param_t const &parameters, bool with_leads) : param_(pa
     make_g0_by_fft();
 
   } else if (param_.bath_type == "flatband_fft") {
-    bath_hybrid_R_left = [this](dcomplex omega) { return -1_j * param_.Gamma / 2.; };
-    bath_hybrid_A_left = [this](dcomplex omega) { return 1_j * param_.Gamma / 2.; };
+    bath_hybrid_R_left = [this]([[maybe_unused]] dcomplex omega) { return -1_j * param_.Gamma / 2.; };
+    bath_hybrid_A_left = [this]([[maybe_unused]] dcomplex omega) { return 1_j * param_.Gamma / 2.; };
     bath_hybrid_R_right = bath_hybrid_R_left;
     bath_hybrid_A_right = bath_hybrid_A_left;
     make_g0_by_fft();
 
   } else if (param_.bath_type == "flatband_contour") {
-    bath_hybrid_R_left = [this](dcomplex omega) { return -1_j * param_.Gamma / 2.; };
-    bath_hybrid_A_left = [this](dcomplex omega) { return 1_j * param_.Gamma / 2.; };
+    bath_hybrid_R_left = [this]([[maybe_unused]] dcomplex omega) { return -1_j * param_.Gamma / 2.; };
+    bath_hybrid_A_left = [this]([[maybe_unused]] dcomplex omega) { return 1_j * param_.Gamma / 2.; };
     bath_hybrid_R_right = bath_hybrid_R_left;
     bath_hybrid_A_right = bath_hybrid_A_left;
 
@@ -158,7 +158,7 @@ void contour_integration_t::integrate(std::function<dcomplex(dcomplex)> func, dc
     return -left_dir * func(omega);
   };
   auto [result_1, abserr_1] = worker.qag_si(f1, 0, std::numeric_limits<double>::infinity(), abstol, reltol);
-    //  worker.get_abserr_real() * worker.get_abserr_real() + worker.get_abserr_imag() * worker.get_abserr_imag();
+  //  worker.get_abserr_real() * worker.get_abserr_real() + worker.get_abserr_imag() * worker.get_abserr_imag();
 
   // middle segment
   auto f2 = [&](double x) -> dcomplex { return func(x); };
@@ -203,12 +203,16 @@ void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
   // Define local Fermi function; reads in beta
   auto nFermi = [this](dcomplex omega) -> dcomplex {
     if (std::real(omega) > 0) {
-      if (param_.beta < 0) return 0.;
+      if (param_.beta < 0) {
+        return 0.;
+      }
 
       auto y = std::exp(-param_.beta * omega);
       return y / (1. + y);
     }
-    if (param_.beta < 0) return 1.;
+    if (param_.beta < 0) {
+      return 1.;
+    }
 
     return 1.0 / (std::exp(param_.beta * omega) + 1);
   };
@@ -290,7 +294,6 @@ void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
       }
 
       // TODO: make use of t <-> -t symmetry to reduce calculations
-
     }
   }
 
