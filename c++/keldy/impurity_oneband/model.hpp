@@ -127,7 +127,7 @@ class g0_model {
 class CPP2PY_IGNORE contour_integration_t {
 
  private:
-  details::gsl_integration_cpx_wrapper_t worker;
+  details::gsl_integration_wrapper worker;
   double const abstol = 1e-14;
   double const reltol = 1e-8;
   double const left_turn_pt;
