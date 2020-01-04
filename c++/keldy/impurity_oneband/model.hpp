@@ -95,8 +95,8 @@ class g0_model {
   /// make dot g0
   void make_g0_by_fft();
   void make_g0_by_contour(double left_turn_pt, double right_turn_pt);
-  void make_semicircular_model();
-  void make_flat_band();
+  // void make_semicircular_model();
+  // void make_flat_band();
   void make_flat_band_analytic();
 
   model_param_t param_; // g0_keldysh_contour_t will need access to alpha

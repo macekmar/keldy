@@ -116,11 +116,11 @@ c.add_member(c_name = "contain_leads",
 
 c.add_constructor("""(keldy::impurity_oneband::model_param_t parameters, bool with_leads)""", doc = r"""""")
 
-c.add_method("""void make_semicircular_model ()""",
-             doc = r"""make dot g0""")
+# c.add_method("""void make_semicircular_model ()""",
+#              doc = r"""""")
 
-c.add_method("""void make_flat_band ()""",
-             doc = r"""""")
+# c.add_method("""void make_flat_band ()""",
+#              doc = r"""""")
 
 c.add_method("""void make_flat_band_analytic ()""",
              doc = r"""""")
