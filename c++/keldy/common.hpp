@@ -35,6 +35,8 @@ using orbital_t = int;
 enum spin_t { up = 0, down = 1 };
 enum keldysh_idx_t { forward = 0, backward = 1 };
 
+// ************
+
 /// Point of the Keldysh Contour (time, keldysh_idx, timesplit)
 class contour_pt_t {
  public:
@@ -48,5 +50,23 @@ class contour_pt_t {
 };
 
 int compare_3way(const contour_pt_t &a, const contour_pt_t &b);
+
+// ************
+// Fermi function: need for both double and dcomplex
+
+// Constraint: T floating point or complex floating point
+// Always assume beta >= 0
+template<typename T> 
+inline T n_fermi(T omega, double beta) {
+  // Need this case to avoid ambiguity. If beta = +/- infinity, we get NaN.
+  if(omega == 0.){
+    return 0.5;
+  }
+  if (std::real(omega) > 0) {
+    auto y = std::exp(-beta * omega);
+    return y / (1. + y);
+  }
+  return 1.0 / (std::exp(beta * omega) + 1);
+}
 
 } // namespace keldy
