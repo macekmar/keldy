@@ -158,4 +158,4 @@ class CPP2PY_IGNORE gsl_integration_wrapper {
   }
 };
 
-} // namespace keldy::gsl
+} // namespace keldy::details
