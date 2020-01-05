@@ -21,6 +21,7 @@
 //******************************************************************************
 
 #include "model.hpp"
+#include "../contour_integral.hpp"
 #include <limits>
 #include <triqs/gfs.hpp>
 #include <boost/math/special_functions/expint.hpp>
@@ -150,37 +151,7 @@ void g0_model::make_g0_by_fft() {
   g0_greater = make_block_gf<retime, matrix_valued>({"up", "down"}, {g0_greater_up, g0_greater_up});
 }
 
-void contour_integration_t::integrate(std::function<dcomplex(dcomplex)> func, dcomplex left_dir, dcomplex right_dir) {
 
-  // left tail
-  auto f1 = [&](double x) -> dcomplex {
-    dcomplex omega = left_dir * x + left_turn_pt;
-    return -left_dir * func(omega);
-  };
-  auto [result_1, abserr_1] = worker.qag_si(f1, 0, std::numeric_limits<double>::infinity(), abstol, reltol);
-  //  worker.get_abserr_real() * worker.get_abserr_real() + worker.get_abserr_imag() * worker.get_abserr_imag();
-
-  // middle segment
-  auto f2 = [&](double x) -> dcomplex { return func(x); };
-  auto [result_2, abserr_2] = worker.qag(f2, left_turn_pt, right_turn_pt, abstol, reltol, GSL_INTEG_GAUSS61);
-  // result += worker.get_result();
-  // abserr_sqr +=
-  //    worker.get_abserr_real() * worker.get_abserr_real() + worker.get_abserr_imag() * worker.get_abserr_imag();
-
-  // right tail
-  auto f3 = [&](double x) -> dcomplex {
-    dcomplex omega = right_turn_pt + right_dir * x;
-    return right_dir * func(omega);
-  };
-  auto [result_3, abserr_3] = worker.qag_si(f3, 0, std::numeric_limits<double>::infinity(), abstol, reltol);
-
-  result = result_1 + result_2 + result_3;
-  abserr_sqr = std::norm(abserr_1 + abserr_2 + abserr_3);
-
-  // result += worker.get_result();
-  // abserr_sqr +=
-  //    worker.get_abserr_real() * worker.get_abserr_real() + worker.get_abserr_imag() * worker.get_abserr_imag();
-};
 
 /*
  * Compute the Fourier transform of g^{</>}(\omega) by integrating along a suitable contour in the complex plane.
