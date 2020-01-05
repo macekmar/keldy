@@ -49,6 +49,8 @@ class CPP2PY_IGNORE model_param_t {
 // fake function to get cpp2py to create adaptor for model_param_t
 CPP2PY_ARG_AS_DICT inline void fake([[maybe_unused]] model_param_t const &temp){};
 
+// ***************************
+
 /// Index of the Keldysh Green Function
 class gf_index_t {
  public:
@@ -79,6 +81,8 @@ inline std::ostream &operator<<(std::ostream &os, gf_index_t const &m) {
   return os << "{" << m.contour.time << ", " << m.contour.k_idx << ", " << m.spin << ", " << m.orbital << "}";
 }
 
+// ***************************
+
 /// Defines model throuh non-interacting Green function g_lesser / g_greater
 class g0_model {
  public:
@@ -95,8 +99,6 @@ class g0_model {
   /// make dot g0
   void make_g0_by_fft();
   void make_g0_by_contour(double left_turn_pt, double right_turn_pt);
-  // void make_semicircular_model();
-  // void make_flat_band();
   void make_flat_band_analytic();
 
   model_param_t param_; // g0_keldysh_contour_t will need access to alpha
@@ -129,6 +131,8 @@ class g0_model {
   std::function<dcomplex(dcomplex)> bath_hybrid_R_left_ = []([[maybe_unused]] dcomplex omega) { return 0; };
   std::function<dcomplex(dcomplex)> bath_hybrid_R_right_ = []([[maybe_unused]] dcomplex omega) { return 0; };
 };
+
+// ***************************
 
 /// Adapt g0_lesser and g0_greater into Green function on Keldysh contour
 struct g0_keldysh_contour_t {
