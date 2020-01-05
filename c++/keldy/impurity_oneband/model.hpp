@@ -153,9 +153,24 @@ class CPP2PY_IGNORE contour_integration_t {
 /// Adapt g0_lesser and g0_greater into Green function on Keldysh contour
 struct g0_keldysh_contour_t {
   g0_model model;
-  /// Evalutate G, passing two Keldysh contour points
-  dcomplex operator()(gf_index_t const &a, gf_index_t const &b, bool internal_point = true) const;
   g0_keldysh_contour_t(g0_model model_) : model(std::move(model_)){};
+
+  /// return $g^{ab}(t,t')$ in contour basis from $g^<, g^>$ functions
+  dcomplex operator()(gf_index_t const &a, gf_index_t const &b, bool internal_point = true) const {
+    if (a.spin != b.spin) {
+      return 0.0; //  g0 is diagonal in spin
+    }
+    int time_order = compare_3way(a.contour, b.contour); // Orders on Keldysh Contour
+
+    if (time_order > 0) {
+      return model.g0_greater[a.spin](a.contour.time - b.contour.time)(0, 0);
+    }
+    if (time_order < 0) {
+      return model.g0_lesser[a.spin](a.contour.time - b.contour.time)(0, 0);
+    }
+    // if at equal contour points (incl. time-split)
+    return model.g0_lesser[a.spin](0.0)(0, 0) - static_cast<int>(internal_point) * 1_j * model.param_.alpha;
+  }
 };
 
 } // namespace keldy::impurity_oneband

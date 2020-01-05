@@ -489,23 +489,4 @@ void g0_model::make_flat_band_analytic() {
   g0_greater = make_block_gf<retime, matrix_valued>({"up", "down"}, {g0_greater_up, g0_greater_up});
 }
 
-// *****
-
-/// Adaptor: return $g^{ab}(t,t')$ in contour basis from $g^<, g^>$ functions
-dcomplex g0_keldysh_contour_t::operator()(gf_index_t const &a, gf_index_t const &b, bool internal_point) const {
-  if (a.spin != b.spin) {
-    return 0.0; //  g0 is diagonal in spin
-  }
-  int time_order = compare_3way(a.contour, b.contour); // Orders on Keldysh Contour
-
-  if (time_order > 0) {
-    return model.g0_greater[a.spin](a.contour.time - b.contour.time)(0, 0);
-  }
-  if (time_order < 0) {
-    return model.g0_lesser[a.spin](a.contour.time - b.contour.time)(0, 0);
-  }
-  // if at equal contour points (incl. time-split)
-  return model.g0_lesser[a.spin](0.0)(0, 0) - static_cast<int>(internal_point) * 1_j * model.param_.alpha;
-}
-
 } // namespace keldy::impurity_oneband
