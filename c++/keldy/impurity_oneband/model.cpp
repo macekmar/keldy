@@ -45,6 +45,11 @@ bool operator<(gf_index_t const &a, gf_index_t const &b) {
 // *****
 
 g0_model::g0_model(model_param_t const &parameters, bool with_leads) : param_(parameters), contain_leads(with_leads) {
+  if (param_.beta < 0) {
+    std::cout << "WARNING: beta < 0. Interpret this as beta = +infinity." << std::endl;
+    param_.beta = std::numeric_limits<double>::infinity();
+      }
+
   if (param_.bath_type == "semicircle_fft") {
     bath_hybrid_R_left = [Gamma = param_.Gamma](dcomplex omega) -> dcomplex {
       auto omega2 = omega / 2.;
@@ -94,21 +99,14 @@ void g0_model::make_g0_by_fft() {
   gf<refreq, matrix_valued> g0_lesser_omega{freq_mesh, {2, 2}};
   gf<refreq, matrix_valued> g0_greater_omega{freq_mesh, {2, 2}};
 
-  // Define local Fermi function; reads in beta
-  auto nFermi = [this](dcomplex omega) {
-    if (std::real(omega) > 0) {
-      auto y = std::exp(-param_.beta * omega);
-      return y / (1. + y);
-    }
-    return 1.0 / (std::exp(param_.beta * omega) + 1);
+  auto bath_hybrid_left_K = [this](dcomplex omega) {
+    return -(2 * n_fermi(omega + param_.bias_V / 2, param_.beta) - 1.)
+       * (bath_hybrid_R_left(omega) - bath_hybrid_A_left(omega));
   };
 
-  auto bath_hybrid_left_K = [this, nFermi](dcomplex omega) {
-    return -(2 * nFermi(omega + param_.bias_V / 2) - 1.) * (bath_hybrid_R_left(omega) - bath_hybrid_A_left(omega));
-  };
-
-  auto bath_hybrid_right_K = [this, nFermi](dcomplex omega) {
-    return -(2 * nFermi(omega - param_.bias_V / 2) - 1.) * (bath_hybrid_R_right(omega) - bath_hybrid_A_right(omega));
+  auto bath_hybrid_right_K = [this](dcomplex omega) {
+    return -(2 * n_fermi(omega - param_.bias_V / 2, param_.beta) - 1.)
+       * (bath_hybrid_R_right(omega) - bath_hybrid_A_right(omega));
   };
 
   auto g0_reta_dot = [this](dcomplex omega) {
@@ -168,32 +166,17 @@ void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
   gf<retime, matrix_valued> g0_lesser_time{time_mesh, {2, 2}};
   gf<retime, matrix_valued> g0_greater_time{time_mesh, {2, 2}};
 
-  // Define local Fermi function; reads in beta
-  auto nFermi = [this](dcomplex omega) -> dcomplex {
-    if (std::real(omega) > 0) {
-      if (param_.beta < 0) {
-        return 0.;
-      }
-
-      auto y = std::exp(-param_.beta * omega);
-      return y / (1. + y);
-    }
-    if (param_.beta < 0) {
-      return 1.;
-    }
-
-    return 1.0 / (std::exp(param_.beta * omega) + 1);
-  };
-
   double const mu_left = -param_.bias_V / 2;
   double const mu_right = +param_.bias_V / 2;
 
-  auto bath_hybrid_left_K = [this, nFermi](dcomplex omega) {
-    return -(2 * nFermi(omega + param_.bias_V / 2) - 1.) * (bath_hybrid_R_left(omega) - bath_hybrid_A_left(omega));
+  auto bath_hybrid_left_K = [this](dcomplex omega) {
+    return -(2 * n_fermi(omega + param_.bias_V / 2, param_.beta) - 1.)
+       * (bath_hybrid_R_left(omega) - bath_hybrid_A_left(omega));
   };
 
-  auto bath_hybrid_right_K = [this, nFermi](dcomplex omega) {
-    return -(2 * nFermi(omega - param_.bias_V / 2) - 1.) * (bath_hybrid_R_right(omega) - bath_hybrid_A_right(omega));
+  auto bath_hybrid_right_K = [this](dcomplex omega) {
+    return -(2 * n_fermi(omega - param_.bias_V / 2, param_.beta) - 1.)
+       * (bath_hybrid_R_right(omega) - bath_hybrid_A_right(omega));
   };
 
   auto g0_reta_dot = [this](dcomplex omega) {
@@ -209,14 +192,15 @@ void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
     auto bath_hybrid_right = bath_hybrid_R_right(omega) - bath_hybrid_A_right(omega);
     int sign = (is_lesser) ? +1 : -1;
     return -sign * g0_reta_dot(omega)
-       * (nFermi(sign * (omega - mu_left)) * bath_hybrid_left + nFermi(sign * (omega - mu_right)) * bath_hybrid_right)
+       * (n_fermi(sign * (omega - mu_left), param_.beta) * bath_hybrid_left
+          + n_fermi(sign * (omega - mu_right), param_.beta) * bath_hybrid_right)
        * g0_adva_dot(omega);
   };
 
   auto g0_rightlead_dot_omega = [&](dcomplex omega, bool is_lesser) {
     auto bath_hybrid_right = bath_hybrid_R_right(omega) - bath_hybrid_A_right(omega);
     int sign = (is_lesser) ? +1 : -1;
-    return -sign * nFermi(sign * (omega - mu_right)) * bath_hybrid_right * g0_adva_dot(omega)
+    return -sign * n_fermi(sign * (omega - mu_right), param_.beta) * bath_hybrid_right * g0_adva_dot(omega)
        + bath_hybrid_R_right(omega) * g0_omega(omega, is_lesser);
   };
 
@@ -226,7 +210,7 @@ void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
   for (const auto t : time_mesh) {
     int sign_of_t = (t > 0) - (t < 0);
     dcomplex direc_1 = (t == 0) ? -1 : -1_j * sign_of_t;
-    dcomplex direc_2 = (param_.beta < 0) ? 1. : param_.beta - t * 1_j;
+    dcomplex direc_2 = (param_.beta == std::numeric_limits<double>::infinity()) ? 1. : param_.beta - t * 1_j;
     direc_2 /= std::abs(direc_2);
 
     for (const bool is_lesser : {true, false}) {
@@ -422,12 +406,10 @@ void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
 // }
 
 void g0_model::make_flat_band_analytic() {
-
-  if (param_.beta >= 0 || param_.bias_V != 0. || param_.eps_d != 0.) {
+  if (param_.beta != std::numeric_limits<double>::infinity() || param_.bias_V != 0. || param_.eps_d != 0.) {
     TRIQS_RUNTIME_ERROR
-       << "Analytic flatband covers only the following parameters: beta=-1 (zero temperature), bias_V=0, eps_d=0.";
+       << "Analytic flatband covers only the following parameters: beta=infinity (zero temperature), bias_V=0, eps_d=0.";
   }
-
   if (contain_leads) {
     TRIQS_RUNTIME_ERROR << "No analytic formula for dot-lead Green's functions.";
   }
