@@ -102,18 +102,32 @@ class g0_model {
   model_param_t param_; // g0_keldysh_contour_t will need access to alpha
   bool const contain_leads;
 
-  std::function<dcomplex(dcomplex)> get_bath_hybrid_R_left() { return bath_hybrid_R_left; };
-  std::function<dcomplex(dcomplex)> get_bath_hybrid_R_right() { return bath_hybrid_R_right; };
+  dcomplex g0_R_dot(dcomplex omega) {
+    return 1.0 / (omega - param_.eps_d - bath_hybrid_R_left(omega) - bath_hybrid_R_right(omega));
+  }
 
-  std::function<dcomplex(dcomplex)> get_bath_hybrid_A_left() { return bath_hybrid_A_left; };
-  std::function<dcomplex(dcomplex)> get_bath_hybrid_A_right() { return bath_hybrid_A_right; };
+  dcomplex g0_A_dot(dcomplex omega) {
+    return 1.0 / (omega - param_.eps_d - bath_hybrid_A_left(omega) - bath_hybrid_A_right(omega));
+  }
+
+  dcomplex bath_hybrid_R_left(dcomplex omega) { return bath_hybrid_R_left_(omega); }
+  dcomplex bath_hybrid_A_left(dcomplex omega) { return std::conj(bath_hybrid_R_left_(std::conj(omega))); }
+  dcomplex bath_hybrid_K_left(dcomplex omega) {
+    double mu_left = -param_.bias_V / 2;
+    return -(2 * n_fermi(omega - mu_left, param_.beta) - 1.) * (bath_hybrid_R_left(omega) - bath_hybrid_A_left(omega));
+  }
+
+  dcomplex bath_hybrid_R_right(dcomplex omega) { return bath_hybrid_R_right_(omega); }
+  dcomplex bath_hybrid_A_right(dcomplex omega) { return std::conj(bath_hybrid_R_right_(std::conj(omega))); }
+  dcomplex bath_hybrid_K_right(dcomplex omega) {
+    double mu_right = +param_.bias_V / 2;
+    return -(2 * n_fermi(omega - mu_right, param_.beta) - 1.)
+       * (bath_hybrid_R_right(omega) - bath_hybrid_A_right(omega));
+  };
 
  private:
-  std::function<dcomplex(dcomplex)> bath_hybrid_R_left = []([[maybe_unused]] dcomplex omega) { return 0; };
-  std::function<dcomplex(dcomplex)> bath_hybrid_R_right = []([[maybe_unused]] dcomplex omega) { return 0; };
-
-  std::function<dcomplex(dcomplex)> bath_hybrid_A_left = []([[maybe_unused]] dcomplex omega) { return 0; };
-  std::function<dcomplex(dcomplex)> bath_hybrid_A_right = []([[maybe_unused]] dcomplex omega) { return 0; };
+  std::function<dcomplex(dcomplex)> bath_hybrid_R_left_ = []([[maybe_unused]] dcomplex omega) { return 0; };
+  std::function<dcomplex(dcomplex)> bath_hybrid_R_right_ = []([[maybe_unused]] dcomplex omega) { return 0; };
 };
 
 /// Adapt g0_lesser and g0_greater into Green function on Keldysh contour

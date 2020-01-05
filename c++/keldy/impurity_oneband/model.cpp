@@ -59,21 +59,17 @@ g0_model::g0_model(model_param_t const &parameters, bool with_leads) : param_(pa
       auto sgn_omega = (1 - 2 * int(std::signbit(std::real(omega2))));
       return (Gamma / 2) * (omega2 - sgn_omega * std::sqrt(omega2 * omega2 - 1));
     };
-    bath_hybrid_R_right = bath_hybrid_R_left;
+    bath_hybrid_R_right_ = bath_hybrid_R_left_;
     make_g0_by_fft();
 
   } else if (param_.bath_type == "flatband_fft") {
-    bath_hybrid_R_left = [this]([[maybe_unused]] dcomplex omega) { return -1_j * param_.Gamma / 2.; };
-    bath_hybrid_A_left = [this]([[maybe_unused]] dcomplex omega) { return 1_j * param_.Gamma / 2.; };
-    bath_hybrid_R_right = bath_hybrid_R_left;
-    bath_hybrid_A_right = bath_hybrid_A_left;
+    bath_hybrid_R_left_ = [Gamma = param_.Gamma]([[maybe_unused]] dcomplex omega) { return -1_j * Gamma / 2.; };
+    bath_hybrid_R_right_ = bath_hybrid_R_left_;
     make_g0_by_fft();
 
   } else if (param_.bath_type == "flatband_contour") {
-    bath_hybrid_R_left = [this]([[maybe_unused]] dcomplex omega) { return -1_j * param_.Gamma / 2.; };
-    bath_hybrid_A_left = [this]([[maybe_unused]] dcomplex omega) { return 1_j * param_.Gamma / 2.; };
-    bath_hybrid_R_right = bath_hybrid_R_left;
-    bath_hybrid_A_right = bath_hybrid_A_left;
+    bath_hybrid_R_left_ = [Gamma = param_.Gamma]([[maybe_unused]] dcomplex omega) { return -1_j * Gamma / 2.; };
+    bath_hybrid_R_right_ = bath_hybrid_R_left_;
 
     double margin = std::abs(std::max(param_.Gamma, 1. / param_.beta));
     double left_turn_pt = std::min(-std::abs(param_.bias_V / 2), param_.eps_d) - margin;
@@ -84,6 +80,9 @@ g0_model::g0_model(model_param_t const &parameters, bool with_leads) : param_(pa
     //FIXME: the lead-dot green's functions at t=0 is infinite (logarithmic singularity) for flatband. How to treat it correctly?
 
   } else if (param_.bath_type == "flatband_analytic") {
+    // bath_hybrid_R not used to get g(t)
+    bath_hybrid_R_left_ = [Gamma = param_.Gamma]([[maybe_unused]] dcomplex omega) { return -1_j * Gamma / 2.; };
+    bath_hybrid_R_right_ = bath_hybrid_R_left_;
     make_flat_band_analytic();
   } else {
     TRIQS_RUNTIME_ERROR << "bath_type not defined";
@@ -99,37 +98,19 @@ void g0_model::make_g0_by_fft() {
   gf<refreq, matrix_valued> g0_lesser_omega{freq_mesh, {2, 2}};
   gf<refreq, matrix_valued> g0_greater_omega{freq_mesh, {2, 2}};
 
-  auto bath_hybrid_left_K = [this](dcomplex omega) {
-    return -(2 * n_fermi(omega + param_.bias_V / 2, param_.beta) - 1.)
-       * (bath_hybrid_R_left(omega) - bath_hybrid_A_left(omega));
-  };
-
-  auto bath_hybrid_right_K = [this](dcomplex omega) {
-    return -(2 * n_fermi(omega - param_.bias_V / 2, param_.beta) - 1.)
-       * (bath_hybrid_R_right(omega) - bath_hybrid_A_right(omega));
-  };
-
-  auto g0_reta_dot = [this](dcomplex omega) {
-    return 1.0 / (omega - param_.eps_d - bath_hybrid_R_left(omega) - bath_hybrid_R_right(omega));
-  };
-
-  auto g0_adva_dot = [this](dcomplex omega) {
-    return 1.0 / (omega - param_.eps_d - bath_hybrid_A_left(omega) - bath_hybrid_A_right(omega));
-  };
-
   for (auto omega : freq_mesh) {
     dcomplex omegaj = omega + 0_j;
-    auto R = g0_reta_dot(omegaj);
-    auto A = g0_adva_dot(omegaj);
-    auto K = R * (bath_hybrid_left_K(omegaj) + bath_hybrid_right_K(omegaj)) * A;
+    auto R = g0_R_dot(omegaj);
+    auto A = g0_A_dot(omegaj);
+    auto K = R * (bath_hybrid_K_left(omegaj) + bath_hybrid_K_right(omegaj)) * A;
 
     g0_lesser_omega[omega](0, 0) = (K - R + A) / 2;
     g0_greater_omega[omega](0, 0) = (K + R - A) / 2;
 
     if (contain_leads) {
       /// right lead only
-      K = bath_hybrid_right_K(omegaj) * A + bath_hybrid_R_right(omegaj) * K;
-      R = bath_hybrid_R_right(omegaj) * g0_reta_dot(omegaj);
+      K = bath_hybrid_K_right(omegaj) * A + bath_hybrid_R_right(omegaj) * K;
+      R = bath_hybrid_R_right(omegaj) * g0_R_dot(omegaj);
       A = std::conj(R);
       g0_lesser_omega[omega](1, 0) = (K - R + A) / 2;
       g0_greater_omega[omega](1, 0) = (K + R - A) / 2;
@@ -169,38 +150,31 @@ void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
   double const mu_left = -param_.bias_V / 2;
   double const mu_right = +param_.bias_V / 2;
 
-  auto bath_hybrid_left_K = [this](dcomplex omega) {
-    return -(2 * n_fermi(omega + param_.bias_V / 2, param_.beta) - 1.)
-       * (bath_hybrid_R_left(omega) - bath_hybrid_A_left(omega));
-  };
+  // auto bath_hybrid_left_K = [this](dcomplex omega) {
+  //   return -(2 * n_fermi(omega + param_.bias_V / 2, param_.beta) - 1.)
+  //      * (bath_hybrid_R_left(omega) - bath_hybrid_A_left(omega));
+  // };
 
-  auto bath_hybrid_right_K = [this](dcomplex omega) {
-    return -(2 * n_fermi(omega - param_.bias_V / 2, param_.beta) - 1.)
-       * (bath_hybrid_R_right(omega) - bath_hybrid_A_right(omega));
-  };
+  // auto bath_hybrid_right_K = [this](dcomplex omega) {
+  //   return -(2 * n_fermi(omega - param_.bias_V / 2, param_.beta) - 1.)
+  //      * (bath_hybrid_R_right(omega) - bath_hybrid_A_right(omega));
+  // };
 
-  auto g0_reta_dot = [this](dcomplex omega) {
-    return 1.0 / (omega - param_.eps_d - bath_hybrid_R_left(omega) - bath_hybrid_R_right(omega));
-  };
-
-  auto g0_adva_dot = [this](dcomplex omega) {
-    return 1.0 / (omega - param_.eps_d - bath_hybrid_A_left(omega) - bath_hybrid_A_right(omega));
-  };
 
   auto g0_omega = [&](dcomplex omega, bool is_lesser) {
     auto bath_hybrid_left = bath_hybrid_R_left(omega) - bath_hybrid_A_left(omega);
     auto bath_hybrid_right = bath_hybrid_R_right(omega) - bath_hybrid_A_right(omega);
     int sign = (is_lesser) ? +1 : -1;
-    return -sign * g0_reta_dot(omega)
+    return -sign * g0_R_dot(omega)
        * (n_fermi(sign * (omega - mu_left), param_.beta) * bath_hybrid_left
           + n_fermi(sign * (omega - mu_right), param_.beta) * bath_hybrid_right)
-       * g0_adva_dot(omega);
+       * g0_A_dot(omega);
   };
 
   auto g0_rightlead_dot_omega = [&](dcomplex omega, bool is_lesser) {
     auto bath_hybrid_right = bath_hybrid_R_right(omega) - bath_hybrid_A_right(omega);
     int sign = (is_lesser) ? +1 : -1;
-    return -sign * n_fermi(sign * (omega - mu_right), param_.beta) * bath_hybrid_right * g0_adva_dot(omega)
+    return -sign * n_fermi(sign * (omega - mu_right), param_.beta) * bath_hybrid_right * g0_A_dot(omega)
        + bath_hybrid_R_right(omega) * g0_omega(omega, is_lesser);
   };
 
@@ -418,12 +392,15 @@ void g0_model::make_flat_band_analytic() {
   gf<retime, matrix_valued> g0_lesser_up{time_mesh, {2, 2}};
   gf<retime, matrix_valued> g0_greater_up{time_mesh, {2, 2}};
 
-  auto const g0_lesser_values = [this](time_real_t time) -> dcomplex {
+  auto const g0_lesser_values = [Gamma = param_.Gamma](time_real_t time) -> dcomplex {
+    using namespace boost::math;
     using namespace boost::math::double_constants;
 
-    auto const Gt = param_.Gamma * time;
-    auto const real_part =
-       (Gt == 0) ? 0.0 : (std::exp(Gt) * boost::math::expint(-Gt) - std::exp(-Gt) * boost::math::expint(Gt)) / (2 * pi);
+    if (time == 0.0) {
+      return 0.5_j;
+    }
+    auto Gt = Gamma * time;
+    auto real_part = (std::exp(Gt) * expint(-Gt) - std::exp(-Gt) * expint(Gt)) / (2 * pi);
     return real_part + 0.5_j * std::exp(-std::abs(Gt));
   };
 
