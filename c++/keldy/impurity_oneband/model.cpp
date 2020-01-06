@@ -45,10 +45,8 @@ bool operator<(gf_index_t const &a, gf_index_t const &b) {
 // *****
 
 g0_model::g0_model(model_param_t const &parameters, bool with_leads) : param_(parameters), contain_leads(with_leads) {
-      }
-
   if (param_.bath_type == "semicircle_fft") {
-    bath_hybrid_R_left_ = [Gamma = param_.Gamma](dcomplex omega) -> dcomplex {
+    bath_hybrid_R_left = [Gamma = param_.Gamma](dcomplex omega) -> dcomplex {
       auto omega2 = omega / 2.;
       if (std::abs(std::real(omega2)) < 1) {
         return (Gamma / 2) * (omega2 - 1_j * std::sqrt(1 - omega2 * omega2));
