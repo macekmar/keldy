@@ -147,13 +147,18 @@ struct g0_keldysh_contour_t {
     int time_order = compare_3way(a.contour, b.contour); // Orders on Keldysh Contour
 
     if (time_order > 0) {
-      return model.g0_greater[a.spin](a.contour.time - b.contour.time)(0, 0);
+      return model.g0_greater[a.spin](a.contour.time - b.contour.time)(a.orbital, b.orbital);
     }
     if (time_order < 0) {
-      return model.g0_lesser[a.spin](a.contour.time - b.contour.time)(0, 0);
+      return model.g0_lesser[a.spin](a.contour.time - b.contour.time)(a.orbital, b.orbital);
     }
     // if at equal contour points (incl. time-split)
-    return model.g0_lesser[a.spin](0.0)(0, 0) - static_cast<int>(internal_point) * 1_j * model.param_.alpha;
+    if (a.orbital != b.orbital) {
+      return model.g0_lesser[a.spin](0.0)(a.orbital, b.orbital);
+    }
+    // if at equal contour points (incl. time-split) AND equal orbitals
+    return model.g0_lesser[a.spin](0.0)(a.orbital, a.orbital)
+       - static_cast<int>(internal_point) * 1_j * model.param_.alpha;
   }
 };
 
