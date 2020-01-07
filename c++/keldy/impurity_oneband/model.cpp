@@ -51,6 +51,12 @@ g0_model_omega::g0_model_omega(model_param_t const &parameters) : param_(paramet
     param_.beta = std::numeric_limits<double>::infinity();
   }
 
+  // Ensure t=0 is in the mesh
+  if (param_.nr_time_points_gf % 2 == 0) {
+    std::cout << "WARNING: number of time points has been increased to make it odd." << std::endl;
+    param_.nr_time_points_gf += 1;
+  }
+
   if (param_.bath_type == "semicircle") {
     bath_hybrid_R_left_ = [&Gamma = param_.Gamma](dcomplex omega) -> dcomplex {
       auto omega2 = omega / 2.;

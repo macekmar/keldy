@@ -13,6 +13,39 @@
 using namespace keldy;
 using namespace keldy::impurity_oneband;
 
+/// Check if any element of `container` equals `value`
+template <typename T, typename V>
+void expect_contain(T const &container, V value) {
+  bool found = false;
+
+  for (auto const &v : container) {
+    if (v == value) {
+      found = true;
+      break;
+    }
+  }
+
+  EXPECT_TRUE(found);
+};
+
+TEST(g0_model, MiddleTimePoint1) { // NOLINT
+  model_param_t params;
+  params.nr_time_points_gf = 1000;
+  g0_model g0{params, true};
+
+  expect_contain(g0.g0_lesser[up].mesh(), 0.);
+  expect_contain(g0.g0_greater[up].mesh(), 0.);
+}
+
+TEST(g0_model, MiddleTimePoint2) { // NOLINT
+  model_param_t params;
+  params.nr_time_points_gf = 1001;
+  g0_model g0{params, true};
+
+  expect_contain(g0.g0_lesser[up].mesh(), 0.);
+  expect_contain(g0.g0_greater[up].mesh(), 0.);
+}
+
 TEST(g0_keldysh_adaptor, Initialize) { // NOLINT
   model_param_t params;
   g0_model g0{g0_model_omega{params}, true};
