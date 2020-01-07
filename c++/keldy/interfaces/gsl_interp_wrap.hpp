@@ -48,6 +48,11 @@ class CPP2PY_IGNORE gsl_interp_wrapper_t {
 
   double operator()(double x_in) { return gsl_spline_eval(spline, x_in, acc); }
 
+  std::function<double(double)> derivative() { 
+    std::function<double(double)> d = [=] (double x_in) -> double {return gsl_spline_eval_deriv(spline, x_in, acc);};
+    return d;
+  } 
+
   // triqs::arrays::array<double, 1> operator()(const triqs::arrays::array<double, 1> &x_in) {
   //   auto F = triqs::arrays::map([&](double x_point) { return gsl_spline_eval(spline, x_point, acc); });
   //   return F(x_in);

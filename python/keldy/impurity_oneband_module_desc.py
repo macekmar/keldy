@@ -387,6 +387,30 @@ c.add_method("""double evaluate_warping_function (std::vector<double> ui_vec)"""
 
 module.add_class(c)
 
+# The class warper_plasma_projection_t
+c = class_(
+        py_type = "WarperPlasmaProjectionT",  # name of the python class
+        c_type = "keldy::warper_plasma_projection_t",   # name of the C++ class
+        doc = r"""""",   # doc of the C++ class
+        hdf5 = False,
+)
+
+c.add_constructor("""(std::function<double(std::vector<double>)> integrand_, warper_plasma_1D_t w_warper_, int order, int nr_function_sample_points)""", doc = r"""""")
+
+c.add_method("""std::vector<double> ui_from_li (std::vector<double> li_vec)""",
+             doc = r"""""")
+
+c.add_method("""std::vector<double> li_from_ui (std::vector<double> ui_vec)""",
+             doc = r"""""")
+
+c.add_method("""double jacobian (std::vector<double> li_vec)""",
+             doc = r"""""")
+
+c.add_method("""double evaluate_warping_function (std::vector<double> ui_vec)""",
+             doc = r"""""")
+
+module.add_class(c)
+
 
 # The class compute_charge_Q_direct
 c = class_(
