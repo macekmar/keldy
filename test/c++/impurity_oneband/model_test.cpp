@@ -15,7 +15,7 @@ using namespace keldy::impurity_oneband;
 
 TEST(g0_keldysh_adaptor, Initialize) { // NOLINT
   model_param_t params;
-  g0_model g0{params, true};
+  g0_model g0{g0_model_omega{params}, true};
   g0_keldysh_contour_t g0_k{g0};
 }
 
@@ -23,7 +23,7 @@ TEST(g0_keldysh_adaptor, LesserGreater) { // NOLINT
   model_param_t params;
   params.eps_d = 0.0;
   params.alpha = 0.0;
-  g0_model g0{params, false};
+  g0_model g0{g0_model_omega{params}, false};
   g0_keldysh_contour_t g0_k{g0};
 
   double const tol = 1e-12;
@@ -53,7 +53,7 @@ TEST(g0_keldysh_adaptor, Orbital) { // NOLINT
   model_param_t params;
   params.eps_d = 0.0;
   params.alpha = 0.0;
-  g0_model g0{params, true};
+  g0_model g0{g0_model_omega{params}, true};
   g0_keldysh_contour_t g0_k{g0};
 
   double const tol = 1e-12;
@@ -85,7 +85,7 @@ TEST(g0_keldysh_adaptor, WithAlpha) { // NOLINT
   model_param_t params;
   params.eps_d = 0.0;
   params.alpha = 0.8;
-  g0_model g0{params, true};
+  g0_model g0{g0_model_omega{params}, true};
   g0_keldysh_contour_t g0_k{g0};
 
   double const tol = 1e-12;
@@ -105,7 +105,7 @@ TEST(g0_keldysh_adaptor, WithoutAlpha) { // NOLINT
   model_param_t params;
   params.eps_d = 0.0;
   params.alpha = 0.8;
-  g0_model g0{params, true};
+  g0_model g0{g0_model_omega{params}, true};
   g0_keldysh_contour_t g0_k{g0};
 
   double const tol = 1e-12;

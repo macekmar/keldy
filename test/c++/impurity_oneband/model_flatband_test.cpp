@@ -15,8 +15,9 @@ using namespace keldy::impurity_oneband;
 
 TEST(g0_model, Initialize_flatband) { // NOLINT
   model_param_t params;
-  params.bath_type = "flatband_fft";
-  g0_model g0{params, true};
+  params.bath_type = "flatband";
+  params.ft_method = "fft";
+  g0_model g0{g0_model_omega{params}, true};
 }
 
 TEST(g0_model, Initialize_flatband_contour) { // NOLINT
@@ -28,12 +29,14 @@ TEST(g0_model, Initialize_flatband_contour) { // NOLINT
   params.time_max = 100.0;
   params.nr_time_points_gf = 100;
   params.alpha = 0.0;
-  params.bath_type = "flatband_contour";
-  g0_model g0{params, false};
+  params.bath_type = "flatband";
+  params.ft_method = "contour";
+
+  g0_model g0{g0_model_omega{params}, false};
 
   // large beta
   params.beta = 10000.0;
-  g0_model g0_cold{params, false};
+  g0_model g0_cold{g0_model_omega{params}, false};
 }
 
 TEST(g0_model, Initialize_flatband_analytic) { // NOLINT
@@ -42,8 +45,10 @@ TEST(g0_model, Initialize_flatband_analytic) { // NOLINT
   params.bias_V = 0.;
   params.eps_d = 0.;
   params.alpha = 0.;
-  params.bath_type = "flatband_analytic";
-  g0_model g0{params, false};
+  params.bath_type = "flatband";
+  params.ft_method = "analytic";
+
+  g0_model g0{g0_model_omega{params}, false};
 }
 
 /*
@@ -59,10 +64,11 @@ TEST(g0_model, Flatband_sym) { // NOLINT
   params.time_max = 1000.0;
   params.nr_time_points_gf = 100001;
   params.alpha = 0.0;
-  params.bath_type = "flatband_fft";
+  params.bath_type = "flatband";
+  params.ft_method = "fft";
 
   // TODO: copy params ?
-  g0_model g0{params, false};
+  g0_model g0{g0_model_omega{params}, false};
 
   auto g0_less_expected = [Gamma = params.Gamma](double t1, double t2) -> dcomplex {
     using namespace boost::math::double_constants;
@@ -98,9 +104,10 @@ TEST(g0_model, Flatband_contour_sym) { // NOLINT
   params.time_max = 20.0;
   params.nr_time_points_gf = 1001;
   params.alpha = 0.0;
-  params.bath_type = "flatband_contour";
+  params.bath_type = "flatband";
+  params.ft_method = "contour";
 
-  g0_model g0_zeroT{params, false};
+  g0_model g0_zeroT{g0_model_omega{params}, false};
 
   auto g0_less_expected = [Gamma = params.Gamma](double t1, double t2) -> dcomplex {
     using namespace boost::math::double_constants;
@@ -125,7 +132,7 @@ TEST(g0_model, Flatband_contour_sym) { // NOLINT
   std::cout << "error = " << g0_zeroT.greater_ft_error << std::endl;
 
   params.beta = 100000.;
-  g0_model g0_largebeta{params, false};
+  g0_model g0_largebeta{g0_model_omega{params}, false};
 
   for (size_t i = 0; i <= 100; ++i) {
     time = -10.0 + i * 0.2;
@@ -151,9 +158,10 @@ TEST(g0_model, Flatband_asym_1) { // NOLINT
   params.time_max = 100.0;
   params.nr_time_points_gf = 10001;
   params.alpha = 0.0;
-  params.bath_type = "flatband_fft";
+  params.bath_type = "flatband";
+  params.ft_method = "fft";
 
-  g0_model g0_fft{params, false};
+  g0_model g0_fft{g0_model_omega{params}, false};
 
   /// value from Marjan analytic formula
   EXPECT_COMPLEX_NEAR(-0.09907315 + 0.06406786_j, g0_fft.g0_lesser[up](1.0)(0, 0), 1e-4);
@@ -161,9 +169,10 @@ TEST(g0_model, Flatband_asym_1) { // NOLINT
   params.beta = -1;
   params.time_max = 10.0;
   params.nr_time_points_gf = 10001;
-  params.bath_type = "flatband_contour";
+  params.bath_type = "flatband";
+  params.ft_method = "contour";
 
-  g0_model g0_ctr{params, false};
+  g0_model g0_ctr{g0_model_omega{params}, false};
 
   /// value from Marjan analytic formula
   EXPECT_COMPLEX_NEAR(-0.09907315 + 0.06406786_j, g0_ctr.g0_lesser[up](1.0)(0, 0), 1e-7);
@@ -182,9 +191,10 @@ TEST(g0_model, Flatband_asym_2) { // NOLINT
   params.time_max = 100.0;
   params.nr_time_points_gf = 10001;
   params.alpha = 0.0;
-  params.bath_type = "flatband_fft";
+  params.bath_type = "flatband";
+  params.ft_method = "fft";
 
-  g0_model g0_fft{params, false};
+  g0_model g0_fft{g0_model_omega{params}, false};
 
   /// value from Marjan analytic formula
   EXPECT_COMPLEX_NEAR(-0.2868307 + 0.05648988_j, g0_fft.g0_lesser[up](1.0)(0, 0), 1e-4);
@@ -192,9 +202,10 @@ TEST(g0_model, Flatband_asym_2) { // NOLINT
   params.beta = -1;
   params.time_max = 10.0;
   params.nr_time_points_gf = 10001;
-  params.bath_type = "flatband_contour";
+  params.bath_type = "flatband";
+  params.ft_method = "contour";
 
-  g0_model g0_ctr{params, false};
+  g0_model g0_ctr{g0_model_omega{params}, false};
 
   /// value from Marjan analytic formula
   EXPECT_COMPLEX_NEAR(-0.2868307 + 0.05648988_j, g0_ctr.g0_lesser[up](1.0)(0, 0), 1e-7);
@@ -213,9 +224,10 @@ TEST(g0_model, Flatband_3) { // NOLINT
   params.time_max = 100.0;
   params.nr_time_points_gf = 10001;
   params.alpha = 0.0;
-  params.bath_type = "flatband_fft";
+  params.bath_type = "flatband";
+  params.ft_method = "fft";
 
-  g0_model g0_fft{params, true};
+  g0_model g0_fft{g0_model_omega{params}, true};
 
   std::cout << "t=0: " << g0_fft.g0_lesser[up](0.0) << std::endl;
   std::cout << "t=0: " << g0_fft.g0_lesser[up](0.0)(1, 0) << std::endl;
@@ -232,9 +244,10 @@ TEST(g0_model, Flatband_3) { // NOLINT
   EXPECT_COMPLEX_NEAR(g0_fft.g0_greater[up](1.0)(0, 0), -std::conj(g0_fft.g0_greater[up](-1.0)(0, 0)), 1e-8);
   EXPECT_COMPLEX_NEAR(g0_fft.g0_greater[up](1.0)(0, 1), -std::conj(g0_fft.g0_greater[up](-1.0)(1, 0)), 1e-8);
 
-  params.bath_type = "flatband_contour";
+  params.bath_type = "flatband";
+  params.ft_method = "contour";
 
-  g0_model g0_ctr{params, true};
+  g0_model g0_ctr{g0_model_omega{params}, true};
 
   std::cout << "t=0: " << g0_ctr.g0_lesser[up](0.0) << std::endl;
   std::cout << "t=0: " << g0_ctr.g0_lesser[up](0.0)(1, 0) << std::endl;

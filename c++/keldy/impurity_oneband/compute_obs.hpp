@@ -62,7 +62,7 @@ class compute_charge_Q_direct : public integrator<dcomplex, integrand_g_direct, 
   compute_charge_Q_direct(model_param_t params, double time, int order, std::string warper_function_name,
                           int nr_sample_points_warper)
      : integrator{dcomplex{0},
-                  integrand_g_direct{g0_keldysh_contour_t{g0_model{params, false}}, gf_index_t{time, up, forward},
+                  integrand_g_direct{g0_keldysh_contour_t{g0_model{g0_model_omega{params}, false}}, gf_index_t{time, up, forward},
                                      gf_index_t{time, up, backward}},
                   warper_plasma_simple_t{time},
                   order,
@@ -121,7 +121,7 @@ class compute_charge_Q_direct_gsl_vegas : public gsl_vegas_wrapper_t {
   compute_charge_Q_direct_gsl_vegas(model_param_t params, double time, int order, std::string gsl_rng_name)
      : gsl_vegas_wrapper_t{
         adapt_integrand{time,
-                        integrand_g_direct{g0_keldysh_contour_t{g0_model{params, false}}, gf_index_t{time, up, forward},
+                        integrand_g_direct{g0_keldysh_contour_t{g0_model{g0_model_omega{params}, false}}, gf_index_t{time, up, forward},
                                            gf_index_t{time, up, backward}}},
         order, 1.0, gsl_rng_name} {}
 };
@@ -131,7 +131,7 @@ class compute_charge_Q_direct_cuba : public cuba_wrapper {
  public:
   compute_charge_Q_direct_cuba(model_param_t params, double time, int order, cuba_common_param in)
      : cuba_wrapper{adapt_integrand{time,
-                                    integrand_g_direct{g0_keldysh_contour_t{g0_model{params, false}},
+                                    integrand_g_direct{g0_keldysh_contour_t{g0_model{g0_model_omega{params}, false}},
                                                        gf_index_t{time, up, forward}, gf_index_t{time, up, backward}}},
                     order, std::move(in)} {}
 };
@@ -142,7 +142,7 @@ class compute_current_J_direct : public integrator<dcomplex, integrand_g_direct,
   compute_current_J_direct(model_param_t params, double time, int order, std::string warper_function_name,
                            int nr_sample_points_warper)
      : integrator{dcomplex{0},
-                  integrand_g_direct{g0_keldysh_contour_t{g0_model{params, true}}, gf_index_t{time, up, forward, 0, 1},
+                  integrand_g_direct{g0_keldysh_contour_t{g0_model{g0_model_omega{params}, true}}, gf_index_t{time, up, forward, 0, 1},
                                      gf_index_t{time, up, backward, 0, 0}},
                   warper_plasma_simple_t{time},
                   order,
@@ -172,7 +172,7 @@ class compute_gf_kernel : public integrator<kernel_binner, integrand_g_kernel, w
    compute_gf_kernel(model_param_t params, double time, int order, std::string warper_function_name,
                      int nr_sample_points_warper)
       : integrator{kernel_binner{0.0, time, 100},
-                   integrand_g_kernel{g0_keldysh_contour_t{g0_model{params, false}}, gf_index_t{time, up, forward}},
+                   integrand_g_kernel{g0_keldysh_contour_t{g0_model{g0_model_omega{params}, false}}, gf_index_t{time, up, forward}},
                    warper_plasma_simple_t{time},
                    order,
                    "sobol",

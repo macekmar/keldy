@@ -7,7 +7,7 @@ using namespace keldy::impurity_oneband;
 
 TEST(integrand_direct, Order_1) { // NOLINT
   model_param_t params;
-  g0_model g0{params, true};
+  g0_model g0{g0_model_omega{params}, true};
   g0_keldysh_contour_t g0_k{g0};
   auto external_A = gf_index_t{5.0, up, forward};
   auto external_B = gf_index_t{5.0, up, forward};
@@ -32,7 +32,7 @@ TEST(integrand_direct, Order_1) { // NOLINT
 
 TEST(integrand_direct, Order_2) { // NOLINT
   model_param_t params;
-  g0_model g0{params, true};
+  g0_model g0{g0_model_omega{params}, true};
   g0_keldysh_contour_t g0_k{g0};
   auto external_A = gf_index_t{5.0, up, forward};
   auto external_B = gf_index_t{5.0, up, forward};

@@ -14,7 +14,8 @@ TEST(integrand_direct, Order_1) { // NOLINT
   params.time_max = 1000.0;
   params.nr_time_points_gf = 100000;
   params.alpha = 0.0;
-  params.bath_type = "flatband_fft";
+  params.bath_type = "flatband";
+  params.ft_method = "fft";
 
   compute_charge_Q_direct_gsl_vegas comp{params, 10.0, 3, "sobol"};
 

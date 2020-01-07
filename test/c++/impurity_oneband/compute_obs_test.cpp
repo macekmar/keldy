@@ -64,7 +64,8 @@ TEST(ComputeChargeQDirect, FlatbandAnalyticCompare) { // NOLINT
   params.time_max = 30.0;
   params.nr_time_points_gf = 10001;
   params.alpha = 0.0;
-  params.bath_type = "flatband_analytic";
+  params.bath_type = "flatband";
+  params.ft_method = "analytic";
 
   // Series computed for epsilon_d=0, alpha=0, from Horvatic, Zlatic. J. Physique 46 (1985) 1459-1467.
   std::vector<double> HZ_charge_series = {0.5,

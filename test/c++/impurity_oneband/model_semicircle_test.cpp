@@ -15,8 +15,10 @@ using namespace keldy::impurity_oneband;
 
 TEST(g0_model, Initialize_semicircle) { // NOLINT
   model_param_t params;
-  params.bath_type = "semicircle_fft";
-  g0_model g0{params, true};
+  params.bath_type = "semicircle";
+  params.ft_method = "fft";
+
+  g0_model g0{g0_model_omega{params}, true};
 }
 
 /*
@@ -32,9 +34,10 @@ TEST(g0_model, Semicirc) { // NOLINT
   params.time_max = 100.0;
   params.nr_time_points_gf = 10000;
   params.alpha = 0.0;
-  params.bath_type = "semicircle_fft";
+  params.bath_type = "semicircle";
+  params.ft_method = "fft";
 
-  g0_model g0{params, true};
+  g0_model g0{g0_model_omega{params}, true};
 
   /// values from ctint_keldysh
   EXPECT_COMPLEX_NEAR(-0.23107349410223865 + 0.13213346415985422_j, g0.g0_lesser[up](1.0)(0, 0), 1e-3);
