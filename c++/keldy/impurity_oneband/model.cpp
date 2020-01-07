@@ -26,6 +26,7 @@
 #include <limits>
 #include <triqs/gfs.hpp>
 #include <boost/math/special_functions/expint.hpp>
+#include <itertools/omp_chunk.hpp>
 
 namespace keldy::impurity_oneband {
 
@@ -157,52 +158,56 @@ void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
   gf<retime, matrix_valued> g0_lesser_time{time_mesh, {2, 2}};
   gf<retime, matrix_valued> g0_greater_time{time_mesh, {2, 2}};
 
-  contour_integration_t worker(left_turn_pt, right_turn_pt);
   auto gsl_default_handler = gsl_set_error_handler_off();
 
-  for (const auto t : time_mesh) {
-    int sign_of_t = (t > 0) - (t < 0);
-    dcomplex direc_1 = (t == 0) ? -1 : -1_j * sign_of_t;
-    dcomplex direc_2 =
-       (model_omega.param_.beta == std::numeric_limits<double>::infinity()) ? 1. : model_omega.param_.beta - t * 1_j;
-    direc_2 /= std::abs(direc_2);
+#pragma omp parallel
+  {
+    contour_integration_t worker(left_turn_pt, right_turn_pt);
 
-    // g_lesser:
-    auto integrand_dot_lesser = [t, model = this->model_omega](dcomplex omega) -> dcomplex {
-      return std::exp(-1_j * omega * t) * model.g0_dot_lesser(omega) / (2 * pi);
-    };
+    for (const auto t : itertools::omp_chunk(time_mesh)) {
+      int sign_of_t = (t > 0) - (t < 0);
+      dcomplex direc_1 = (t == 0) ? -1 : -1_j * sign_of_t;
+      dcomplex direc_2 =
+         (model_omega.param_.beta == std::numeric_limits<double>::infinity()) ? 1. : model_omega.param_.beta - t * 1_j;
+      direc_2 /= std::abs(direc_2);
 
-    worker.integrate(integrand_dot_lesser, direc_1, direc_2);
-    g0_lesser_time[t](0, 0) = worker.get_result();
-    lesser_ft_error(0, 0) += worker.get_abserr_sqr();
-
-    if (make_dot_lead) {
-      auto integrand_lead_lesser = [t, model = this->model_omega](dcomplex omega) -> dcomplex {
-        return std::exp(-1_j * omega * t) * model.g0_rightlead_dot_lesser(omega) / (2 * pi);
+      // g_lesser:
+      auto integrand_dot_lesser = [t, model = this->model_omega](dcomplex omega) -> dcomplex {
+        return std::exp(-1_j * omega * t) * model.g0_dot_lesser(omega) / (2 * pi);
       };
 
-      worker.integrate(integrand_lead_lesser, direc_1, direc_2);
-      g0_lesser_time[t](1, 0) = worker.get_result();
-      lesser_ft_error(1, 0) += worker.get_abserr_sqr();
-    }
+      worker.integrate(integrand_dot_lesser, direc_1, direc_2);
+      g0_lesser_time[t](0, 0) = worker.get_result();
+      lesser_ft_error(0, 0) += worker.get_abserr_sqr();
 
-    // g_greater
-    auto integrand_dot_greater = [t, model = this->model_omega](dcomplex omega) -> dcomplex {
-      return std::exp(-1_j * omega * t) * model.g0_dot_greater(omega) / (2 * pi);
-    };
+      if (make_dot_lead) {
+        auto integrand_lead_lesser = [t, model = this->model_omega](dcomplex omega) -> dcomplex {
+          return std::exp(-1_j * omega * t) * model.g0_rightlead_dot_lesser(omega) / (2 * pi);
+        };
 
-    worker.integrate(integrand_dot_greater, -std::conj(direc_2), -std::conj(direc_1));
-    g0_greater_time[t](0, 0) = worker.get_result();
-    greater_ft_error(0, 0) += worker.get_abserr_sqr();
+        worker.integrate(integrand_lead_lesser, direc_1, direc_2);
+        g0_lesser_time[t](1, 0) = worker.get_result();
+        lesser_ft_error(1, 0) += worker.get_abserr_sqr();
+      }
 
-    if (make_dot_lead) {
-      auto integrand_lead_greater = [t, model = this->model_omega](dcomplex omega) -> dcomplex {
-        return std::exp(-1_j * omega * t) * model.g0_rightlead_dot_greater(omega) / (2 * pi);
+      // g_greater
+      auto integrand_dot_greater = [t, model = this->model_omega](dcomplex omega) -> dcomplex {
+        return std::exp(-1_j * omega * t) * model.g0_dot_greater(omega) / (2 * pi);
       };
 
-      worker.integrate(integrand_lead_greater, -std::conj(direc_2), -std::conj(direc_1));
-      g0_greater_time[t](1, 0) = worker.get_result();
-      greater_ft_error(1, 0) += worker.get_abserr_sqr();
+      worker.integrate(integrand_dot_greater, -std::conj(direc_2), -std::conj(direc_1));
+      g0_greater_time[t](0, 0) = worker.get_result();
+      greater_ft_error(0, 0) += worker.get_abserr_sqr();
+
+      if (make_dot_lead) {
+        auto integrand_lead_greater = [t, model = this->model_omega](dcomplex omega) -> dcomplex {
+          return std::exp(-1_j * omega * t) * model.g0_rightlead_dot_greater(omega) / (2 * pi);
+        };
+
+        worker.integrate(integrand_lead_greater, -std::conj(direc_2), -std::conj(direc_1));
+        g0_greater_time[t](1, 0) = worker.get_result();
+        greater_ft_error(1, 0) += worker.get_abserr_sqr();
+      }
     }
 
     // TODO: make use of t <-> -t symmetry to reduce calculations
