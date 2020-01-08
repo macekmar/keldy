@@ -30,9 +30,9 @@ module.add_enum("keldysh_idx_t", ['keldysh_idx_t::forward', 'keldysh_idx_t::back
 
 # The class contour_pt_t
 c = class_(
-        py_type = "TimeIdxT",  # name of the python class
+        py_type = "ContourPtT",  # name of the python class
         c_type = "keldy::contour_pt_t",   # name of the C++ class
-        doc = r"""""",   # doc of the C++ class
+        doc = r"""Point of the Keldysh Contour (time, keldysh_idx, timesplit)""",   # doc of the C++ class
         hdf5 = False,
 )
 
@@ -57,7 +57,7 @@ module.add_class(c)
 c = class_(
         py_type = "GfIndexT",  # name of the python class
         c_type = "keldy::impurity_oneband::gf_index_t",   # name of the C++ class
-        doc = r"""Point of the Contour Keldysh Green Function (time, spin, keldysh_idx)""",   # doc of the C++ class
+        doc = r"""Index of the Keldysh Green Function""",   # doc of the C++ class
         hdf5 = False,
 )
 
@@ -86,44 +86,103 @@ c.add_constructor("""(keldy::time_real_t time_, int spin_, int k_idx_, int times
 
 module.add_class(c)
 
-# The class g0_model
+# The class g0_model_omega
 c = class_(
-        py_type = "G0Model",  # name of the python class
-        c_type = "keldy::impurity_oneband::g0_model",   # name of the C++ class
+        py_type = "G0ModelOmega",  # name of the python class
+        c_type = "keldy::impurity_oneband::g0_model_omega",   # name of the C++ class
         doc = r"""Defines model throuh non-interacting Green function g_lesser / g_greater""",   # doc of the C++ class
         hdf5 = False,
 )
-
-c.add_member(c_name = "g0_lesser",
-             c_type = "block_gf<triqs::gfs::retime, triqs::gfs::matrix_valued>",
-             read_only= True,
-             doc = r"""Lesser Green function $G^{<}_{\sigma}(t)$; block spin $\sigma$ {up, down}""")
-
-c.add_member(c_name = "g0_greater",
-             c_type = "block_gf<triqs::gfs::retime, triqs::gfs::matrix_valued>",
-             read_only= True,
-             doc = r"""Greater Green function $G^{>}_{\sigma}(t)$; block spin $\sigma$ {up, down}""")
 
 c.add_member(c_name = "param_",
              c_type = "keldy::impurity_oneband::model_param_t",
              read_only= True,
              doc = r"""""")
 
-c.add_member(c_name = "contain_leads",
+c.add_constructor("""(keldy::impurity_oneband::model_param_t parameters)""", doc = r"""""")
+
+c.add_method("""double mu_left ()""",
+             doc = r"""""")
+
+c.add_method("""double mu_right ()""",
+             doc = r"""""")
+
+c.add_method("""keldy::dcomplex g0_dot_R (keldy::dcomplex omega)""",
+             doc = r"""""")
+
+c.add_method("""keldy::dcomplex g0_dot_A (keldy::dcomplex omega)""",
+             doc = r"""""")
+
+c.add_method("""keldy::dcomplex g0_dot_lesser (keldy::dcomplex omega)""",
+             doc = r"""""")
+
+c.add_method("""keldy::dcomplex g0_dot_greater (keldy::dcomplex omega)""",
+             doc = r"""""")
+
+c.add_method("""keldy::dcomplex bath_hybrid_R_left (keldy::dcomplex omega)""",
+             doc = r"""""")
+
+c.add_method("""keldy::dcomplex bath_hybrid_A_left (keldy::dcomplex omega)""",
+             doc = r"""""")
+
+c.add_method("""keldy::dcomplex bath_hybrid_K_left (keldy::dcomplex omega)""",
+             doc = r"""""")
+
+c.add_method("""keldy::dcomplex bath_hybrid_R_right (keldy::dcomplex omega)""",
+             doc = r"""""")
+
+c.add_method("""keldy::dcomplex bath_hybrid_A_right (keldy::dcomplex omega)""",
+             doc = r"""""")
+
+c.add_method("""keldy::dcomplex bath_hybrid_K_right (keldy::dcomplex omega)""",
+             doc = r"""""")
+
+c.add_method("""keldy::dcomplex g0_rightlead_dot_lesser (keldy::dcomplex omega)""",
+             doc = r"""""")
+
+c.add_method("""keldy::dcomplex g0_rightlead_dot_greater (keldy::dcomplex omega)""",
+             doc = r"""""")
+
+module.add_class(c)
+# The class g0_model
+c = class_(
+        py_type = "G0Model",  # name of the python class
+        c_type = "keldy::impurity_oneband::g0_model",   # name of the C++ class
+        doc = r"""""",   # doc of the C++ class
+        hdf5 = False,
+)
+
+c.add_member(c_name = "model_omega",
+             c_type = "keldy::impurity_oneband::g0_model_omega",
+             read_only= True,
+             doc = r"""""")
+
+c.add_member(c_name = "make_dot_lead",
              c_type = "const bool",
              read_only= True,
              doc = r"""""")
 
-c.add_constructor("""(keldy::impurity_oneband::model_param_t parameters, bool with_leads)""", doc = r"""""")
+c.add_member(c_name = "g0_lesser",
+             c_type = "block_gf<triqs::gfs::retime, triqs::gfs::matrix_valued>",
+             read_only= True,
+             doc = r"""Lesser Green function $G^{<}_{\sigma}(t)$; block spin $\sigma$ {up, down}""")
 
-# c.add_method("""void make_semicircular_model ()""",
-#              doc = r"""""")
-
-# c.add_method("""void make_flat_band ()""",
-#              doc = r"""""")
-
-c.add_method("""void make_flat_band_analytic ()""",
+c.add_member(c_name = "lesser_ft_error",
+             c_type = "array<double, 2>",
+             read_only= True,
              doc = r"""""")
+
+c.add_member(c_name = "g0_greater",
+             c_type = "block_gf<triqs::gfs::retime, triqs::gfs::matrix_valued>",
+             read_only= True,
+             doc = r"""Greater Green function $G^{>}_{\sigma}(t)$; block spin $\sigma$ {up, down}""")
+
+c.add_member(c_name = "greater_ft_error",
+             c_type = "array<double, 2>",
+             read_only= True,
+             doc = r"""""")
+
+c.add_constructor("""(keldy::impurity_oneband::g0_model_omega model_omega_, bool make_dot_lead_)""", doc = r"""""")
 
 module.add_class(c)
 
@@ -144,7 +203,7 @@ c.add_constructor("""(keldy::impurity_oneband::g0_model model_)""", doc = r"""""
 
 c.add_method("""keldy::dcomplex operator() (keldy::impurity_oneband::gf_index_t a, keldy::impurity_oneband::gf_index_t b, bool internal_point = true)""",
              name = "__call__",
-             doc = r"""Evalutate G, passing two Keldysh contour points""")
+             doc = r"""return :math:`g^{ab}(t,t')` in contour basis from :math:`g^<, g^>` functions""")
 
 module.add_class(c)
 
@@ -470,6 +529,8 @@ c.add_method("""keldy::impurity_oneband::integrand_g_kernel get_integrand ()""",
 
 module.add_class(c)
 
+module.add_function ("int keldy::compare_3way (keldy::contour_pt_t a, keldy::contour_pt_t b)", doc = r"""""")
+
 module.add_function ("void keldy::impurity_oneband::fake (**keldy::impurity_oneband::model_param_t)", doc = r"""
 
 
@@ -494,6 +555,8 @@ module.add_function ("void keldy::impurity_oneband::fake (**keldy::impurity_oneb
 | bath_type         | std::string | "flatband" |               |
 +-------------------+-------------+------------+---------------+
 """)
+
+module.add_function ("bool keldy::impurity_oneband::equivalent_without_timesplit (keldy::impurity_oneband::gf_index_t lhs, keldy::impurity_oneband::gf_index_t rhs)", doc = r"""""")
 
 module.add_function ("std::vector<double> keldy::vi_from_ui (double t_max, std::vector<double> u_times)", doc = r"""""")
 
@@ -525,6 +588,16 @@ c.add_member(c_name = "Gamma",
              initializer = """ 1.0 """,
              doc = r"""""")
 
+c.add_member(c_name = "alpha",
+             c_type = "double",
+             initializer = """ 0.0 """,
+             doc = r"""""")
+
+c.add_member(c_name = "bath_type",
+             c_type = "std::string",
+             initializer = """ "flatband" """,
+             doc = r"""""")
+
 c.add_member(c_name = "time_max",
              c_type = "double",
              initializer = """ +100.0 """,
@@ -535,14 +608,9 @@ c.add_member(c_name = "nr_time_points_gf",
              initializer = """ 1000 """,
              doc = r"""""")
 
-c.add_member(c_name = "alpha",
-             c_type = "double",
-             initializer = """ 0.0 """,
-             doc = r"""""")
-
-c.add_member(c_name = "bath_type",
+c.add_member(c_name = "ft_method",
              c_type = "std::string",
-             initializer = """ "flatband" """,
+             initializer = """ "fft" """,
              doc = r"""""")
 
 module.add_converter(c)
@@ -700,17 +768,17 @@ c = converter_(
 )
 c.add_member(c_name = "n_new_evals_each_subdivision",
              c_type = "int",
-             initializer = """ 1000 """,
+             initializer = """ 5000 """,
              doc = r"""""")
 
 c.add_member(c_name = "n_min_samples_region_threashold",
              c_type = "int",
-             initializer = """ 1000 """,
+             initializer = """ 500 """,
              doc = r"""""")
 
 c.add_member(c_name = "flatness_parameter_p",
              c_type = "double",
-             initializer = """ 10.0 """,
+             initializer = """ 50.0 """,
              doc = r"""""")
 
 module.add_converter(c)
