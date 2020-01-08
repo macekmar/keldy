@@ -5,13 +5,43 @@
 using namespace keldy;
 using namespace keldy::impurity_oneband;
 
+TEST(integrand_direct, Cutoff) { // NOLINT
+  model_param_t params;
+  params.beta = 1.0;
+  params.bias_V = 0.0;
+  params.eps_d = 0.0;
+  params.Gamma = 1.0;
+  params.time_max = 10.0; // (time_limit_min = - time_limit_max)
+  params.nr_time_points_gf = 1000;
+  params.alpha = 0.0;
+  params.bath_type = "flatband_fft";
+
+  g0_model g0{params, true};
+  g0_keldysh_contour_t g0_k{g0};
+  auto external_A = gf_index_t{5.0, up, forward};
+  auto external_B = gf_index_t{5.0, up, forward};
+
+  double const cutoff = 1e-4;
+  integrand_g_direct integrand_1(g0_k, external_A, external_B, 0.); // no cutoff
+  integrand_g_direct integrand_2(g0_k, external_A, external_B, cutoff);
+
+  std::vector<double> time_vec = {2., 0.};
+  EXPECT_LT(std::abs(integrand_1(time_vec)), cutoff);
+  EXPECT_NE(integrand_1(time_vec), 0.);
+  EXPECT_EQ(integrand_2(time_vec), 0.);
+
+  time_vec = {4.9, 4.8};
+  EXPECT_GT(std::abs(integrand_1(time_vec)), cutoff);
+  EXPECT_EQ(integrand_1(time_vec), integrand_2(time_vec));
+}
+
 TEST(integrand_direct, Order_1) { // NOLINT
   model_param_t params;
   g0_model g0{g0_model_omega{params}, true};
   g0_keldysh_contour_t g0_k{g0};
   auto external_A = gf_index_t{5.0, up, forward};
   auto external_B = gf_index_t{5.0, up, forward};
-  integrand_g_direct integrand{g0_k, external_A, external_B};
+  integrand_g_direct integrand(g0_k, external_A, external_B);
 
   dcomplex computed_val;
   dcomplex expected_val;
@@ -36,7 +66,7 @@ TEST(integrand_direct, Order_2) { // NOLINT
   g0_keldysh_contour_t g0_k{g0};
   auto external_A = gf_index_t{5.0, up, forward};
   auto external_B = gf_index_t{5.0, up, forward};
-  integrand_g_direct integrand{g0_k, external_A, external_B};
+  integrand_g_direct integrand(g0_k, external_A, external_B);
 
   dcomplex computed_val;
   dcomplex expected_val;

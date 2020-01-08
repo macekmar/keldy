@@ -139,6 +139,11 @@ dcomplex integrand_g_direct::operator()(std::vector<double> const &times) const 
     integrand_result += GetBitParity(idx_kel) * determinant(tmp_mat_s1) * determinant(tmp_mat_s2);
   }
 
+  // apply cutoff
+  if (std::abs(integrand_result) < cutoff) {
+    integrand_result = 0.;
+  }
+
   // Multiply by overall factors (-1j) * (j)^n * (-1j)^n ?? FIXME
   return integrand_result;
 }

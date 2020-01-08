@@ -215,7 +215,7 @@ c = class_(
         hdf5 = False,
 )
 
-c.add_constructor("""(keldy::impurity_oneband::g0_keldysh_contour_t g0_, keldy::impurity_oneband::gf_index_t external_A_, keldy::impurity_oneband::gf_index_t external_B_)""", doc = r"""""")
+c.add_constructor("""(keldy::impurity_oneband::g0_keldysh_contour_t g0_, keldy::impurity_oneband::gf_index_t external_A_, keldy::impurity_oneband::gf_index_t external_B_, double cutoff = 0.)""", doc = r"""""")
 
 c.add_method("""keldy::impurity_oneband::integrand_g_direct::result_t operator() (std::vector<double> times)""",
              name = "__call__",
@@ -611,6 +611,11 @@ c.add_member(c_name = "nr_time_points_gf",
 c.add_member(c_name = "ft_method",
              c_type = "std::string",
              initializer = """ "fft" """,
+             doc = r"""""")
+
+c.add_member(c_name = "cutoff_integrand",
+             c_type = "double",
+             initializer = """ 0. """,
              doc = r"""""")
 
 module.add_converter(c)
