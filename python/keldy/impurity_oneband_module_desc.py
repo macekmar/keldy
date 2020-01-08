@@ -365,7 +365,7 @@ c = class_(
         hdf5 = False,
 )
 
-c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, std::string warper_function_name, int nr_sample_points_warper)""", doc = r"""""")
+c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)""", doc = r"""""")
 
 c.add_method("""void run (int nr_steps)""",
              doc = r"""""")
@@ -393,7 +393,7 @@ c = class_(
         hdf5 = False,
 )
 
-c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, std::string gsl_rng_name)""", doc = r"""""")
+c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, std::string gsl_rng_name, double warper_scale = 1)""", doc = r"""""")
 
 c.add_method("""double operator() (std::vector<double> x)""",
              name = "__call__",
@@ -486,7 +486,7 @@ c.add_method("""double operator() (std::vector<double> x)""",
              doc = r"""""")
 
 
-c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, keldy::cuba_common_param in)""", doc = r"""""")
+c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, keldy::cuba_common_param in, double warper_scale = 1)""", doc = r"""""")
 
 c.add_method("""void run_vegas (keldy::cuba_vegas_param in_v)""",
              doc = r"""""")
@@ -537,7 +537,7 @@ c = class_(
         hdf5 = False,
 )
 
-c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, std::string warper_function_name, int nr_sample_points_warper)""", doc = r"""""")
+c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)""", doc = r"""""")
 
 c.add_method("""void run (int nr_steps)""",
              doc = r"""""")

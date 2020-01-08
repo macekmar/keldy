@@ -42,16 +42,29 @@ namespace keldy::impurity_oneband {
 // ******************************************************************************************************************************************************
 // Direct Evaluation ('Profumo')
 
-inline std::function<double(double)>
-scalar_warper_function_factory(std::string const &label, integrand_g_direct const &f, double time) CPP2PY_IGNORE {
+inline warper_plasma_simple_t simple_plasma_warper_factory(std::string const &label, integrand_g_direct const &f,
+                                                           double time, int nr_sample_points_warper,
+                                                           double warper_scale) CPP2PY_IGNORE {
   if (label == "first_order") {
-    return [time, &f](double t) -> double { return std::abs(f(std::vector<double>{time - t})) + 1e-12; };
+    return {[time, &f](double t) -> double { return std::abs(f(std::vector<double>{time - t})) + 1e-12; }, time,
+            nr_sample_points_warper};
   }
   if (label == "lorentzian") {
-    return [](double t) -> double { return 1.0 / ((1.0 + t) * (1.0 + t)); };
+    return {[warper_scale](double t) -> double {
+              return warper_scale * warper_scale / ((warper_scale + t) * (warper_scale + t));
+            },
+            [warper_scale](double t) -> double { return warper_scale * warper_scale * t / (warper_scale + t); },
+            [warper_scale](double l) -> double { return warper_scale * l / (warper_scale - l); }, time,
+            nr_sample_points_warper};
+  }
+  if (label == "exponential") {
+    return {[warper_scale](double t) -> double { return std::exp(-(t / warper_scale)); },
+            [warper_scale](double t) -> double { return warper_scale * (1 - std::exp(-t / warper_scale)); },
+            [warper_scale](double l) -> double { return -warper_scale * std::log(1 - l / warper_scale); }, time,
+            nr_sample_points_warper};
   }
   if (label == "identity") {
-    return []([[maybe_unused]] double t) -> double { return 1.0; };
+    return {time};
   }
   TRIQS_RUNTIME_ERROR << "Warper function name is not defined.";
 }
@@ -60,7 +73,7 @@ scalar_warper_function_factory(std::string const &label, integrand_g_direct cons
 class compute_charge_Q_direct : public integrator<dcomplex, integrand_g_direct, warper_plasma_simple_t> {
  public:
   compute_charge_Q_direct(model_param_t params, double time, int order, std::string warper_function_name,
-                          int nr_sample_points_warper)
+                          int nr_sample_points_warper, double warper_scale = 1)
      : integrator{dcomplex{0},
                   integrand_g_direct{g0_keldysh_contour_t{g0_model{g0_model_omega{params}, false}},
                                      gf_index_t{time, up, forward}, gf_index_t{time, up, backward},
@@ -69,7 +82,7 @@ class compute_charge_Q_direct : public integrator<dcomplex, integrand_g_direct, 
                   order,
                   "sobol",
                   0} {
-    warper = {scalar_warper_function_factory(warper_function_name, integrand, time), time, nr_sample_points_warper};
+    warper = simple_plasma_warper_factory(warper_function_name, integrand, time, nr_sample_points_warper, warper_scale);
   }
 };
 
@@ -100,10 +113,10 @@ class CPP2PY_IGNORE adapt_integrand {
   warper_plasma_simple_t pre_warper;
 
  public:
-  adapt_integrand(double time_max, integrand_g_direct integrand)
+  adapt_integrand(double time_max, integrand_g_direct integrand, double warper_scale)
      : //time_max_(time_max),
        integrand_(std::move(integrand)),
-       pre_warper{scalar_warper_function_factory("lorentzian", integrand_, time_max), time_max, int(1e6)} {};
+       pre_warper{simple_plasma_warper_factory("lorentzian", integrand_, time_max, int(1e6), warper_scale)} {};
 
   double operator()(std::vector<double> const &li_vec) {
     std::vector<double> ui_vec = pre_warper.ui_from_li(li_vec);
@@ -119,31 +132,35 @@ class CPP2PY_IGNORE adapt_integrand {
 // Class to compute charge = G^{lesser}_{up,up}(t).
 class compute_charge_Q_direct_gsl_vegas : public gsl_vegas_wrapper_t {
  public:
-  compute_charge_Q_direct_gsl_vegas(model_param_t params, double time, int order, std::string gsl_rng_name)
+  compute_charge_Q_direct_gsl_vegas(model_param_t params, double time, int order, std::string gsl_rng_name,
+                                    double warper_scale = 1)
      : gsl_vegas_wrapper_t{
         adapt_integrand{time,
                         integrand_g_direct{g0_keldysh_contour_t{g0_model{g0_model_omega{params}, false}},
                                            gf_index_t{time, up, forward}, gf_index_t{time, up, backward},
-                                           params.cutoff_integrand}},
+                                           params.cutoff_integrand},
+                        warper_scale},
         order, 1.0, gsl_rng_name} {}
 };
 
 // Class to compute charge = G^{lesser}_{up,up}(t).
 class compute_charge_Q_direct_cuba : public cuba_wrapper {
  public:
-  compute_charge_Q_direct_cuba(model_param_t params, double time, int order, cuba_common_param in)
+  compute_charge_Q_direct_cuba(model_param_t params, double time, int order, cuba_common_param in,
+                               double warper_scale = 1)
      : cuba_wrapper{adapt_integrand{time,
                                     integrand_g_direct{g0_keldysh_contour_t{g0_model{g0_model_omega{params}, false}},
                                                        gf_index_t{time, up, forward}, gf_index_t{time, up, backward},
-                                                       params.cutoff_integrand}},
+                                                       params.cutoff_integrand},
+                                    warper_scale},
                     order, std::move(in)} {}
 };
 
-// Class to compute the current = hbar*i / (2*m*a) * < d^\dagger_{up}(t) c_{up}(t) > + c.c.
+// Class to compute the current = -2e/hbar gamma Re[G^<_{lead-dot}(t, t)]
 class compute_current_J_direct : public integrator<dcomplex, integrand_g_direct, warper_plasma_simple_t> {
  public:
   compute_current_J_direct(model_param_t params, double time, int order, std::string warper_function_name,
-                           int nr_sample_points_warper)
+                           int nr_sample_points_warper, double warper_scale = 1)
      : integrator{dcomplex{0},
                   integrand_g_direct{g0_keldysh_contour_t{g0_model{g0_model_omega{params}, true}},
                                      gf_index_t{time, up, forward, 0, 1}, gf_index_t{time, up, backward, 0, 0},
@@ -152,7 +169,7 @@ class compute_current_J_direct : public integrator<dcomplex, integrand_g_direct,
                   order,
                   "sobol",
                   0} {
-    warper = {scalar_warper_function_factory(warper_function_name, integrand, time), time, nr_sample_points_warper};
+    warper = simple_plasma_warper_factory(warper_function_name, integrand, time, nr_sample_points_warper, warper_scale);
   }
 };
 

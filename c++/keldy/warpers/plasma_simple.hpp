@@ -72,7 +72,7 @@ using gf_t = triqs::gfs::gf<retime, scalar_real_valued>;
 class warper_plasma_simple_t {
  private:
   double t_max{};
-  double f1_integrate_norm{};
+  double f1_integrated_norm{};
   gf_t f1_integrated;
   gf_t f1_integrated_inverse;
 
@@ -90,6 +90,7 @@ class warper_plasma_simple_t {
   warper_plasma_simple_t(std::function<double(double)> f1_, double t_max_,
                          int nr_function_sample_points) // points vs resampling points
      : t_max(t_max_), f1(std::move(f1_)) {
+
     // Integrate Ansatz using Trapezoid Rule
     f1_integrated = gf_t({0.0, t_max, nr_function_sample_points});
     double delta = f1_integrated.mesh().delta();
@@ -101,8 +102,8 @@ class warper_plasma_simple_t {
     data(0) = 0.0;
 
     std::partial_sum(data.begin(), data.end(), data.begin());
-    f1_integrate_norm = data(data.size() - 1);
-    data /= f1_integrate_norm; // normalize
+    f1_integrated_norm = data(data.size() - 1);
+    data /= f1_integrated_norm; // normalize
 
     // Inverse Function via interpolation
     triqs::arrays::array<double, 1> mesh_time(nr_function_sample_points);
@@ -114,6 +115,33 @@ class warper_plasma_simple_t {
     details::gsl_interp_wrapper_t interpolate(gsl_interp_akima, data, mesh_time); //gsl_interp_steffen
     for (auto l : f1_integrated_inverse.mesh()) {
       f1_integrated_inverse[l] = interpolate(l);
+    }
+  }
+
+  // Constructor to use if f1, f1_integrated and f1_integrated_inverse can be provided (e.g. known analytically)
+  warper_plasma_simple_t(std::function<double(double)> f1_, std::function<double(double)> f1_integrated_,
+                         std::function<double(double)> f1_integrated_inverse_, double t_max_,
+                         int nr_function_sample_points) // points vs resampling points
+     : t_max(t_max_), f1_integrated_norm(f1_integrated_(t_max)), f1(std::move(f1_)) {
+
+    // check consistency of functions provided
+    double l_prime = 0.;
+    for (double l : {0., 0.25, 0.5, 0.75, 1.}) {
+      l_prime = f1_integrated_norm * l + f1_integrated_(0) * (1 - l);
+      if (std::abs(f1_integrated_(f1_integrated_inverse_(l_prime)) - l_prime) > 1e-10) {
+        TRIQS_RUNTIME_ERROR << "Inconsistent functions: f1_integrated_inverse should be the inverse of f1_integrated ("
+                            << f1_integrated_(f1_integrated_inverse_(l_prime)) << " != " << l_prime << ")";
+      }
+    }
+
+    f1_integrated = gf_t({0.0, t_max, nr_function_sample_points});
+    for (auto const &t : f1_integrated.mesh()) {
+      f1_integrated[t] = f1_integrated_(t);
+    }
+
+    f1_integrated_inverse = gf_t({0.0, 1.0, 1 + 5 * (nr_function_sample_points - 1)});
+    for (auto const &l : f1_integrated_inverse.mesh()) {
+      f1_integrated_inverse[l] = f1_integrated_inverse_(f1_integrated_norm * l + f1_integrated(0) * (1 - l));
     }
   }
 
@@ -137,7 +165,7 @@ class warper_plasma_simple_t {
   double jacobian(std::vector<double> const &li_vec) const {
     double result = 1.0;
     for (auto li : li_vec) {
-      result *= f1_integrate_norm / f1(f1_integrated_inverse(li));
+      result *= f1_integrated_norm / f1(f1_integrated_inverse(li));
     }
     return result;
   }

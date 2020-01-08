@@ -35,6 +35,13 @@ TEST(ViUiMaps, OutOfOrder) { // NOLINT
   EXPECT_EQ(ui_from_vi(t_max, vi_out), std::vector<double>({6.0, 2.0, 1.0, 0.0}));
 }
 
+TEST(WarperPlasmaSimple, Initialize) { // NOLINT
+  double const t_max = 3.5;
+  auto f1 = [](double x) -> double { return 1. / ((1. + x) * (1. + x)); };
+
+  auto warper = warper_plasma_simple_t(f1, t_max, 50);
+}
+
 // double linear_function(double x) {
 //   if (x > 1 || x < 0) {
 //     return 0;
