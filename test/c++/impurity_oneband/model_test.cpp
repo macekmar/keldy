@@ -31,7 +31,7 @@ void expect_contain(T const &container, V value) {
 TEST(g0_model, MiddleTimePoint1) { // NOLINT
   model_param_t params;
   params.nr_time_points_gf = 1000;
-  g0_model g0{params, true};
+  g0_model g0{g0_model_omega{params}, true};
 
   expect_contain(g0.g0_lesser[up].mesh(), 0.);
   expect_contain(g0.g0_greater[up].mesh(), 0.);
@@ -40,7 +40,7 @@ TEST(g0_model, MiddleTimePoint1) { // NOLINT
 TEST(g0_model, MiddleTimePoint2) { // NOLINT
   model_param_t params;
   params.nr_time_points_gf = 1001;
-  g0_model g0{params, true};
+  g0_model g0{g0_model_omega{params}, true};
 
   expect_contain(g0.g0_lesser[up].mesh(), 0.);
   expect_contain(g0.g0_greater[up].mesh(), 0.);

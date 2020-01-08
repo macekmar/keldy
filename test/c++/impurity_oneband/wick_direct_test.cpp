@@ -14,9 +14,10 @@ TEST(integrand_direct, Cutoff) { // NOLINT
   params.time_max = 10.0; // (time_limit_min = - time_limit_max)
   params.nr_time_points_gf = 1000;
   params.alpha = 0.0;
-  params.bath_type = "flatband_fft";
+  params.bath_type = "flatband";
+  params.ft_method = "fft";
 
-  g0_model g0{params, true};
+  g0_model g0{g0_model_omega{params}, true};
   g0_keldysh_contour_t g0_k{g0};
   auto external_A = gf_index_t{5.0, up, forward};
   auto external_B = gf_index_t{5.0, up, forward};

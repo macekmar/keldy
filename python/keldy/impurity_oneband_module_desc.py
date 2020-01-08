@@ -184,30 +184,6 @@ c.add_member(c_name = "greater_ft_error",
 
 c.add_constructor("""(keldy::impurity_oneband::g0_model_omega model_omega_, bool make_dot_lead_)""", doc = r"""""")
 
-c.add_method("""keldy::dcomplex g0_R_dot (keldy::dcomplex omega)""",
-             doc = r"""""")
-
-c.add_method("""keldy::dcomplex g0_A_dot (keldy::dcomplex omega)""",
-             doc = r"""""")
-
-c.add_method("""keldy::dcomplex bath_hybrid_R_left (keldy::dcomplex omega)""",
-             doc = r"""""")
-
-c.add_method("""keldy::dcomplex bath_hybrid_A_left (keldy::dcomplex omega)""",
-             doc = r"""""")
-
-c.add_method("""keldy::dcomplex bath_hybrid_K_left (keldy::dcomplex omega)""",
-             doc = r"""""")
-
-c.add_method("""keldy::dcomplex bath_hybrid_R_right (keldy::dcomplex omega)""",
-             doc = r"""""")
-
-c.add_method("""keldy::dcomplex bath_hybrid_A_right (keldy::dcomplex omega)""",
-             doc = r"""""")
-
-c.add_method("""keldy::dcomplex bath_hybrid_K_right (keldy::dcomplex omega)""",
-             doc = r"""""")
-
 module.add_class(c)
 
 # The class g0_keldysh_contour_t
