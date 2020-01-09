@@ -352,7 +352,8 @@ c.add_method("""std::vector<double> li_from_ui (std::vector<double> ui_vec)""",
 c.add_method("""double jacobian (std::vector<double> li_vec)""",
              doc = r"""""")
 
-c.add_method("""double evaluate_warping_function (std::vector<double> ui_vec)""",
+c.add_method("""double operator() (std::vector<double> ui_vec)""",
+             name = "__call__",
              doc = r"""""")
 
 module.add_class(c)

@@ -49,7 +49,7 @@ inline warper_plasma_simple_t simple_plasma_warper_factory(std::string const &la
     return {[time, &f](double t) -> double { return std::abs(f(std::vector<double>{time - t})) + 1e-12; }, time,
             nr_sample_points_warper};
   }
-  if (label == "lorentzian") {
+  if (label == "inverse_square") {
     return {[warper_scale](double t) -> double {
               return warper_scale * warper_scale / ((warper_scale + t) * (warper_scale + t));
             },
@@ -116,7 +116,7 @@ class CPP2PY_IGNORE adapt_integrand {
   adapt_integrand(double time_max, integrand_g_direct integrand, double warper_scale)
      : //time_max_(time_max),
        integrand_(std::move(integrand)),
-       pre_warper{simple_plasma_warper_factory("lorentzian", integrand_, time_max, int(1e6), warper_scale)} {};
+       pre_warper{simple_plasma_warper_factory("inverse_square", integrand_, time_max, int(1e6), warper_scale)} {};
 
   double operator()(std::vector<double> const &li_vec) {
     std::vector<double> ui_vec = pre_warper.ui_from_li(li_vec);

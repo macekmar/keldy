@@ -170,7 +170,7 @@ class warper_plasma_simple_t {
     return result;
   }
 
-  double evaluate_warping_function(std::vector<double> const &ui_vec) const {
+  double operator()(std::vector<double> const &ui_vec) const {
     double result = 1.0;
     auto vi_vec = vi_from_ui(t_max, ui_vec);
     for (auto vi : vi_vec) {

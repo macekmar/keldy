@@ -81,7 +81,7 @@ TEST(ComputeChargeQDirect, FlatbandAnalyticCompare1) { // NOLINT
 
   for (int order = 1; order <= 6; ++order) {
     std::cout << "Order " << order << std::endl;
-    compute_charge_Q_direct computer(params, t_max, order, "lorentzian", 1e5);
+    compute_charge_Q_direct computer(params, t_max, order, "inverse_square", 1e5);
     computer.run(1e4);
 
     if (order >= 5) {
