@@ -28,5 +28,6 @@ DOC
 import impurity_oneband_module as impurity_oneband
 import gsl_vegas_wrap
 import cuba_interface as cuba
+import visualization
 
 # __all__ = ['Model', 'WarperPlasmaSimpleT']
