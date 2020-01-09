@@ -197,6 +197,8 @@ struct g0_keldysh_contour_t {
     return model.g0_lesser[a.spin](0.0)(a.orbital, a.orbital)
        - static_cast<int>(internal_point) * 1_j * model.model_omega.param_.alpha;
   }
+
+  double get_time_max() const { return model.g0_lesser[up].mesh().x_max(); };
 };
 
 } // namespace keldy::impurity_oneband
