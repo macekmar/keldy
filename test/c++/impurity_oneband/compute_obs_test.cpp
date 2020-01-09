@@ -37,6 +37,27 @@ TEST(ComputeObs, Initialize2) { // NOLINT
   std::cout << computer.reduce_nr_points_run() << std::endl;
 }
 
+TEST(ComputeObs, InitializeInverseSquare) { // NOLINT
+  model_param_t params;
+  compute_charge_Q_direct computer(params, 10.0, 4, "inverse_square", 1000, 1.5);
+
+  computer.run(10);
+}
+
+TEST(ComputeObs, InitializeExponential) { // NOLINT
+  model_param_t params;
+  compute_charge_Q_direct computer(params, 10.0, 4, "exponential", 1000, 1.5);
+
+  computer.run(10);
+}
+
+TEST(ComputeObs, InitializeIdentity) { // NOLINT
+  model_param_t params;
+  compute_charge_Q_direct computer(params, 10.0, 4, "identity", 1000, 1.5);
+
+  computer.run(10);
+}
+
 TEST(ComputeObs, Initialize_current) { // NOLINT
   model_param_t params;
   // TRIQS_PRINT(params.bath_type);

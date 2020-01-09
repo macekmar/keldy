@@ -53,7 +53,7 @@ inline warper_plasma_simple_t simple_plasma_warper_factory(std::string const &la
     return {[warper_scale](double t) -> double {
               return warper_scale * warper_scale / ((warper_scale + t) * (warper_scale + t));
             },
-            [warper_scale](double t) -> double { return warper_scale * warper_scale * t / (warper_scale + t); },
+            [warper_scale](double t) -> double { return warper_scale * t / (warper_scale + t); },
             [warper_scale](double l) -> double { return warper_scale * l / (warper_scale - l); }, time,
             nr_sample_points_warper};
   }
