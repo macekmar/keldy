@@ -57,12 +57,8 @@ inline std::vector<double> ui_from_vi(double t_max, std::vector<double> const &v
 
 // Warpers:
 
-// Todo / Qs:
-// * Should we use gfs to store data. Or other?
-// * replace nr_function_sample_points by variable sample_grid?
-// * OP: wrapping of constructor with funciton for cpp2py. No templating?
-
-struct idenity_function {
+// CPP2PY_IGNORE?
+struct identity_function {
   double operator()([[maybe_unused]] double t) { return 1.0; }
 };
 
@@ -85,7 +81,7 @@ class warper_plasma_simple_t {
   //     warper_plasma_simple_t(std::function<double(double)>(f1_), t_max_, nr_function_sample_points) {} // points vs resampling points
 
   // Identity Constructor: should use this if nothing else is specified
-  warper_plasma_simple_t(double t_max_) : warper_plasma_simple_t{idenity_function{}, t_max_, 8} {}
+  warper_plasma_simple_t(double t_max_) : warper_plasma_simple_t{identity_function{}, t_max_, 8} {}
 
   warper_plasma_simple_t(std::function<double(double)> f1_, double t_max_,
                          int nr_function_sample_points) // points vs resampling points

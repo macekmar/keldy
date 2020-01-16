@@ -317,10 +317,10 @@ c.add_method("""void discard (int nr_discard)""",
 
 module.add_class(c)
 
-# The class idenity_function
+# The class identity_function
 c = class_(
-        py_type = "IdenityFunction",  # name of the python class
-        c_type = "keldy::idenity_function",   # name of the C++ class
+        py_type = "IdentityFunction",  # name of the python class
+        c_type = "keldy::identity_function",   # name of the C++ class
         doc = r"""""",   # doc of the C++ class
         hdf5 = False,
 )
