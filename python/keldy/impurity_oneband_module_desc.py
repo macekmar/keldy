@@ -317,20 +317,6 @@ c.add_method("""void discard (int nr_discard)""",
 
 module.add_class(c)
 
-# The class identity_function
-c = class_(
-        py_type = "IdentityFunction",  # name of the python class
-        c_type = "keldy::identity_function",   # name of the C++ class
-        doc = r"""""",   # doc of the C++ class
-        hdf5 = False,
-)
-
-c.add_method("""double operator() (double t)""",
-             name = "__call__",
-             doc = r"""""")
-
-module.add_class(c)
-
 # The class warper_plasma_simple_t
 c = class_(
         py_type = "WarperPlasmaSimpleT",  # name of the python class

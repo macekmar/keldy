@@ -23,6 +23,7 @@
 #pragma once
 
 #include "../common.hpp"
+#include "warpers_common.hpp"
 #include "../interfaces/gsl_interp_wrap.hpp"
 #include <algorithm>
 #include <any>
@@ -34,36 +35,7 @@
 
 namespace keldy {
 
-using namespace triqs::gfs;
-
-// Coordinate Transforms (ui <-> vi):
-inline std::vector<double> vi_from_ui(double t_max, std::vector<double> const &u_times) {
-  std::vector<double> v_times = u_times;
-  std::sort(v_times.begin(), v_times.end(), std::greater<>());
-  int n = v_times.size();
-  for (int i = n - 1; i > 0; i--) {
-    v_times[i] = (v_times[i - 1] - v_times[i]);
-  }
-  v_times[0] = t_max - v_times[0];
-  return v_times;
-}
-
-inline std::vector<double> ui_from_vi(double t_max, std::vector<double> const &v_times) {
-  std::vector<double> u_times = v_times;
-  u_times[0] = t_max - u_times[0];
-  std::partial_sum(u_times.begin(), u_times.end(), u_times.begin(), std::minus<>());
-  return u_times;
-}
-
-// Warpers:
-
-// CPP2PY_IGNORE?
-struct identity_function {
-  double operator()([[maybe_unused]] double t) { return 1.0; }
-};
-
-// std::function<dcomplex(double)>;
-using gf_t = triqs::gfs::gf<retime, scalar_real_valued>;
+using gf_t = triqs::gfs::gf<triqs::gfs::retime, triqs::gfs::scalar_real_valued>;
 
 class warper_plasma_simple_t {
  private:
@@ -71,20 +43,16 @@ class warper_plasma_simple_t {
   double f1_integrated_norm{};
   gf_t f1_integrated;
   gf_t f1_integrated_inverse;
-
   std::function<double(double)> f1;
 
  public:
-  // might need if want pass a lambda: but should not need.
-  // template <typename F>// CPP2PY Should ignore
-  // warper_plasma_simple_t(F f1_, double t_max_, int nr_function_sample_points) :
-  //     warper_plasma_simple_t(std::function<double(double)>(f1_), t_max_, nr_function_sample_points) {} // points vs resampling points
-
   // Identity Constructor: should use this if nothing else is specified
-  warper_plasma_simple_t(double t_max_) : warper_plasma_simple_t{identity_function{}, t_max_, 8} {}
+  warper_plasma_simple_t(double t_max_)
+     : warper_plasma_simple_t{identity_function{}, linear_function{}, linear_function{}, t_max_, 4} {}
 
-  warper_plasma_simple_t(std::function<double(double)> f1_, double t_max_,
-                         int nr_function_sample_points) // points vs resampling points
+  // Pass Warping Function: numerically perform integration
+  // TODO: points vs resampling points
+  warper_plasma_simple_t(std::function<double(double)> f1_, double t_max_, int nr_function_sample_points)
      : t_max(t_max_), f1(std::move(f1_)) {
 
     // Integrate Ansatz using Trapezoid Rule
@@ -114,10 +82,11 @@ class warper_plasma_simple_t {
     }
   }
 
-  // Constructor to use if f1, f1_integrated and f1_integrated_inverse can be provided (e.g. known analytically)
+  // Constructor to use if f1, f1_integrated and f1_integrated_inverse can be provided analytically
+  // To do:points vs resampling points
   warper_plasma_simple_t(std::function<double(double)> f1_, std::function<double(double)> f1_integrated_,
                          std::function<double(double)> f1_integrated_inverse_, double t_max_,
-                         int nr_function_sample_points) // points vs resampling points
+                         int nr_function_sample_points)
      : t_max(t_max_), f1_integrated_norm(f1_integrated_(t_max)), f1(std::move(f1_)) {
 
     // check consistency of functions provided

@@ -22,11 +22,6 @@
 
 #pragma once
 
-#include "../common.hpp"
+#include "warpers_common.hpp"
 #include "plasma.hpp"
 #include "plasma_simple.hpp"
-
-#include <algorithm>
-#include <functional>
-
-namespace keldy {} // namespace keldy
