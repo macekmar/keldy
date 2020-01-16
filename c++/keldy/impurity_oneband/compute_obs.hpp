@@ -86,26 +86,6 @@ class compute_charge_Q_direct : public integrator<dcomplex, integrand_g_direct, 
   }
 };
 
-// class CPP2PY_IGNORE adapt_integrand {
-//   double time_max_;
-//   integrand_g_direct integrand_;
-
-//  public:
-//   adapt_integrand(double time_max, integrand_g_direct integrand)
-//      : time_max_(time_max), integrand_(std::move(integrand)){};
-
-//   double operator()(std::vector<double> const &times_norm) {
-//     if (!std::is_sorted(std::begin(times_norm), std::end(times_norm))) {
-//       return 0.0;
-//     }
-//     auto times = times_norm;
-//     for (auto &t : times) {
-//       t *= time_max_;
-//     }
-//     int order = times.size();
-//     return std::real(-std::pow(1_j, 1 + order) * integrand_(times) * std::pow(time_max_, order));
-//   }
-// };
 
 class CPP2PY_IGNORE adapt_integrand {
   // double time_max_;
