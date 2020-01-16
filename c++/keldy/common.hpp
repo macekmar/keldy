@@ -23,6 +23,7 @@
 #pragma once
 
 #include <complex>
+#include <triqs/utility/first_include.hpp>
 
 namespace keldy {
 
