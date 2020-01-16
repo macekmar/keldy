@@ -44,7 +44,7 @@ class CPP2PY_IGNORE contour_integration_t {
   double const left_turn_pt;
   double const right_turn_pt;
   dcomplex result = 0;
-  double abserr_sqr = 0;
+  dcomplex abserr = 0;
 
  public:
   contour_integration_t(double left_turn_pt_, double right_turn_pt_)
@@ -56,7 +56,7 @@ class CPP2PY_IGNORE contour_integration_t {
   };
 
   dcomplex get_result() const { return result; };
-  double get_abserr_sqr() const { return abserr_sqr; };
+  dcomplex get_abserr() const { return abserr; };
 
   void integrate(std::function<dcomplex(dcomplex)> func, dcomplex left_dir, dcomplex right_dir) {
 
@@ -79,7 +79,7 @@ class CPP2PY_IGNORE contour_integration_t {
     auto [result_3, abserr_3] = worker.qag_si(f3, 0, std::numeric_limits<double>::infinity(), abstol, reltol);
 
     result = result_1 + result_2 + result_3;
-    abserr_sqr = std::norm(abserr_1 + abserr_2 + abserr_3);
+    abserr = abserr_1 + abserr_2 + abserr_3;
   }
 };
 

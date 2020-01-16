@@ -130,6 +130,10 @@ g0_model::g0_model(g0_model_omega model_omega_, bool make_dot_lead_)
 
   auto param_ = model_omega.get_param();
 
+  if (make_dot_lead && (param_.bath_type == "flatband")) {
+    TRIQS_RUNTIME_ERROR << "The dot-lead g0 for flatband bath is singular and not implemented accurately.";
+  }
+
   if (param_.ft_method == "fft") {
     make_g0_by_fft();
 
@@ -205,16 +209,18 @@ void g0_model::make_g0_by_finite_contour(double left_end_pt, double right_end_pt
 
   gf<retime, matrix_valued> g0_lesser_time{time_mesh, {2, 2}};
   gf<retime, matrix_valued> g0_greater_time{time_mesh, {2, 2}};
+  lesser_ft_error = {time_mesh, {2, 2}};
+  greater_ft_error = {time_mesh, {2, 2}};
 
   auto gsl_default_handler = gsl_set_error_handler_off();
   double const abstol = 1e-14;
   double const reltol = 1e-8;
-  dcomplex result;
-  dcomplex abserr;
 
-  //#pragma omp parallel
+#pragma omp parallel
   {
     details::gsl_integration_wrapper worker{1000};
+    dcomplex result;
+    dcomplex abserr;
 
     for (const auto t : itertools::omp_chunk(time_mesh)) {
 
@@ -226,7 +232,7 @@ void g0_model::make_g0_by_finite_contour(double left_end_pt, double right_end_pt
       std::tie(result, abserr) =
          worker.qag(integrand_dot_lesser, left_end_pt, right_end_pt, abstol, reltol, GSL_INTEG_GAUSS61);
       g0_lesser_time[t](0, 0) = result;
-      lesser_ft_error(0, 0) += std::norm(abserr);
+      lesser_ft_error[t](0, 0) = abserr;
 
       if (make_dot_lead) {
         auto integrand_lead_lesser = [t, model = this->model_omega](double omega) -> dcomplex {
@@ -236,7 +242,7 @@ void g0_model::make_g0_by_finite_contour(double left_end_pt, double right_end_pt
         std::tie(result, abserr) =
            worker.qag(integrand_lead_lesser, left_end_pt, right_end_pt, abstol, reltol, GSL_INTEG_GAUSS61);
         g0_lesser_time[t](1, 0) = result;
-        lesser_ft_error(1, 0) += std::norm(abserr);
+        lesser_ft_error[t](1, 0) = abserr;
       }
 
       // g_greater
@@ -247,7 +253,7 @@ void g0_model::make_g0_by_finite_contour(double left_end_pt, double right_end_pt
       std::tie(result, abserr) =
          worker.qag(integrand_dot_greater, left_end_pt, right_end_pt, abstol, reltol, GSL_INTEG_GAUSS61);
       g0_greater_time[t](0, 0) = result;
-      greater_ft_error(0, 0) += std::norm(abserr);
+      greater_ft_error[t](0, 0) = abserr;
 
       if (make_dot_lead) {
         auto integrand_lead_greater = [t, model = this->model_omega](double omega) -> dcomplex {
@@ -257,7 +263,7 @@ void g0_model::make_g0_by_finite_contour(double left_end_pt, double right_end_pt
         std::tie(result, abserr) =
            worker.qag(integrand_lead_greater, left_end_pt, right_end_pt, abstol, reltol, GSL_INTEG_GAUSS61);
         g0_greater_time[t](1, 0) = result;
-        greater_ft_error(1, 0) += std::norm(abserr);
+        greater_ft_error[t](1, 0) = abserr;
       }
     }
 
@@ -266,9 +272,7 @@ void g0_model::make_g0_by_finite_contour(double left_end_pt, double right_end_pt
 
   // GSL error estimations
   //lesser_ft_error(0, 1) = lesser_ft_error(1, 0);
-  lesser_ft_error = sqrt(lesser_ft_error / time_mesh.size());
   //greater_ft_error(0, 1) = greater_ft_error(1, 0);
-  greater_ft_error = sqrt(greater_ft_error / time_mesh.size());
 
   // reset default GSL error handler
   gsl_set_error_handler(gsl_default_handler);
@@ -297,6 +301,8 @@ void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
 
   gf<retime, matrix_valued> g0_lesser_time{time_mesh, {2, 2}};
   gf<retime, matrix_valued> g0_greater_time{time_mesh, {2, 2}};
+  lesser_ft_error = {time_mesh, {2, 2}};
+  greater_ft_error = {time_mesh, {2, 2}};
 
   auto gsl_default_handler = gsl_set_error_handler_off();
 
@@ -317,7 +323,7 @@ void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
 
       worker.integrate(integrand_dot_lesser, direc_1, direc_2);
       g0_lesser_time[t](0, 0) = worker.get_result();
-      lesser_ft_error(0, 0) += worker.get_abserr_sqr();
+      lesser_ft_error[t](0, 0) = worker.get_abserr();
 
       if (make_dot_lead) {
         auto integrand_lead_lesser = [t, model = this->model_omega](dcomplex omega) -> dcomplex {
@@ -326,7 +332,7 @@ void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
 
         worker.integrate(integrand_lead_lesser, direc_1, direc_2);
         g0_lesser_time[t](1, 0) = worker.get_result();
-        lesser_ft_error(1, 0) += worker.get_abserr_sqr();
+        lesser_ft_error[t](1, 0) = worker.get_abserr();
       }
 
       // g_greater
@@ -336,7 +342,7 @@ void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
 
       worker.integrate(integrand_dot_greater, -std::conj(direc_2), -std::conj(direc_1));
       g0_greater_time[t](0, 0) = worker.get_result();
-      greater_ft_error(0, 0) += worker.get_abserr_sqr();
+      greater_ft_error[t](0, 0) = worker.get_abserr();
 
       if (make_dot_lead) {
         auto integrand_lead_greater = [t, model = this->model_omega](dcomplex omega) -> dcomplex {
@@ -345,7 +351,7 @@ void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
 
         worker.integrate(integrand_lead_greater, -std::conj(direc_2), -std::conj(direc_1));
         g0_greater_time[t](1, 0) = worker.get_result();
-        greater_ft_error(1, 0) += worker.get_abserr_sqr();
+        greater_ft_error[t](1, 0) = worker.get_abserr();
       }
     }
 
@@ -354,9 +360,7 @@ void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
 
   // GSL error estimations
   //lesser_ft_error(0, 1) = lesser_ft_error(1, 0);
-  lesser_ft_error = sqrt(lesser_ft_error / time_mesh.size());
   //greater_ft_error(0, 1) = greater_ft_error(1, 0);
-  greater_ft_error = sqrt(greater_ft_error / time_mesh.size());
 
   // reset default GSL error handler
   gsl_set_error_handler(gsl_default_handler);

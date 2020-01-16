@@ -41,7 +41,7 @@ class CPP2PY_IGNORE model_param_t {
   double eps_d = 0.0;
   double Gamma = 1.0;
   double alpha = 0.0;
-  std::string bath_type = "flatband";
+  std::string bath_type = "semicircle";
   // ********
   double time_max = +100.0; // (time_limit_min = - time_limit_max)
   int nr_time_points_gf = 1000;
@@ -163,11 +163,11 @@ class g0_model {
 
   /// Lesser Green function $G^{<}_{\sigma}(t)$; block spin $\sigma$ {up, down}
   block_gf<retime, matrix_valued> g0_lesser;
-  array<double, 2> lesser_ft_error = {{0, 0}, {0, 0}};
+  gf<retime, matrix_valued> lesser_ft_error;
 
   /// Greater Green function $G^{>}_{\sigma}(t)$; block spin $\sigma$ {up, down}
   block_gf<retime, matrix_valued> g0_greater;
-  array<double, 2> greater_ft_error = {{0, 0}, {0, 0}};
+  gf<retime, matrix_valued> greater_ft_error;
 
   g0_model() = default;
   g0_model(g0_model_omega model_omega_, bool make_dot_lead_);
