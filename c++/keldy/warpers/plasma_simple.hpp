@@ -24,15 +24,12 @@
 
 #include "../common.hpp"
 #include "warpers_common.hpp"
-#include "plasma.hpp"
 #include "../interfaces/gsl_interp_wrap.hpp"
 #include <algorithm>
 #include <any>
 #include <functional>
 #include <numeric>
 #include <triqs/gfs.hpp>
-
-// Plasma 1d -- vector of function
 
 namespace keldy {
 

@@ -31,21 +31,9 @@
 #include <numeric>
 #include <triqs/gfs.hpp>
 
-// Plasma 1d -- vector of functions
-
 namespace keldy {
 
-using namespace triqs::gfs;
-
-// Warpers:
-
-// Todo / Qs:
-// * Should we use gfs to store data. Or other?
-// * replace nr_function_sample_points by variable sample_grid?
-// * OP: wrapping of constructor with funciton for cpp2py. No templating?
-
-// std::function<dcomplex(double)>;
-using gf_t = triqs::gfs::gf<retime, scalar_real_valued>;
+using gf_t = triqs::gfs::gf<triqs::gfs::retime, triqs::gfs::scalar_real_valued>;
 
 class warper_plasma_1D_t {
  private:
@@ -54,16 +42,14 @@ class warper_plasma_1D_t {
   std::vector<gf_t> fn_integrated;
   std::vector<gf_t> fn_integrated_inverse;
 
-
   std::vector<std::function<double(double)>> fn;
 
  public:
-  
-    // Identity Constructor: should use this if nothing else is specified
-  warper_plasma_1D_t(double t_max_) : warper_plasma_1D_t{{idenity_function{}}, t_max_, 8} {}
+  // Identity Constructor: should use this if nothing else is specified
+  warper_plasma_1D_t(double t_max_) : warper_plasma_1D_t{{identity_function{}}, t_max_, 4} {}
 
   warper_plasma_1D_t(std::vector<std::function<double(double)>> fn_, double t_max_,
-                         int nr_function_sample_points) // points vs resampling points
+                     int nr_function_sample_points) // points vs resampling points
      : t_max(t_max_), fn(std::move(fn_)) {
     for (int axis = 0; axis < fn.size(); axis++) {
       // Integrate Ansatz using Trapezoid Rule
@@ -78,8 +64,7 @@ class warper_plasma_1D_t {
       std::partial_sum(data.begin(), data.end(), data.begin());
       fn_integrate_norm.push_back(data(data.size() - 1));
       data /= fn_integrate_norm[axis]; // normalize each axis separtely
-    
-    
+
       // Inverse Function via interpolation
       triqs::arrays::array<double, 1> mesh_time(nr_function_sample_points);
       for (auto const &[i, t] : itertools::enumerate(fn_integrated[axis].mesh())) {
@@ -119,10 +104,10 @@ class warper_plasma_1D_t {
     return result;
   }
 
-  double evaluate_warping_function(std::vector<double> const &ui_vec) const {
+  double operator()(std::vector<double> const &ui_vec) const {
     double result = 1.0;
     auto vi_vec = vi_from_ui(t_max, ui_vec);
-    for (auto [i,vi] : itertools::enumerate(vi_vec)) {
+    for (auto [i, vi] : itertools::enumerate(vi_vec)) {
       result *= fn[i](vi);
     }
     return result;
