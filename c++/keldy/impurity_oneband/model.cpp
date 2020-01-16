@@ -89,11 +89,14 @@ g0_model_omega::g0_model_omega(model_param_t const &parameters) : param_(paramet
   if (param_.bath_type == "semicircle") {
     bath_hybrid_R_left_ = [Gamma = param_.Gamma](dcomplex omega) -> dcomplex {
       auto omega2 = omega / 2.;
-      if (std::abs(std::real(omega2)) < 1) {
-        return (Gamma / 2) * (omega2 - 1_j * std::sqrt(1 - omega2 * omega2));
+      if (std::imag(omega2) == 0.) {
+        if (std::abs(std::real(omega2)) < 1) {
+          return (Gamma / 2) * (omega2 - 1_j * std::sqrt(1 - omega2 * omega2));
+        }
+        auto sgn_omega = (1 - 2 * int(std::signbit(std::real(omega2))));
+        return (Gamma / 2) * (omega2 - sgn_omega * std::sqrt(omega2 * omega2 - 1));
       }
-      auto sgn_omega = (1 - 2 * int(std::signbit(std::real(omega2))));
-      return (Gamma / 2) * (omega2 - sgn_omega * std::sqrt(omega2 * omega2 - 1));
+      return omega2 - 1_j * std::sqrt(Gamma * Gamma / 4. - omega2 * omega2);
     };
     bath_hybrid_R_right_ = bath_hybrid_R_left_;
 
@@ -131,10 +134,14 @@ g0_model::g0_model(g0_model_omega model_omega_, bool make_dot_lead_)
     make_g0_by_fft();
 
   } else if (param_.ft_method == "contour") {
-    double margin = std::abs(std::max(param_.Gamma, 1. / param_.beta));
-    double left_turn_pt = std::min(-std::abs(param_.bias_V / 2), param_.eps_d) - margin;
-    double right_turn_pt = std::max(std::abs(param_.bias_V / 2), param_.eps_d) + margin;
-    make_g0_by_contour(left_turn_pt, right_turn_pt);
+    if (param_.bath_type == "semicircle") { // semicircular DOS has a bounded support
+      make_g0_by_finite_contour(-2., 2.);
+    } else {
+      double margin = std::abs(std::max(param_.Gamma, 1. / param_.beta));
+      double left_turn_pt = std::min(-std::abs(param_.bias_V / 2), param_.eps_d) - margin;
+      double right_turn_pt = std::max(std::abs(param_.bias_V / 2), param_.eps_d) + margin;
+      make_g0_by_contour(left_turn_pt, right_turn_pt);
+    }
 
   } else if (param_.ft_method == "analytic") {
     if (param_.bath_type == "flatband") {
@@ -144,7 +151,7 @@ g0_model::g0_model(g0_model_omega model_omega_, bool make_dot_lead_)
     }
 
   } else {
-    TRIQS_RUNTIME_ERROR << "ft_method not defined";
+    TRIQS_RUNTIME_ERROR << "ft_method '" << param_.ft_method << "' is not defined";
   }
 }
 
@@ -180,6 +187,95 @@ void g0_model::make_g0_by_fft() {
   // Since Spin up and down are currently identical
   g0_lesser = make_block_gf<retime, matrix_valued>({"up", "down"}, {g0_lesser_up, g0_lesser_up});
   g0_greater = make_block_gf<retime, matrix_valued>({"up", "down"}, {g0_greater_up, g0_greater_up});
+}
+
+/*
+ * Compute the Fourier transform of g^{</>}(\omega) by integrating along a finite interval.
+ *
+ * This method is suitable only for bath dos with a finite support, like semi-circular.
+ * omega is real in this method.
+ */
+void g0_model::make_g0_by_finite_contour(double left_end_pt, double right_end_pt) {
+  using namespace triqs::gfs;
+  using namespace boost::math::double_constants;
+
+  auto param_ = model_omega.get_param();
+
+  auto time_mesh = gf_mesh<retime>({-param_.time_max, param_.time_max, param_.nr_time_points_gf});
+
+  gf<retime, matrix_valued> g0_lesser_time{time_mesh, {2, 2}};
+  gf<retime, matrix_valued> g0_greater_time{time_mesh, {2, 2}};
+
+  auto gsl_default_handler = gsl_set_error_handler_off();
+  double const abstol = 1e-14;
+  double const reltol = 1e-8;
+  dcomplex result;
+  dcomplex abserr;
+
+  //#pragma omp parallel
+  {
+    details::gsl_integration_wrapper worker{1000};
+
+    for (const auto t : itertools::omp_chunk(time_mesh)) {
+
+      // g_lesser:
+      auto integrand_dot_lesser = [t, model = this->model_omega](double omega) -> dcomplex {
+        return std::exp(-1_j * omega * t) * model.g0_dot_lesser(omega) / (2 * pi);
+      };
+
+      std::tie(result, abserr) =
+         worker.qag(integrand_dot_lesser, left_end_pt, right_end_pt, abstol, reltol, GSL_INTEG_GAUSS61);
+      g0_lesser_time[t](0, 0) = result;
+      lesser_ft_error(0, 0) += std::norm(abserr);
+
+      if (make_dot_lead) {
+        auto integrand_lead_lesser = [t, model = this->model_omega](double omega) -> dcomplex {
+          return std::exp(-1_j * omega * t) * model.g0_rightlead_dot_lesser(omega) / (2 * pi);
+        };
+
+        std::tie(result, abserr) =
+           worker.qag(integrand_lead_lesser, left_end_pt, right_end_pt, abstol, reltol, GSL_INTEG_GAUSS61);
+        g0_lesser_time[t](1, 0) = result;
+        lesser_ft_error(1, 0) += std::norm(abserr);
+      }
+
+      // g_greater
+      auto integrand_dot_greater = [t, model = this->model_omega](double omega) -> dcomplex {
+        return std::exp(-1_j * omega * t) * model.g0_dot_greater(omega) / (2 * pi);
+      };
+
+      std::tie(result, abserr) =
+         worker.qag(integrand_dot_greater, left_end_pt, right_end_pt, abstol, reltol, GSL_INTEG_GAUSS61);
+      g0_greater_time[t](0, 0) = result;
+      greater_ft_error(0, 0) += std::norm(abserr);
+
+      if (make_dot_lead) {
+        auto integrand_lead_greater = [t, model = this->model_omega](double omega) -> dcomplex {
+          return std::exp(-1_j * omega * t) * model.g0_rightlead_dot_greater(omega) / (2 * pi);
+        };
+
+        std::tie(result, abserr) =
+           worker.qag(integrand_lead_greater, left_end_pt, right_end_pt, abstol, reltol, GSL_INTEG_GAUSS61);
+        g0_greater_time[t](1, 0) = result;
+        greater_ft_error(1, 0) += std::norm(abserr);
+      }
+    }
+
+    // TODO: make use of t <-> -t symmetry to reduce calculations
+  }
+
+  // GSL error estimations
+  //lesser_ft_error(0, 1) = lesser_ft_error(1, 0);
+  lesser_ft_error = sqrt(lesser_ft_error / time_mesh.size());
+  //greater_ft_error(0, 1) = greater_ft_error(1, 0);
+  greater_ft_error = sqrt(greater_ft_error / time_mesh.size());
+
+  // reset default GSL error handler
+  gsl_set_error_handler(gsl_default_handler);
+
+  // Spin up and down are currently identical
+  g0_lesser = make_block_gf<retime, matrix_valued>({"up", "down"}, {g0_lesser_time, g0_lesser_time});
+  g0_greater = make_block_gf<retime, matrix_valued>({"up", "down"}, {g0_greater_time, g0_greater_time});
 }
 
 /*

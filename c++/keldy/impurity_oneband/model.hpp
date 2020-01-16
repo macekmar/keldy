@@ -207,6 +207,7 @@ class g0_model {
  private:
   /// make dot g0
   void make_g0_by_fft();
+  void make_g0_by_finite_contour(double left_end_pt, double right_end_pt);
   void make_g0_by_contour(double left_turn_pt, double right_turn_pt);
   void make_flat_band_analytic();
 };
