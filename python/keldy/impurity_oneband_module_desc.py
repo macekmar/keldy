@@ -363,7 +363,7 @@ module.add_class(c)
 
 # The class warper_plasma_1D_t
 c = class_(
-        py_type = "WarperPlasma1DT",  # name of the python class
+        py_type = "WarperPlasma1dT",  # name of the python class
         c_type = "keldy::warper_plasma_1D_t",   # name of the C++ class
         doc = r"""""",   # doc of the C++ class
         hdf5 = False,
@@ -382,7 +382,9 @@ c.add_method("""std::vector<double> li_from_ui (std::vector<double> ui_vec)""",
 c.add_method("""double jacobian (std::vector<double> li_vec)""",
              doc = r"""""")
 
-c.add_method("""double evaluate_warping_function (std::vector<double> ui_vec)""",
+c.add_method("""double operator() (std::vector<double> ui_vec)""",
+             name = "__call__",
+             doc = r"""""")
              doc = r"""""")
 
 module.add_class(c)
@@ -395,7 +397,7 @@ c = class_(
         hdf5 = False,
 )
 
-c.add_constructor("""(std::function<double(std::vector<double>)> integrand_, warper_plasma_1D_t w_warper_, int order, int nr_function_sample_points)""", doc = r"""""")
+c.add_constructor("""(std::function<double(std::vector<double>)> integrand_, keldy::warper_plasma_1D_t w_warper_, int order, int nr_function_sample_points)""", doc = r"""""")
 
 c.add_method("""std::vector<double> ui_from_li (std::vector<double> li_vec)""",
              doc = r"""""")
@@ -446,7 +448,7 @@ module.add_class(c)
 
 # The class compute_charge_Q_direct_plasma_1D
 c = class_(
-        py_type = "ComputeChargeQDirectPlasma1D",  # name of the python class
+        py_type = "ComputeChargeQDirectPlasma1d",  # name of the python class
         c_type = "keldy::impurity_oneband::compute_charge_Q_direct_plasma_1D",   # name of the C++ class
         doc = r"""""",   # doc of the C++ class
         hdf5 = False,
