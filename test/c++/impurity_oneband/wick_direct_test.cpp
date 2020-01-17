@@ -5,6 +5,28 @@
 using namespace keldy;
 using namespace keldy::impurity_oneband;
 
+TEST(integrand_direct, domain_checking) { // NOLINT
+  model_param_t params;
+  params.time_max = 10.0; 
+  params.nr_time_points_gf = 100;
+  params.bath_type = "flatband";
+  params.ft_method = "fft";
+
+  g0_keldysh_contour_t g0_k{g0_model{g0_model_omega{params}, true}};
+  auto external_A = gf_index_t{5.0, up, forward};
+  auto external_B = gf_index_t{5.0, up, forward};
+
+  integrand_g_direct integrand(g0_k, external_A, external_B, 0.); // no cutoff
+
+  std::vector<double> time_vec = {2., 1.};
+  // in time domain
+  EXPECT_EQ(integrand(time_vec).second, 1);
+
+  // out of time domain
+  time_vec = {1.0, -1.0};
+  EXPECT_EQ(integrand(time_vec).second, 0);
+}
+
 TEST(integrand_direct, Cutoff) { // NOLINT
   model_param_t params;
   params.beta = 1.0;
@@ -27,13 +49,13 @@ TEST(integrand_direct, Cutoff) { // NOLINT
   integrand_g_direct integrand_2(g0_k, external_A, external_B, cutoff);
 
   std::vector<double> time_vec = {2., 0.};
-  EXPECT_LT(std::abs(integrand_1(time_vec)), cutoff);
-  EXPECT_NE(integrand_1(time_vec), 0.);
-  EXPECT_EQ(integrand_2(time_vec), 0.);
+  EXPECT_LT(std::abs(integrand_1(time_vec).first), cutoff);
+  EXPECT_NE(integrand_1(time_vec).first, 0.);
+  EXPECT_EQ(integrand_2(time_vec).first, 0.);
 
   time_vec = {4.9, 4.8};
-  EXPECT_GT(std::abs(integrand_1(time_vec)), cutoff);
-  EXPECT_EQ(integrand_1(time_vec), integrand_2(time_vec));
+  EXPECT_GT(std::abs(integrand_1(time_vec).first), cutoff);
+  EXPECT_EQ(integrand_1(time_vec).first, integrand_2(time_vec).first);
 }
 
 TEST(integrand_direct, Order_1) { // NOLINT
@@ -44,7 +66,6 @@ TEST(integrand_direct, Order_1) { // NOLINT
   auto external_B = gf_index_t{5.0, up, forward};
   integrand_g_direct integrand(g0_k, external_A, external_B);
 
-  dcomplex computed_val;
   dcomplex expected_val;
 
   // We ignore disconnected diagrams
@@ -56,7 +77,7 @@ TEST(integrand_direct, Order_1) { // NOLINT
        * g0_k({1.0, up, a}, external_B);
   }
 
-  computed_val = integrand(std::vector<double>{1.0});
+  auto [computed_val, in_domain] = integrand(std::vector<double>{1.0});
 
   EXPECT_COMPLEX_NEAR(expected_val, computed_val, 1e-17);
 }
@@ -69,7 +90,7 @@ TEST(integrand_direct, Order_2) { // NOLINT
   auto external_B = gf_index_t{5.0, up, forward};
   integrand_g_direct integrand(g0_k, external_A, external_B);
 
-  dcomplex computed_val;
+  // dcomplex computed_val;
   dcomplex expected_val;
 
   //// Order 2 with full determinants (unprecise)
@@ -93,7 +114,7 @@ TEST(integrand_direct, Order_2) { // NOLINT
   //  }
   //}
 
-  //computed_val = integrand(std::vector<double>{1.0, 2.0});
+  //computed_val = integrand(std::vector<double>{1.0, 2.0}).first;
 
   //EXPECT_COMPLEX_NEAR(expected_val, computed_val, 1e-16); // imag part very close to 0
 
@@ -117,7 +138,7 @@ TEST(integrand_direct, Order_2) { // NOLINT
     }
   }
 
-  computed_val = integrand(std::vector<double>{1.0, 2.0});
+  auto [computed_val, in_domain] = integrand(std::vector<double>{1.0, 2.0});
 
   EXPECT_COMPLEX_NEAR(expected_val, computed_val, 1e-16); // real part very close to 0
 }

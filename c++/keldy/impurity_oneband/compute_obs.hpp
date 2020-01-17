@@ -46,7 +46,7 @@ inline warper_plasma_simple_t simple_plasma_warper_factory(std::string const &la
                                                            double time, int nr_sample_points_warper,
                                                            double warper_scale) CPP2PY_IGNORE {
   if (label == "first_order") {
-    return {[time, &f](double t) -> double { return std::abs(f(std::vector<double>{time - t})) + 1e-12; }, time,
+    return {[time, &f](double t) -> double { return std::abs(f(std::vector<double>{time - t}).first) + 1e-12; }, time,
             nr_sample_points_warper};
   }
   if (label == "inverse_square") {
@@ -101,7 +101,7 @@ class CPP2PY_IGNORE adapt_integrand {
   double operator()(std::vector<double> const &li_vec) {
     std::vector<double> ui_vec = pre_warper.ui_from_li(li_vec);
 
-    auto eval = integrand_(ui_vec);
+    auto [eval, in_domain] = integrand_(ui_vec);
     eval *= pre_warper.jacobian(li_vec);
 
     int order = li_vec.size();
@@ -160,7 +160,7 @@ inline std::function<double(double)> scalar_warper_function_factory_kernel(std::
                                                                            integrand_g_kernel const &f,
                                                                            double time) CPP2PY_IGNORE {
   if (label == "first_order") {
-    return [time, &f](double t) -> double { return f(std::vector<double>{time - t}).sum_weights() + 1e-12; }; // refine
+    return [time, &f](double t) -> double { return f(std::vector<double>{time - t}).first.sum_weights() + 1e-12; }; // refine
   }
   if (label == "identity") {
     return []([[maybe_unused]] double t) -> double { return 1.0; };

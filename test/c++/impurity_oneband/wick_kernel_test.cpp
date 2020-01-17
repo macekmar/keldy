@@ -22,7 +22,7 @@ TEST(integrand_kernel, Order_1) { // NOLINT
          {{u, up, backward}, g0_k({u, up, backward}, external_B) * g0_k({u, down, forward}, {u, down, backward})}}}
         .data;
 
-  auto computed_val = integrand(std::vector<double>{u}).data;
+  auto computed_val = integrand(std::vector<double>{u}).first.data;
   ASSERT_EQ(computed_val.size(), 2);
 
   auto const compare = [](std::pair<gf_index_t, dcomplex> const &a, std::pair<gf_index_t, dcomplex> const &b) -> bool {
@@ -74,7 +74,7 @@ TEST(integrand_kernel, Order_2) { // NOLINT
                            {{v, up, backward}, det_prod_v(forward, backward) + det_prod_v(backward, backward)}}}
         .data;
 
-  auto computed_val = integrand(std::vector<double>{u, v}).data;
+  auto computed_val = integrand(std::vector<double>{u, v}).first.data;
   ASSERT_EQ(computed_val.size(), 4);
 
   auto const compare = [](std::pair<gf_index_t, dcomplex> const &a, std::pair<gf_index_t, dcomplex> const &b) -> bool {

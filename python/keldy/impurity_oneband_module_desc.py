@@ -217,7 +217,7 @@ c = class_(
 
 c.add_constructor("""(keldy::impurity_oneband::g0_keldysh_contour_t g0_, keldy::impurity_oneband::gf_index_t external_A_, keldy::impurity_oneband::gf_index_t external_B_, double cutoff_ = 0.)""", doc = r"""""")
 
-c.add_method("""keldy::impurity_oneband::integrand_g_direct::result_t operator() (std::vector<double> times, bool keep_u_hypercube = true)""",
+c.add_method("""std::pair<keldy::impurity_oneband::integrand_g_direct::result_t,int> operator() (std::vector<double> times, bool keep_u_hypercube = true)""",
              name = "__call__",
              doc = r"""Returns integrand for the specified times""")
 
@@ -289,7 +289,7 @@ c = class_(
 
 c.add_constructor("""(keldy::impurity_oneband::g0_keldysh_contour_t g0_, keldy::impurity_oneband::gf_index_t g_idx_X_)""", doc = r"""""")
 
-c.add_method("""keldy::impurity_oneband::integrand_g_kernel::result_t operator() (std::vector<double> times)""",
+c.add_method("""std::pair<keldy::impurity_oneband::integrand_g_kernel::result_t,int> operator() (std::vector<double> times)""",
              name = "__call__",
              doc = r"""""")
 
@@ -363,6 +363,9 @@ c.add_method("""keldy::dcomplex reduce_result ()""",
 c.add_method("""uint64_t reduce_nr_points_run ()""",
              doc = r"""""")
 
+c.add_method("""uint64_t reduce_nr_points_in_domain ()""",
+             doc = r"""""")
+
 c.add_method("""keldy::warper_plasma_simple_t get_warper ()""",
              doc = r"""""")
 
@@ -370,7 +373,6 @@ c.add_method("""keldy::impurity_oneband::integrand_g_direct get_integrand ()""",
              doc = r"""""")
 
 module.add_class(c)
-
 
 # The class compute_charge_Q_direct_gsl_vegas
 c = class_(
@@ -508,6 +510,9 @@ c.add_method("""keldy::impurity_oneband::kernel_binner reduce_result ()""",
 c.add_method("""uint64_t reduce_nr_points_run ()""",
              doc = r"""""")
 
+c.add_method("""uint64_t reduce_nr_points_in_domain ()""",
+             doc = r"""""")
+
 c.add_method("""keldy::warper_plasma_simple_t get_warper ()""",
              doc = r"""""")
 
@@ -533,6 +538,9 @@ c.add_method("""keldy::dcomplex reduce_result ()""",
              doc = r"""""")
 
 c.add_method("""uint64_t reduce_nr_points_run ()""",
+             doc = r"""""")
+
+c.add_method("""uint64_t reduce_nr_points_in_domain ()""",
              doc = r"""""")
 
 c.add_method("""keldy::warper_plasma_simple_t get_warper ()""",

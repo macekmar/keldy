@@ -44,6 +44,7 @@ class integrator {
   // Result of the integration and number of samples
   R result{};
   uint64_t n_points = 0;
+  uint64_t n_integrand_evals_in_domain = 0;
 
   // Function that when called with a vector of times returns the integrand
   I integrand;
@@ -70,9 +71,10 @@ class integrator {
       }
       std::vector<double> ui_vec = warper.ui_from_li(li_vec);
 
-      auto eval = integrand(ui_vec);
+      auto [eval, in_domain] = integrand(ui_vec);
       eval *= warper.jacobian(li_vec);
-      
+
+      n_integrand_evals_in_domain += in_domain;
       result += eval;
       n_points++;
     }
@@ -97,6 +99,8 @@ class integrator {
   }
 
   uint64_t reduce_nr_points_run() const { return mpi::all_reduce(n_points, comm); }
+
+  uint64_t reduce_nr_points_in_domain() const { return mpi::all_reduce(n_integrand_evals_in_domain, comm); }
 
   // For Python Visualzation Purposes:
   auto get_integrand() const { return integrand; }

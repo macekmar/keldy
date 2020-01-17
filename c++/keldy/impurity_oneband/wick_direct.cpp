@@ -22,6 +22,8 @@
 
 #include "wick_direct.hpp"
 #include <complex>
+#include <tuple>
+#include <utility>
 
 #pragma omp declare reduction(+ : dcomplex : omp_out += omp_in)
 
@@ -36,18 +38,18 @@ inline int GetBitParity(unsigned int in) { return 1 - 2 * __builtin_parity(in); 
 namespace keldy::impurity_oneband {
 
 // should we sort times?
-dcomplex integrand_g_direct::operator()(std::vector<double> const &times, bool keep_u_hypercube) const {
+std::pair<dcomplex, int> integrand_g_direct::operator()(std::vector<double> const &times, bool keep_u_hypercube) const {
   using namespace triqs::arrays;
 
   // Model is diagonal in spin
   if (external_A.spin != external_B.spin) {
-    return 0.0;
+    return std::make_pair(0.0, 0);
   }
 
   // Interaction starts a t = 0
   if (keep_u_hypercube) {
-    if (*std::min_element(times.begin(), times.end()) < 0) { // can replace with a for_any
-      return 0.0;
+    if (std::any_of(times.cbegin(), times.cend(), [](double t) { return t < 0.0; })) {
+      return std::make_pair(0.0, 0);
     }
   }
 
@@ -61,7 +63,7 @@ dcomplex integrand_g_direct::operator()(std::vector<double> const &times, bool k
   b.contour.timesplit_n = order_n;
 
   if (order_n == 0) {
-    return g0(a, b, false);
+    return std::make_pair(g0(a, b, false), 1);
   }
 
   // Pre-Comute Large Matrix.
@@ -147,7 +149,7 @@ dcomplex integrand_g_direct::operator()(std::vector<double> const &times, bool k
   }
 
   // Multiply by overall factors (-1j) * (j)^n * (-1j)^n ?? FIXME
-  return integrand_result;
+  return std::make_pair(integrand_result, 1);
 }
 
 // *******************************************************
