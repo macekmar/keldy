@@ -463,6 +463,9 @@ c.add_method("""keldy::dcomplex reduce_result ()""",
 c.add_method("""uint64_t reduce_nr_points_run ()""",
              doc = r"""""")
 
+c.add_method("""uint64_t reduce_nr_points_in_domain ()""",
+             doc = r"""""")
+
 c.add_method("""keldy::warper_plasma_1D_t get_warper ()""",
              doc = r"""""")
 
