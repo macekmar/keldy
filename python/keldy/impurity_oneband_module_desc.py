@@ -385,6 +385,30 @@ c.add_method("""double jacobian (std::vector<double> li_vec)""",
 c.add_method("""double operator() (std::vector<double> ui_vec)""",
              name = "__call__",
              doc = r"""""")
+
+module.add_class(c)
+
+# The class hist_xi
+c = class_(
+        py_type = "HistXi",  # name of the python class
+        c_type = "keldy::hist_xi",   # name of the C++ class
+        doc = r"""""",   # doc of the C++ class
+        hdf5 = False,
+)
+
+c.add_member(c_name = "bins",
+             c_type = "std::vector<double>",
+             read_only= True,
+             doc = r"""""")
+
+c.add_member(c_name = "values",
+             c_type = "std::vector<double>",
+             read_only= True,
+             doc = r"""""")
+
+c.add_member(c_name = "counts",
+             c_type = "std::vector<int>",
+             read_only= True,
              doc = r"""""")
 
 module.add_class(c)
@@ -690,6 +714,9 @@ module.add_function ("std::vector<double> keldy::vi_from_ui (double t_max, std::
 
 module.add_function ("std::vector<double> keldy::ui_from_vi (double t_max, std::vector<double> v_times)", doc = r"""""")
 
+module.add_function ("void keldy::bin_values (keldy::hist_xi xi, int axis, std::vector<std::vector<double>> points, std::vector<double> values)", doc = r"""""")
+
+module.add_function ("void keldy::convolve (std::vector<double> signal, std::vector<double> window)", doc = r"""""")
 
 # Converter for model_param_t
 c = converter_(

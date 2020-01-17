@@ -29,7 +29,7 @@
 
 namespace keldy {
 
-struct gsl_monte_vegas_params_wrap {
+struct CPP2PY_IGNORE gsl_monte_vegas_params_wrap {
   double alpha;
   size_t iterations;
   int stage;
@@ -37,7 +37,7 @@ struct gsl_monte_vegas_params_wrap {
   int verbose;
 };
 
-class gsl_vegas_wrapper_t {
+class CPP2PY_IGNORE gsl_vegas_wrapper_t {
  private:
   using gsl_integrand_t = double (*)(double *, size_t, void *);
 
