@@ -100,7 +100,7 @@ class compute_charge_Q_direct_plasma_1D : public integrator<dcomplex, integrand_
   compute_charge_Q_direct_plasma_1D(model_param_t params, double time, int order,
                                     std::vector<std::function<double(double)>> fn_, int nr_sample_points_warper)
      : integrator{dcomplex{0},
-                  integrand_g_direct{g0_keldysh_contour_t{g0_model{params, false}}, gf_index_t{time, up, forward},
+                  integrand_g_direct{g0_keldysh_contour_t{g0_model{g0_model_omega{params}, false}}, gf_index_t{time, up, forward},
                                      gf_index_t{time, up, backward}},
                   warper_plasma_1D_t{time},
                   order,
