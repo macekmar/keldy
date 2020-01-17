@@ -205,6 +205,9 @@ c.add_method("""keldy::dcomplex operator() (keldy::impurity_oneband::gf_index_t 
              name = "__call__",
              doc = r"""return :math:`g^{ab}(t,t')` in contour basis from :math:`g^<, g^>` functions""")
 
+c.add_method("""double get_time_max ()""",
+             doc = r"""""")
+
 module.add_class(c)
 
 # The class integrand_g_direct
@@ -236,7 +239,7 @@ c.add_member(c_name = "data",
              read_only= True,
              doc = r"""""")
 
-c.add_method("""void bin_data (std::pair<gf_index_t, dcomplex> in)""",
+c.add_method("""void bin_data (std::pair<gf_index_t,dcomplex> in)""",
              doc = r"""""")
 
 c.add_method("""double sum_weights ()""",
@@ -327,7 +330,9 @@ c = class_(
 
 c.add_constructor("""(double t_max_)""", doc = r"""""")
 
-c.add_constructor("""(std::function<double (double)> f1_, double t_max_, int nr_function_sample_points)""", doc = r"""""")
+c.add_constructor("""(std::function<double(double)> f1_, double t_max_, int nr_function_sample_points)""", doc = r"""""")
+
+c.add_constructor("""(std::function<double(double)> f1_, std::function<double(double)> f1_integrated_, std::function<double(double)> f1_integrated_inverse_, double t_max_, int nr_function_sample_points)""", doc = r"""""")
 
 c.add_method("""std::vector<double> ui_from_li (std::vector<double> li_vec)""",
              doc = r"""""")
@@ -376,7 +381,7 @@ module.add_class(c)
 
 # The class compute_charge_Q_direct_gsl_vegas
 c = class_(
-        py_type = "ComputeChargeQDirectGSLVegas",  # name of the python class
+        py_type = "ComputeChargeQDirectGslVegas",  # name of the python class
         c_type = "keldy::impurity_oneband::compute_charge_Q_direct_gsl_vegas",   # name of the C++ class
         doc = r"""""",   # doc of the C++ class
         hdf5 = False,
@@ -463,6 +468,7 @@ c.add_member(c_name = "verbose",
 
 module.add_converter(c)
 
+# The class compute_charge_Q_direct_cuba
 c = class_(
         py_type = "ComputeChargeQDirectCuba",  # name of the python class
         c_type = "keldy::impurity_oneband::compute_charge_Q_direct_cuba",   # name of the C++ class
@@ -470,12 +476,11 @@ c = class_(
         hdf5 = False,
 )
 
+c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, keldy::cuba_common_param in, double warper_scale = 1)""", doc = r"""""")
+
 c.add_method("""double operator() (std::vector<double> x)""",
              name = "__call__",
              doc = r"""""")
-
-
-c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, keldy::cuba_common_param in, double warper_scale = 1)""", doc = r"""""")
 
 c.add_method("""void run_vegas (keldy::cuba_vegas_param in_v)""",
              doc = r"""""")
@@ -557,27 +562,29 @@ module.add_function ("void keldy::impurity_oneband::fake (**keldy::impurity_oneb
 
 
 
-+-------------------+-------------+----------------+---------------+
++-------------------+-------------+------------+---------------+
 | Parameter Name    | Type        | Default        | Documentation |
-+===================+=============+================+===============+
++===================+=============+============+===============+
 | beta              | double      | 1.0            |               |
-+-------------------+-------------+----------------+---------------+
++-------------------+-------------+------------+---------------+
 | bias_V            | double      | 0.0            |               |
-+-------------------+-------------+----------------+---------------+
++-------------------+-------------+------------+---------------+
 | eps_d             | double      | 0.0            |               |
-+-------------------+-------------+----------------+---------------+
++-------------------+-------------+------------+---------------+
 | Gamma             | double      | 1.0            |               |
-+-------------------+-------------+----------------+---------------+
++-------------------+-------------+------------+---------------+
+| alpha             | double      | 0.0        |               |
++-------------------+-------------+------------+---------------+
+| bath_type         | std::string | "flatband" |               |
++-------------------+-------------+------------+---------------+
 | time_max          | double      | +100.0         |               |
-+-------------------+-------------+----------------+---------------+
++-------------------+-------------+------------+---------------+
 | nr_time_points_gf | int         | 1000           |               |
-+-------------------+-------------+----------------+---------------+
-| alpha             | double      | 0.0            |               |
-+-------------------+-------------+----------------+---------------+
-| bath_type         | std::string | "flatband_fft" |               |
-+-------------------+-------------+----------------+---------------+
++-------------------+-------------+------------+---------------+
+| ft_method         | std::string | "fft"      |               |
++-------------------+-------------+------------+---------------+
 | cutoff_integrand  | double      | 0.             |               |
-+-------------------+-------------+----------------+---------------+
++-------------------+-------------+------------+---------------+
 """)
 
 module.add_function ("bool keldy::impurity_oneband::equivalent_without_timesplit (keldy::impurity_oneband::gf_index_t lhs, keldy::impurity_oneband::gf_index_t rhs)", doc = r"""""")
