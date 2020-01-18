@@ -30,6 +30,36 @@
 
 namespace keldy::impurity_oneband {
 
+void h5_write(triqs::h5::group &h5group, std::string const &subgroup_name, model_param_t const &c) {
+  auto grp = h5group.create_group(subgroup_name);
+  h5_write(grp, "beta", c.beta);
+  h5_write(grp, "bias_V", c.bias_V);
+  h5_write(grp, "eps_d", c.eps_d);
+  h5_write(grp, "Gamma", c.Gamma);
+  h5_write(grp, "alpha", c.alpha);
+  h5_write(grp, "bath_type", c.bath_type);
+  h5_write(grp, "time_max", c.time_max);
+  h5_write(grp, "nr_time_points_gf", c.nr_time_points_gf);
+  h5_write(grp, "ft_method", c.ft_method);
+  h5_write(grp, "cutoff_integrand", c.cutoff_integrand);
+}
+
+void h5_read(triqs::h5::group &h5group, std::string const &subgroup_name, model_param_t &c) {
+  auto grp = h5group.open_group(subgroup_name);
+  h5_read(grp, "beta", c.beta);
+  h5_read(grp, "bias_V", c.bias_V);
+  h5_read(grp, "eps_d", c.eps_d);
+  h5_read(grp, "Gamma", c.Gamma);
+  h5_read(grp, "alpha", c.alpha);
+  h5_read(grp, "bath_type", c.bath_type);
+  h5_read(grp, "time_max", c.time_max);
+  h5_read(grp, "nr_time_points_gf", c.nr_time_points_gf);
+  h5_read(grp, "ft_method", c.ft_method);
+  h5_read(grp, "cutoff_integrand", c.cutoff_integrand);
+}
+
+// *****************************************************************************
+
 bool operator<(gf_index_t const &a, gf_index_t const &b) {
   // First: order on the time contour
   int contour_3way = compare_3way(a.contour, b.contour);
@@ -78,6 +108,18 @@ g0_model_omega::g0_model_omega(model_param_t const &parameters) : param_(paramet
   } else {
     TRIQS_RUNTIME_ERROR << "bath_type not defined";
   }
+}
+
+void h5_write(triqs::h5::group h5group, std::string subgroup_name, g0_model_omega const &c) {
+  auto grp = h5group.create_group(subgroup_name);
+  h5_write(grp, "param_", c.param_);
+}
+
+void h5_read(triqs::h5::group h5group, std::string subgroup_name, g0_model_omega &c) {
+  auto grp = h5group.open_group(subgroup_name);
+  model_param_t param_temp;
+  h5_read(grp, "param_", param_temp);
+  c = g0_model_omega{param_temp};
 }
 
 // *****************************************************************************
@@ -262,6 +304,26 @@ void g0_model::make_flat_band_analytic() {
   // Since Spin up and down are currently identical
   g0_lesser = make_block_gf<retime, matrix_valued>({"up", "down"}, {g0_lesser_up, g0_lesser_up});
   g0_greater = make_block_gf<retime, matrix_valued>({"up", "down"}, {g0_greater_up, g0_greater_up});
+}
+
+void h5_write(triqs::h5::group &h5group, std::string const &subgroup_name, g0_model const &c) {
+  auto grp = h5group.create_group(subgroup_name);
+  h5_write(grp, "model_omega", c.model_omega);
+  h5_write(grp, "make_dot_lead", c.make_dot_lead);
+  h5_write(grp, "g0_lesser", c.g0_lesser);
+  h5_write(grp, "lesser_ft_error", c.lesser_ft_error);
+  h5_write(grp, "alpg0_greaterha", c.g0_greater);
+  h5_write(grp, "greater_ft_error", c.greater_ft_error);
+}
+
+void h5_read(triqs::h5::group &h5group, std::string const &subgroup_name, g0_model &c) {
+  auto grp = h5group.open_group(subgroup_name);
+  h5_read(grp, "model_omega", c.model_omega);
+  h5_read(grp, "make_dot_lead", c.make_dot_lead);
+  h5_read(grp, "g0_lesser", c.g0_lesser);
+  h5_read(grp, "lesser_ft_error", c.lesser_ft_error);
+  h5_read(grp, "g0_greater", c.g0_greater);
+  h5_read(grp, "greater_ft_error", c.greater_ft_error);
 }
 
 } // namespace keldy::impurity_oneband

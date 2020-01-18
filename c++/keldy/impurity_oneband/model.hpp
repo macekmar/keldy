@@ -52,7 +52,10 @@ class CPP2PY_IGNORE model_param_t {
 // fake function to get cpp2py to create adaptor for model_param_t
 CPP2PY_ARG_AS_DICT inline void fake([[maybe_unused]] model_param_t const &temp){};
 
-// ***************************
+void h5_write(triqs::h5::group &h5group, std::string const &subgroup_name, model_param_t const &c);
+void h5_read(triqs::h5::group &h5group, std::string const &subgroup_name, model_param_t &c);
+
+// *****************************************************************************
 
 /// Index of the Keldysh Green Function
 class gf_index_t {
@@ -85,7 +88,7 @@ inline std::ostream &operator<<(std::ostream &os, gf_index_t const &m) {
   return os << "{" << m.contour.time << ", " << m.contour.k_idx << ", " << m.spin << ", " << m.orbital << "}";
 }
 
-// ***************************
+// *****************************************************************************
 
 /// Defines model throuh non-interacting Green function g_lesser / g_greater
 class g0_model_omega {
@@ -145,7 +148,10 @@ class g0_model_omega {
   std::function<dcomplex(dcomplex)> bath_hybrid_R_right_ = []([[maybe_unused]] dcomplex omega) { return 0; };
 };
 
-// ***************************
+void h5_write(triqs::h5::group h5group, std::string subgroup_name, g0_model_omega const &c);
+void h5_read(triqs::h5::group h5group, std::string subgroup_name, g0_model_omega &c);
+
+// *****************************************************************************
 
 class g0_model {
  public:
@@ -169,7 +175,10 @@ class g0_model {
   void make_flat_band_analytic();
 };
 
-// ***************************
+void h5_write(triqs::h5::group h5group, std::string subgroup_name, g0_model const &c);
+void h5_read(triqs::h5::group h5group, std::string subgroup_name, g0_model &c);
+
+// *****************************************************************************
 
 /// Adapt g0_lesser and g0_greater into Green function on Keldysh contour
 struct g0_keldysh_contour_t {
