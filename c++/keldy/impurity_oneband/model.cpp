@@ -270,7 +270,8 @@ void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
 }
 
 void g0_model::make_flat_band_analytic() {
-  if (model_omega.param_.beta != std::numeric_limits<double>::infinity() || model_omega.param_.bias_V != 0. || model_omega.param_.eps_d != 0.) {
+  if (model_omega.param_.beta != std::numeric_limits<double>::infinity() || model_omega.param_.bias_V != 0.
+      || model_omega.param_.eps_d != 0.) {
     TRIQS_RUNTIME_ERROR
        << "Analytic flatband covers only the following parameters: beta=infinity (zero temperature), bias_V=0, eps_d=0.";
   }
@@ -278,7 +279,8 @@ void g0_model::make_flat_band_analytic() {
     TRIQS_RUNTIME_ERROR << "No analytic formula for dot-lead Green's functions.";
   }
 
-  auto const time_mesh = gf_mesh<retime>({-model_omega.param_.time_max, model_omega.param_.time_max, model_omega.param_.nr_time_points_gf});
+  auto const time_mesh =
+     gf_mesh<retime>({-model_omega.param_.time_max, model_omega.param_.time_max, model_omega.param_.nr_time_points_gf});
   gf<retime, matrix_valued> g0_lesser_up{time_mesh, {2, 2}};
   gf<retime, matrix_valued> g0_greater_up{time_mesh, {2, 2}};
 

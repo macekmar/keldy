@@ -158,7 +158,7 @@ c.add_member(c_name = "model_omega",
              doc = r"""""")
 
 c.add_member(c_name = "make_dot_lead",
-             c_type = "const bool",
+             c_type = "bool",
              read_only= True,
              doc = r"""""")
 

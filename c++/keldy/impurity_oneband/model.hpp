@@ -156,7 +156,7 @@ void h5_read(triqs::h5::group h5group, std::string subgroup_name, g0_model_omega
 class g0_model {
  public:
   g0_model_omega model_omega;
-  bool const make_dot_lead;
+  bool make_dot_lead;
 
   /// Lesser Green function $G^{<}_{\sigma}(t)$; block spin $\sigma$ {up, down}
   block_gf<retime, matrix_valued> g0_lesser;
