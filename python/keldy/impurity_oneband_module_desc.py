@@ -94,12 +94,15 @@ c = class_(
         hdf5 = False,
 )
 
-c.add_member(c_name = "param_",
-             c_type = "keldy::impurity_oneband::model_param_t",
-             read_only= True,
-             doc = r"""""")
+c.add_constructor("""()""", doc = r"""""")
 
 c.add_constructor("""(keldy::impurity_oneband::model_param_t parameters)""", doc = r"""""")
+
+c.add_method("""keldy::impurity_oneband::model_param_t get_param ()""",
+             doc = r"""""")
+
+c.add_method("""double get_param_alpha ()""",
+             doc = r"""""")
 
 c.add_method("""double mu_left ()""",
              doc = r"""""")
@@ -181,6 +184,8 @@ c.add_member(c_name = "greater_ft_error",
              c_type = "array<double, 2>",
              read_only= True,
              doc = r"""""")
+
+c.add_constructor("""()""", doc = r"""""")
 
 c.add_constructor("""(keldy::impurity_oneband::g0_model_omega model_omega_, bool make_dot_lead_)""", doc = r"""""")
 

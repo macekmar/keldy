@@ -92,10 +92,35 @@ inline std::ostream &operator<<(std::ostream &os, gf_index_t const &m) {
 
 /// Defines model throuh non-interacting Green function g_lesser / g_greater
 class g0_model_omega {
+ private:
+  model_param_t param_;
+  std::function<dcomplex(dcomplex)> bath_hybrid_R_left_ = []([[maybe_unused]] dcomplex omega) { return 0; };
+  std::function<dcomplex(dcomplex)> bath_hybrid_R_right_ = []([[maybe_unused]] dcomplex omega) { return 0; };
+
+  dcomplex g0_dot(dcomplex omega, bool is_lesser) const {
+    auto bath_hybrid_left = bath_hybrid_R_left(omega) - bath_hybrid_A_left(omega);
+    auto bath_hybrid_right = bath_hybrid_R_right(omega) - bath_hybrid_A_right(omega);
+    int sign = 2 * static_cast<int>(is_lesser) - 1; // +1 if lesser, -1 if greater
+    return -sign * g0_dot_R(omega)
+       * (n_fermi(sign * (omega - mu_left()), param_.beta) * bath_hybrid_left
+          + n_fermi(sign * (omega - mu_right()), param_.beta) * bath_hybrid_right)
+       * g0_dot_A(omega);
+  }
+
+  dcomplex g0_rightlead_dot(dcomplex omega, bool is_lesser) const {
+    auto bath_hybrid_right = bath_hybrid_R_right(omega) - bath_hybrid_A_right(omega);
+    int sign = 2 * static_cast<int>(is_lesser) - 1; // +1 if lesser, -1 if greater
+    return -sign * n_fermi(sign * (omega - mu_right()), param_.beta) * bath_hybrid_right * g0_dot_A(omega)
+       + bath_hybrid_R_right(omega) * g0_dot(omega, is_lesser);
+  }
+
  public:
+  g0_model_omega() = default;
   explicit g0_model_omega(model_param_t const &parameters);
 
-  model_param_t param_;
+  model_param_t get_param() const { return param_; }
+
+  double get_param_alpha() const { return param_.alpha; }
 
   double mu_left() const { return -param_.bias_V / 2; }
   double mu_right() const { return +param_.bias_V / 2; }
@@ -126,26 +151,6 @@ class g0_model_omega {
   dcomplex g0_rightlead_dot_lesser(dcomplex omega) const { return g0_rightlead_dot(omega, true); }
   dcomplex g0_rightlead_dot_greater(dcomplex omega) const { return g0_rightlead_dot(omega, false); }
 
- private:
-  dcomplex g0_dot(dcomplex omega, bool is_lesser) const {
-    auto bath_hybrid_left = bath_hybrid_R_left(omega) - bath_hybrid_A_left(omega);
-    auto bath_hybrid_right = bath_hybrid_R_right(omega) - bath_hybrid_A_right(omega);
-    int sign = 2 * static_cast<int>(is_lesser) - 1; // +1 if lesser, -1 if greater
-    return -sign * g0_dot_R(omega)
-       * (n_fermi(sign * (omega - mu_left()), param_.beta) * bath_hybrid_left
-          + n_fermi(sign * (omega - mu_right()), param_.beta) * bath_hybrid_right)
-       * g0_dot_A(omega);
-  }
-
-  dcomplex g0_rightlead_dot(dcomplex omega, bool is_lesser) const {
-    auto bath_hybrid_right = bath_hybrid_R_right(omega) - bath_hybrid_A_right(omega);
-    int sign = 2 * static_cast<int>(is_lesser) - 1; // +1 if lesser, -1 if greater
-    return -sign * n_fermi(sign * (omega - mu_right()), param_.beta) * bath_hybrid_right * g0_dot_A(omega)
-       + bath_hybrid_R_right(omega) * g0_dot(omega, is_lesser);
-  }
-
-  std::function<dcomplex(dcomplex)> bath_hybrid_R_left_ = []([[maybe_unused]] dcomplex omega) { return 0; };
-  std::function<dcomplex(dcomplex)> bath_hybrid_R_right_ = []([[maybe_unused]] dcomplex omega) { return 0; };
 };
 
 void h5_write(triqs::h5::group h5group, std::string subgroup_name, g0_model_omega const &c);
@@ -166,6 +171,7 @@ class g0_model {
   block_gf<retime, matrix_valued> g0_greater;
   array<double, 2> greater_ft_error = {{0, 0}, {0, 0}};
 
+  g0_model() = default;
   g0_model(g0_model_omega model_omega_, bool make_dot_lead_);
 
  private:
@@ -204,7 +210,7 @@ struct g0_keldysh_contour_t {
     }
     // if at equal contour points (incl. time-split) AND equal orbitals
     return model.g0_lesser[a.spin](0.0)(a.orbital, a.orbital)
-       - static_cast<int>(internal_point) * 1_j * model.model_omega.param_.alpha;
+       - static_cast<int>(internal_point) * 1_j * model.model_omega.get_param_alpha();
   }
 
   double get_time_max() const { return model.g0_lesser[up].mesh().x_max(); };

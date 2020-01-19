@@ -89,7 +89,7 @@ g0_model_omega::g0_model_omega(model_param_t const &parameters) : param_(paramet
   }
 
   if (param_.bath_type == "semicircle") {
-    bath_hybrid_R_left_ = [&Gamma = param_.Gamma](dcomplex omega) -> dcomplex {
+    bath_hybrid_R_left_ = [Gamma = param_.Gamma](dcomplex omega) -> dcomplex {
       auto omega2 = omega / 2.;
       if (std::abs(std::real(omega2)) < 1) {
         return (Gamma / 2) * (omega2 - 1_j * std::sqrt(1 - omega2 * omega2));
@@ -100,7 +100,7 @@ g0_model_omega::g0_model_omega(model_param_t const &parameters) : param_(paramet
     bath_hybrid_R_right_ = bath_hybrid_R_left_;
 
   } else if (param_.bath_type == "flatband") {
-    bath_hybrid_R_left_ = [&Gamma = param_.Gamma]([[maybe_unused]] dcomplex omega) -> dcomplex {
+    bath_hybrid_R_left_ = [Gamma = param_.Gamma]([[maybe_unused]] dcomplex omega) -> dcomplex {
       return -1_j * Gamma / 2.;
     };
     bath_hybrid_R_right_ = bath_hybrid_R_left_;
@@ -127,17 +127,19 @@ void h5_read(triqs::h5::group h5group, std::string subgroup_name, g0_model_omega
 g0_model::g0_model(g0_model_omega model_omega_, bool make_dot_lead_)
    : model_omega(std::move(model_omega_)), make_dot_lead(make_dot_lead_) {
 
-  if (model_omega.param_.ft_method == "fft") {
+  auto param_ = model_omega.get_param();
+
+  if (param_.ft_method == "fft") {
     make_g0_by_fft();
 
-  } else if (model_omega.param_.ft_method == "contour") {
-    double margin = std::abs(std::max(model_omega.param_.Gamma, 1. / model_omega.param_.beta));
-    double left_turn_pt = std::min(-std::abs(model_omega.param_.bias_V / 2), model_omega.param_.eps_d) - margin;
-    double right_turn_pt = std::max(std::abs(model_omega.param_.bias_V / 2), model_omega.param_.eps_d) + margin;
+  } else if (param_.ft_method == "contour") {
+    double margin = std::abs(std::max(param_.Gamma, 1. / param_.beta));
+    double left_turn_pt = std::min(-std::abs(param_.bias_V / 2), param_.eps_d) - margin;
+    double right_turn_pt = std::max(std::abs(param_.bias_V / 2), param_.eps_d) + margin;
     make_g0_by_contour(left_turn_pt, right_turn_pt);
 
-  } else if (model_omega.param_.ft_method == "analytic") {
-    if (model_omega.param_.bath_type == "flatband") {
+  } else if (param_.ft_method == "analytic") {
+    if (param_.bath_type == "flatband") {
       make_flat_band_analytic();
     } else {
       TRIQS_RUNTIME_ERROR << "analytic ft only works for flatband";
@@ -150,8 +152,10 @@ g0_model::g0_model(g0_model_omega model_omega_, bool make_dot_lead_)
 
 void g0_model::make_g0_by_fft() {
   using namespace triqs::gfs;
-  auto time_mesh =
-     gf_mesh<retime>({-model_omega.param_.time_max, model_omega.param_.time_max, model_omega.param_.nr_time_points_gf});
+
+  auto param_ = model_omega.get_param();
+
+  auto time_mesh = gf_mesh<retime>({-param_.time_max, param_.time_max, param_.nr_time_points_gf});
   auto freq_mesh = make_adjoint_mesh(time_mesh);
 
   gf<refreq, matrix_valued> g0_lesser_omega{freq_mesh, {2, 2}};
@@ -189,13 +193,13 @@ void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
   using namespace triqs::gfs;
   using namespace boost::math::double_constants;
 
-  if (!(left_turn_pt < -std::abs(model_omega.param_.bias_V / 2)
-        && right_turn_pt > std::abs(model_omega.param_.bias_V / 2))) {
+  auto param_ = model_omega.get_param();
+
+  if (!(left_turn_pt < -std::abs(param_.bias_V / 2) && right_turn_pt > std::abs(param_.bias_V / 2))) {
     TRIQS_RUNTIME_ERROR << "Contour is wrong regarding Fermi functions poles.";
   }
 
-  auto time_mesh =
-     gf_mesh<retime>({-model_omega.param_.time_max, model_omega.param_.time_max, model_omega.param_.nr_time_points_gf});
+  auto time_mesh = gf_mesh<retime>({-param_.time_max, param_.time_max, param_.nr_time_points_gf});
 
   gf<retime, matrix_valued> g0_lesser_time{time_mesh, {2, 2}};
   gf<retime, matrix_valued> g0_greater_time{time_mesh, {2, 2}};
@@ -209,8 +213,7 @@ void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
     for (const auto t : itertools::omp_chunk(time_mesh)) {
       int sign_of_t = (t > 0) - (t < 0);
       dcomplex direc_1 = (t == 0) ? -1 : -1_j * sign_of_t;
-      dcomplex direc_2 =
-         (model_omega.param_.beta == std::numeric_limits<double>::infinity()) ? 1. : model_omega.param_.beta - t * 1_j;
+      dcomplex direc_2 = (param_.beta == std::numeric_limits<double>::infinity()) ? 1. : param_.beta - t * 1_j;
       direc_2 /= std::abs(direc_2);
 
       // g_lesser:
@@ -270,8 +273,9 @@ void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
 }
 
 void g0_model::make_flat_band_analytic() {
-  if (model_omega.param_.beta != std::numeric_limits<double>::infinity() || model_omega.param_.bias_V != 0.
-      || model_omega.param_.eps_d != 0.) {
+
+  auto param_ = model_omega.get_param();
+  if (param_.beta != std::numeric_limits<double>::infinity() || param_.bias_V != 0. || param_.eps_d != 0.) {
     TRIQS_RUNTIME_ERROR
        << "Analytic flatband covers only the following parameters: beta=infinity (zero temperature), bias_V=0, eps_d=0.";
   }
@@ -279,12 +283,11 @@ void g0_model::make_flat_band_analytic() {
     TRIQS_RUNTIME_ERROR << "No analytic formula for dot-lead Green's functions.";
   }
 
-  auto const time_mesh =
-     gf_mesh<retime>({-model_omega.param_.time_max, model_omega.param_.time_max, model_omega.param_.nr_time_points_gf});
+  auto const time_mesh = gf_mesh<retime>({-param_.time_max, param_.time_max, param_.nr_time_points_gf});
   gf<retime, matrix_valued> g0_lesser_up{time_mesh, {2, 2}};
   gf<retime, matrix_valued> g0_greater_up{time_mesh, {2, 2}};
 
-  auto const g0_lesser_values = [Gamma = model_omega.param_.Gamma](time_real_t time) -> dcomplex {
+  auto const g0_lesser_values = [Gamma = param_.Gamma](time_real_t time) -> dcomplex {
     using namespace boost::math;
     using namespace boost::math::double_constants;
 
