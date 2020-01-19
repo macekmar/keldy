@@ -371,6 +371,8 @@ c = class_(
 
 c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)""", doc = r"""""")
 
+c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int order, double cutoff_integrand, std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)""", doc = r"""""")
+
 c.add_method("""void run (int nr_steps)""",
              doc = r"""""")
 
@@ -575,27 +577,27 @@ module.add_function ("void keldy::impurity_oneband::fake (**keldy::impurity_oneb
 
 
 +-------------------+-------------+------------+---------------+
-| Parameter Name    | Type        | Default        | Documentation |
+| Parameter Name    | Type        | Default    | Documentation |
 +===================+=============+============+===============+
-| beta              | double      | 1.0            |               |
+| beta              | double      | 1.0        |               |
 +-------------------+-------------+------------+---------------+
-| bias_V            | double      | 0.0            |               |
+| bias_V            | double      | 0.0        |               |
 +-------------------+-------------+------------+---------------+
-| eps_d             | double      | 0.0            |               |
+| eps_d             | double      | 0.0        |               |
 +-------------------+-------------+------------+---------------+
-| Gamma             | double      | 1.0            |               |
+| Gamma             | double      | 1.0        |               |
 +-------------------+-------------+------------+---------------+
 | alpha             | double      | 0.0        |               |
 +-------------------+-------------+------------+---------------+
 | bath_type         | std::string | "flatband" |               |
 +-------------------+-------------+------------+---------------+
-| time_max          | double      | +100.0         |               |
+| time_max          | double      | +100.0     |               |
 +-------------------+-------------+------------+---------------+
-| nr_time_points_gf | int         | 1000           |               |
+| nr_time_points_gf | int         | 1000       |               |
 +-------------------+-------------+------------+---------------+
 | ft_method         | std::string | "fft"      |               |
 +-------------------+-------------+------------+---------------+
-| cutoff_integrand  | double      | 0.             |               |
+| cutoff_integrand  | double      | 0.         |               |
 +-------------------+-------------+------------+---------------+
 """)
 

@@ -72,20 +72,28 @@ inline warper_plasma_simple_t simple_plasma_warper_factory(std::string const &la
 // Class to compute charge = G^{lesser}_{up,up}(t).
 class compute_charge_Q_direct : public integrator<dcomplex, integrand_g_direct, warper_plasma_simple_t> {
  public:
-  compute_charge_Q_direct(model_param_t params, double time, int order, std::string warper_function_name,
+  compute_charge_Q_direct(g0_model model, double time, int order, double cutoff_integrand, std::string warper_function_name,
                           int nr_sample_points_warper, double warper_scale = 1)
      : integrator{dcomplex{0},
-                  integrand_g_direct{g0_keldysh_contour_t{g0_model{g0_model_omega{params}, false}},
-                                     gf_index_t{time, up, forward}, gf_index_t{time, up, backward},
-                                     params.cutoff_integrand},
+                  integrand_g_direct{model, gf_index_t{time, up, forward},
+                                     gf_index_t{time, up, backward}, cutoff_integrand},
                   warper_plasma_simple_t{time},
                   order,
                   "sobol",
                   0} {
     warper = simple_plasma_warper_factory(warper_function_name, integrand, time, nr_sample_points_warper, warper_scale);
   }
-};
 
+  compute_charge_Q_direct(model_param_t params, double time, int order, std::string warper_function_name,
+                          int nr_sample_points_warper, double warper_scale = 1)
+     : compute_charge_Q_direct{g0_model{g0_model_omega{params}, false},
+                               time,
+                               order,
+                               params.cutoff_integrand,
+                               warper_function_name,
+                               nr_sample_points_warper,
+                               warper_scale} {};
+};
 
 class CPP2PY_IGNORE adapt_integrand {
   // double time_max_;
@@ -160,7 +168,9 @@ inline std::function<double(double)> scalar_warper_function_factory_kernel(std::
                                                                            integrand_g_kernel const &f,
                                                                            double time) CPP2PY_IGNORE {
   if (label == "first_order") {
-    return [time, &f](double t) -> double { return f(std::vector<double>{time - t}).first.sum_weights() + 1e-12; }; // refine
+    return [time, &f](double t) -> double {
+      return f(std::vector<double>{time - t}).first.sum_weights() + 1e-12;
+    }; // refine
   }
   if (label == "identity") {
     return []([[maybe_unused]] double t) -> double { return 1.0; };
@@ -169,18 +179,19 @@ inline std::function<double(double)> scalar_warper_function_factory_kernel(std::
 }
 
 class compute_gf_kernel : public integrator<kernel_binner, integrand_g_kernel, warper_plasma_simple_t> {
-  public:
-   compute_gf_kernel(model_param_t params, double time, int order, std::string warper_function_name,
-                     int nr_sample_points_warper)
-      : integrator{kernel_binner{0.0, time, 100},
-                   integrand_g_kernel{g0_keldysh_contour_t{g0_model{g0_model_omega{params}, false}}, gf_index_t{time, up, forward}},
-                   warper_plasma_simple_t{time},
-                   order,
-                   "sobol",
-                   0} {
-     warper = {scalar_warper_function_factory_kernel(warper_function_name, integrand, time), time,
-               nr_sample_points_warper};
-   }
+ public:
+  compute_gf_kernel(model_param_t params, double time, int order, std::string warper_function_name,
+                    int nr_sample_points_warper)
+     : integrator{kernel_binner{0.0, time, 100},
+                  integrand_g_kernel{g0_keldysh_contour_t{g0_model{g0_model_omega{params}, false}},
+                                     gf_index_t{time, up, forward}},
+                  warper_plasma_simple_t{time},
+                  order,
+                  "sobol",
+                  0} {
+    warper = {scalar_warper_function_factory_kernel(warper_function_name, integrand, time), time,
+              nr_sample_points_warper};
+  }
 };
 
 } // namespace keldy::impurity_oneband
