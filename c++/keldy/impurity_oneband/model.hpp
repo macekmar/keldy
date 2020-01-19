@@ -158,8 +158,8 @@ class g0_model_omega {
 
 class g0_model {
  public:
-  g0_model_omega model_omega;
-  bool make_dot_lead;
+  g0_model_omega model_omega{};
+  bool make_dot_lead = false;
 
   /// Lesser Green function $G^{<}_{\sigma}(t)$; block spin $\sigma$ {up, down}
   block_gf<retime, matrix_valued> g0_lesser;
