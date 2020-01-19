@@ -110,12 +110,12 @@ g0_model_omega::g0_model_omega(model_param_t const &parameters) : param_(paramet
   }
 }
 
-void h5_write(triqs::h5::group h5group, std::string subgroup_name, g0_model_omega const &c) {
+void h5_write(triqs::h5::group &h5group, std::string const &subgroup_name, g0_model_omega const &c) {
   auto grp = h5group.create_group(subgroup_name);
   h5_write(grp, "param_", c.param_);
 }
 
-void h5_read(triqs::h5::group h5group, std::string subgroup_name, g0_model_omega &c) {
+void h5_read(triqs::h5::group &h5group, std::string const &subgroup_name, g0_model_omega &c) {
   auto grp = h5group.open_group(subgroup_name);
   model_param_t param_temp;
   h5_read(grp, "param_", param_temp);
@@ -309,26 +309,6 @@ void g0_model::make_flat_band_analytic() {
   // Since Spin up and down are currently identical
   g0_lesser = make_block_gf<retime, matrix_valued>({"up", "down"}, {g0_lesser_up, g0_lesser_up});
   g0_greater = make_block_gf<retime, matrix_valued>({"up", "down"}, {g0_greater_up, g0_greater_up});
-}
-
-void h5_write(triqs::h5::group &h5group, std::string const &subgroup_name, g0_model const &c) {
-  auto grp = h5group.create_group(subgroup_name);
-  h5_write(grp, "model_omega", c.model_omega);
-  h5_write(grp, "make_dot_lead", c.make_dot_lead);
-  h5_write(grp, "g0_lesser", c.g0_lesser);
-  h5_write(grp, "lesser_ft_error", c.lesser_ft_error);
-  h5_write(grp, "alpg0_greaterha", c.g0_greater);
-  h5_write(grp, "greater_ft_error", c.greater_ft_error);
-}
-
-void h5_read(triqs::h5::group &h5group, std::string const &subgroup_name, g0_model &c) {
-  auto grp = h5group.open_group(subgroup_name);
-  h5_read(grp, "model_omega", c.model_omega);
-  h5_read(grp, "make_dot_lead", c.make_dot_lead);
-  h5_read(grp, "g0_lesser", c.g0_lesser);
-  h5_read(grp, "lesser_ft_error", c.lesser_ft_error);
-  h5_read(grp, "g0_greater", c.g0_greater);
-  h5_read(grp, "greater_ft_error", c.greater_ft_error);
 }
 
 } // namespace keldy::impurity_oneband

@@ -20,6 +20,8 @@ module.add_preamble("""
 #include <cpp2py/converters/vector.hpp>
 #include <triqs/cpp2py_converters/arrays.hpp>
 #include <triqs/cpp2py_converters/gf.hpp>
+#include <triqs/cpp2py_converters/h5.hpp>
+#include <triqs/cpp2py_converters/h5.hpp>
 
 using namespace keldy;
 using namespace keldy::impurity_oneband;
@@ -147,12 +149,13 @@ c.add_method("""keldy::dcomplex g0_rightlead_dot_greater (keldy::dcomplex omega)
              doc = r"""""")
 
 module.add_class(c)
+
 # The class g0_model
 c = class_(
         py_type = "G0Model",  # name of the python class
         c_type = "keldy::impurity_oneband::g0_model",   # name of the C++ class
         doc = r"""""",   # doc of the C++ class
-        hdf5 = False,
+        hdf5 = True,
 )
 
 c.add_member(c_name = "model_omega",
@@ -188,6 +191,10 @@ c.add_member(c_name = "greater_ft_error",
 c.add_constructor("""()""", doc = r"""""")
 
 c.add_constructor("""(keldy::impurity_oneband::g0_model_omega model_omega_, bool make_dot_lead_)""", doc = r"""""")
+
+c.add_method("""std::string hdf5_scheme ()""",
+             is_static = True,
+             doc = r"""""")
 
 module.add_class(c)
 

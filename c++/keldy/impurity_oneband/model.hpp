@@ -151,10 +151,9 @@ class g0_model_omega {
   dcomplex g0_rightlead_dot_lesser(dcomplex omega) const { return g0_rightlead_dot(omega, true); }
   dcomplex g0_rightlead_dot_greater(dcomplex omega) const { return g0_rightlead_dot(omega, false); }
 
+  friend void h5_write(triqs::h5::group &h5group, std::string const &subgroup_name, g0_model_omega const &c);
+  friend void h5_read(triqs::h5::group &h5group, std::string const &subgroup_name, g0_model_omega &c);
 };
-
-void h5_write(triqs::h5::group h5group, std::string subgroup_name, g0_model_omega const &c);
-void h5_read(triqs::h5::group h5group, std::string subgroup_name, g0_model_omega &c);
 
 // *****************************************************************************
 
@@ -174,15 +173,44 @@ class g0_model {
   g0_model() = default;
   g0_model(g0_model_omega model_omega_, bool make_dot_lead_);
 
+  static std::string hdf5_scheme() { return "KELDY_G0Model"; }
+
+  friend void h5_write(triqs::h5::group h5group, std::string subgroup_name, g0_model const &c) {
+    auto grp = h5group.create_group(subgroup_name);
+    h5_write_attribute(grp, "TRIQS_HDF5_data_scheme", g0_model::hdf5_scheme());
+    h5_write(grp, "model_omega", c.model_omega);
+    h5_write(grp, "make_dot_lead", c.make_dot_lead);
+    h5_write(grp, "g0_lesser", c.g0_lesser);
+    h5_write(grp, "lesser_ft_error", c.lesser_ft_error);
+    h5_write(grp, "g0_greater", c.g0_greater);
+    h5_write(grp, "greater_ft_error", c.greater_ft_error);
+  }
+
+  // Function that read all containers to hdf5 file
+  friend void h5_read(triqs::h5::group h5group, std::string subgroup_name, g0_model &c) {
+    auto grp = h5group.open_group(subgroup_name);
+    h5_read(grp, "model_omega", c.model_omega);
+    h5_read(grp, "make_dot_lead", c.make_dot_lead);
+    h5_read(grp, "g0_lesser", c.g0_lesser);
+    h5_read(grp, "lesser_ft_error", c.lesser_ft_error);
+    h5_read(grp, "g0_greater", c.g0_greater);
+    h5_read(grp, "greater_ft_error", c.greater_ft_error);
+  }
+
+  // Function that read all containers to hdf5 file
+  CPP2PY_IGNORE
+  static g0_model h5_read_construct(triqs::h5::group h5group, std::string subgroup_name) {
+    g0_model c{};
+    h5_read(h5group, subgroup_name, c);
+    return c;
+  }
+
  private:
   /// make dot g0
   void make_g0_by_fft();
   void make_g0_by_contour(double left_turn_pt, double right_turn_pt);
   void make_flat_band_analytic();
 };
-
-void h5_write(triqs::h5::group h5group, std::string subgroup_name, g0_model const &c);
-void h5_read(triqs::h5::group h5group, std::string subgroup_name, g0_model &c);
 
 // *****************************************************************************
 
