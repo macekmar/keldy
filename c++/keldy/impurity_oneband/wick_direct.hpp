@@ -53,6 +53,9 @@ class integrand_g_direct {
     if ((external_A.contour.time > t_max) || (external_B.contour.time > t_max)) {
       TRIQS_RUNTIME_ERROR << "An external point is out of g0 time window.";
     }
+    if ((external_A.orbital != 0 || external_B.orbital != 0) && g0.model.make_dot_lead == false) {
+      TRIQS_RUNTIME_ERROR << "Need g0_model with make_dot_lead == true to calculate off_diagonal gf.";
+    }
   };
 };
 
