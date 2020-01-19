@@ -42,7 +42,8 @@ class integrand_g_direct {
   using result_t = dcomplex;
 
   /// Returns integrand for the specified times
-  [[nodiscard]] std::pair<result_t, int> operator()(std::vector<double> const &times, bool keep_u_hypercube = true) const;
+  [[nodiscard]] std::pair<result_t, int> operator()(std::vector<double> const &times,
+                                                    bool keep_u_hypercube = true) const;
 
   integrand_g_direct(g0_keldysh_contour_t g0_, gf_index_t external_A_, gf_index_t external_B_, double cutoff_ = 0.)
      : g0(std::move(g0_)), external_A(std::move(external_A_)), external_B(std::move(external_B_)), cutoff(cutoff_) {
