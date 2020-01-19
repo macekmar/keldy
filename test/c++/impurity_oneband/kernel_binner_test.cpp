@@ -18,10 +18,10 @@ TEST(kernel_binner, Accumulation) { // NOLINT
   EXPECT_ARRAY_EQ(times_expected, binner.get_bin_times());
   EXPECT_DOUBLE_EQ(2.5, binner.get_bin_size());
 
-  binner.accumulate({1.5, up, forward},  1.0_j);
+  binner.accumulate({1.5, up, forward}, 1.0_j);
   binner.accumulate({6.3, up, backward}, 10.0_j);
-  binner.accumulate({2.0, up, forward},  1.0);
-  binner.accumulate({2.0, up, forward},  100.0_j);
+  binner.accumulate({2.0, up, forward}, 1.0);
+  binner.accumulate({2.0, up, forward}, 100.0_j);
 
   // boundary points
   binner.accumulate({0.0, up, backward}, 10.0);
@@ -55,7 +55,6 @@ TEST(kernel_binner, Accumulation) { // NOLINT
   // product by scalar
   binner *= 2.0;
   EXPECT_ARRAY_EQ(2.0 * values_expected, binner.get_values());
-
 }
 
 TEST(kernel_binner, Accum_sparse_binner) { // NOLINT
@@ -94,19 +93,19 @@ TEST(kernel_binner, Accum_sparse_binner) { // NOLINT
 }
 
 TEST(sparse_kernel_binner, weight) { // NOLINT
-  sparse_kernel_binner sp_binner{{{{1.5, up, forward},  1.0_j},
-                                 {{6.3, up, backward}, 10.0_j},
-                                 {{2.0, up, forward},  1.0},
-                                 {{2.0, up, forward},  100.0_j}}};
+  sparse_kernel_binner sp_binner{{{{1.5, up, forward}, 1.0_j},
+                                  {{6.3, up, backward}, 10.0_j},
+                                  {{2.0, up, forward}, 1.0},
+                                  {{2.0, up, forward}, 100.0_j}}};
 
   EXPECT_DOUBLE_EQ(112.0, sp_binner.sum_weights());
 }
 
 TEST(sparse_kernel_binner, product_scalar) { // NOLINT
-  sparse_kernel_binner sp_binner{{{{1.5, up, forward},  1.0_j},
-                                 {{6.3, up, backward}, 10.0_j},
-                                 {{2.0, up, forward},  1.0},
-                                 {{2.0, up, forward},  100.0_j}}};
+  sparse_kernel_binner sp_binner{{{{1.5, up, forward}, 1.0_j},
+                                  {{6.3, up, backward}, 10.0_j},
+                                  {{2.0, up, forward}, 1.0},
+                                  {{2.0, up, forward}, 100.0_j}}};
   sp_binner *= 2.0;
 
   EXPECT_DOUBLE_EQ(2.0 * 112.0, sp_binner.sum_weights());

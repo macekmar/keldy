@@ -46,7 +46,8 @@ class sparse_kernel_binner {
   std::vector<std::pair<gf_index_t, dcomplex>> data{};
 
   void bin_data(std::pair<gf_index_t, dcomplex> const &in) {
-    auto loc = std::find_if(std::begin(data), std::end(data), [&in](auto &el) { return equivalent_without_timesplit(el.first, in.first); });
+    auto loc = std::find_if(std::begin(data), std::end(data),
+                            [&in](auto &el) { return equivalent_without_timesplit(el.first, in.first); });
     if (loc != std::end(data)) {
       (*loc).second += in.second;
     } else {

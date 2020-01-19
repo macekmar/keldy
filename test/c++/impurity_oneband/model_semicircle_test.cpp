@@ -45,5 +45,4 @@ TEST(g0_model, Semicirc) { // NOLINT
   EXPECT_COMPLEX_NEAR(-0.0066645142937036958 + 0.12215571972575601_j, g0.g0_lesser[up](1.0)(1, 0), 1e-3);
 }
 
-
 MAKE_MAIN; // NOLINT
