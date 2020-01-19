@@ -7,7 +7,7 @@ using namespace keldy::impurity_oneband;
 TEST(ComputeObs, Initialize1) { // NOLINT
   model_param_t params;
   // TRIQS_PRINT(params.bath_type);
-  compute_charge_Q_direct computer(params, 10.0, 1, "first_order", 1000);
+  compute_charge_Q_direct computer(params, 10.0, 1, 0.0, "first_order", 1000);
   // tests
 
   // run
@@ -25,7 +25,7 @@ TEST(ComputeObs, Initialize1) { // NOLINT
 TEST(ComputeObs, Initialize2) { // NOLINT
   model_param_t params;
   // TRIQS_PRINT(params.bath_type);
-  compute_charge_Q_direct computer(params, 10.0, 4, "first_order", 1000);
+  compute_charge_Q_direct computer(params, 10.0, 4, 0.0, "first_order", 1000);
 
   // tests
   // model_param_t params, double time, int order, std::string const &warper_function_name, int nr_sample_points_ansatz
@@ -39,21 +39,21 @@ TEST(ComputeObs, Initialize2) { // NOLINT
 
 TEST(ComputeObs, InitializeInverseSquare) { // NOLINT
   model_param_t params;
-  compute_charge_Q_direct computer(params, 10.0, 4, "inverse_square", 1000, 1.5);
+  compute_charge_Q_direct computer(params, 10.0, 4, 0.0, "inverse_square", 1000, 1.5);
 
   computer.run(10);
 }
 
 TEST(ComputeObs, InitializeExponential) { // NOLINT
   model_param_t params;
-  compute_charge_Q_direct computer(params, 10.0, 4, "exponential", 1000, 1.5);
+  compute_charge_Q_direct computer(params, 10.0, 4, 0.0, "exponential", 1000, 1.5);
 
   computer.run(10);
 }
 
 TEST(ComputeObs, InitializeIdentity) { // NOLINT
   model_param_t params;
-  compute_charge_Q_direct computer(params, 10.0, 4, "identity", 1000, 1.5);
+  compute_charge_Q_direct computer(params, 10.0, 4, 0.0, "identity", 1000, 1.5);
 
   computer.run(10);
 }
@@ -61,7 +61,7 @@ TEST(ComputeObs, InitializeIdentity) { // NOLINT
 TEST(ComputeObs, Initialize_current) { // NOLINT
   model_param_t params;
   // TRIQS_PRINT(params.bath_type);
-  compute_current_J_direct computer(params, 10.0, 4, "first_order", 1000);
+  compute_current_J_direct computer(params, 10.0, 4, 0.0, "first_order", 1000);
 
   // tests
   // model_param_t params, double time, int order, std::string const &warper_function_name, int nr_sample_points_ansatz
@@ -102,7 +102,7 @@ TEST(ComputeChargeQDirect, FlatbandAnalyticCompare1) { // NOLINT
 
   for (int order = 1; order <= 6; ++order) {
     std::cout << "Order " << order << std::endl;
-    compute_charge_Q_direct computer(params, t_max, order, "inverse_square", 1e5);
+    compute_charge_Q_direct computer(params, t_max, order, 0.0, "inverse_square", 1e5);
     computer.run(1e4);
 
     if (order >= 5) {
@@ -143,7 +143,7 @@ TEST(ComputeChargeQDirect, FlatbandAnalyticCompare2) { // NOLINT
 
   for (int order = 1; order <= 6; ++order) {
     std::cout << "Order " << order << std::endl;
-    compute_charge_Q_direct computer(params, t_max, order, "exponential", 1e5, 2.0);
+    compute_charge_Q_direct computer(params, t_max, order, 0.0, "exponential", 1e5, 2.0);
     computer.run(5e4);
 
     //if (order >= 5) {

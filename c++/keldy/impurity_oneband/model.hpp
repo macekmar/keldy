@@ -46,7 +46,6 @@ class CPP2PY_IGNORE model_param_t {
   double time_max = +100.0; // (time_limit_min = - time_limit_max)
   int nr_time_points_gf = 1000;
   std::string ft_method = "fft"; // or "contour" or "analytic"
-  double cutoff_integrand = 0.;  // no cutoff by default; ignored in kernel
 };
 
 // fake function to get cpp2py to create adaptor for model_param_t

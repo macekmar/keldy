@@ -35,7 +35,7 @@ class integrand_g_direct {
   g0_keldysh_contour_t g0;
   gf_index_t external_A;
   gf_index_t external_B;
-  double const cutoff;
+  double cutoff;
 
  public:
   // Specify return type of function to easily check type compability

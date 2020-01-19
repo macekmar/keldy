@@ -41,7 +41,6 @@ void h5_write(triqs::h5::group &h5group, std::string const &subgroup_name, model
   h5_write(grp, "time_max", c.time_max);
   h5_write(grp, "nr_time_points_gf", c.nr_time_points_gf);
   h5_write(grp, "ft_method", c.ft_method);
-  h5_write(grp, "cutoff_integrand", c.cutoff_integrand);
 }
 
 void h5_read(triqs::h5::group &h5group, std::string const &subgroup_name, model_param_t &c) {
@@ -55,7 +54,6 @@ void h5_read(triqs::h5::group &h5group, std::string const &subgroup_name, model_
   h5_read(grp, "time_max", c.time_max);
   h5_read(grp, "nr_time_points_gf", c.nr_time_points_gf);
   h5_read(grp, "ft_method", c.ft_method);
-  h5_read(grp, "cutoff_integrand", c.cutoff_integrand);
 }
 
 // *****************************************************************************

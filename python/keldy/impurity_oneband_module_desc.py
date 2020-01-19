@@ -369,7 +369,7 @@ c = class_(
         hdf5 = False,
 )
 
-c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)""", doc = r"""""")
+c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, double cutoff_integrand, std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)""", doc = r"""""")
 
 c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int order, double cutoff_integrand, std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)""", doc = r"""""")
 
@@ -401,7 +401,7 @@ c = class_(
         hdf5 = False,
 )
 
-c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, std::string gsl_rng_name, double warper_scale = 1)""", doc = r"""""")
+c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, double cutoff_integrand, std::string gsl_rng_name, double warper_scale = 1)""", doc = r"""""")
 
 c.add_method("""double operator() (std::vector<double> x)""",
              name = "__call__",
@@ -490,7 +490,7 @@ c = class_(
         hdf5 = False,
 )
 
-c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, keldy::cuba_common_param in, double warper_scale = 1)""", doc = r"""""")
+c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, double cutoff_integrand, keldy::cuba_common_param in, double warper_scale = 1)""", doc = r"""""")
 
 c.add_method("""double operator() (std::vector<double> x)""",
              name = "__call__",
@@ -548,7 +548,9 @@ c = class_(
         hdf5 = False,
 )
 
-c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)""", doc = r"""""")
+c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, double cutoff_integrand, std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)""", doc = r"""""")
+
+c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int order, double cutoff_integrand, std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)""", doc = r"""""")
 
 c.add_method("""void run (int nr_steps)""",
              doc = r"""""")
@@ -596,8 +598,6 @@ module.add_function ("void keldy::impurity_oneband::fake (**keldy::impurity_oneb
 | nr_time_points_gf | int         | 1000       |               |
 +-------------------+-------------+------------+---------------+
 | ft_method         | std::string | "fft"      |               |
-+-------------------+-------------+------------+---------------+
-| cutoff_integrand  | double      | 0.         |               |
 +-------------------+-------------+------------+---------------+
 """)
 
@@ -656,11 +656,6 @@ c.add_member(c_name = "nr_time_points_gf",
 c.add_member(c_name = "ft_method",
              c_type = "std::string",
              initializer = """ "fft" """,
-             doc = r"""""")
-
-c.add_member(c_name = "cutoff_integrand",
-             c_type = "double",
-             initializer = """ 0. """,
              doc = r"""""")
 
 module.add_converter(c)
