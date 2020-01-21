@@ -1,5 +1,6 @@
 #include <keldy/impurity_oneband/compute_obs.hpp>
 #include <triqs/test_tools/gfs.hpp>
+#include <boost/math/constants/constants.hpp>
 
 using namespace keldy;
 using namespace keldy::impurity_oneband;
@@ -153,6 +154,26 @@ TEST(ComputeChargeQDirect, FlatbandAnalyticCompare2) { // NOLINT
     EXPECT_COMPLEX_NEAR(-1_j * i_to_the_n[order % 4] * computer.reduce_result(), HZ_charge_series[order],
                         tol * std::abs(HZ_charge_series[order]));
   }
+}
+
+TEST(ComputeObs, ValueCurrent1) { // NOLINT
+
+  model_param_t params;
+  params.beta = -1.0; // zero temperature
+  params.bias_V = 0.6;
+  params.eps_d = -0.5;
+  params.Gamma = 1.0;
+  params.time_max = 100.0;
+  params.nr_time_points_gf = 5001;
+  params.alpha = 0.;
+  params.bath_type = "semicircle";
+  params.ft_method = "contour";
+
+  compute_current_J_direct computer(params, 100., 1, 0.0, "inverse_square", 1e5, 0.5);
+  computer.run(1e5);
+
+  // exact result from analytical calculation
+  EXPECT_NEAR(-2 * std::real(1_j * computer.reduce_result()), 0.041401946352562884, 1e-5);
 }
 
 MAKE_MAIN; // NOLINT
