@@ -22,6 +22,8 @@
 
 #pragma once
 
+#define TRIQS_USE_STD_VARIANT
+
 #include <complex>
 #include <triqs/utility/first_include.hpp>
 
