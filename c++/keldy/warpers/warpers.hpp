@@ -27,3 +27,54 @@
 #include "product_1d_simple.hpp"
 #include "product_1d.hpp"
 #include "plasma_projection.hpp"
+
+#include <variant>
+#include <vector>
+
+namespace keldy {
+
+using warper_variant = std::variant<warper_plasma_uv_t, warper_product_1d_simple_t, warper_product_1d_t>;
+
+class warper_train_t {
+ private:
+  std::vector<warper_variant> warpers{};
+
+ public:
+  std::vector<double> ui_from_li(std::vector<double> const &li_vec) const {
+    std::vector<double> result = li_vec;
+    for (auto it = warpers.crbegin(); it != warpers.crend(); it++) { // REVERSE
+      result = std::visit([&result](auto &&arg) -> std::vector<double> { return arg.ui_from_li(result); }, *it);
+    }
+    return result;
+  }
+
+  std::vector<double> li_from_ui(std::vector<double> const &ui_vec) const {
+    auto result = ui_vec;
+    for (auto &v : warpers) { // FORWARD
+      result = std::visit([&result](auto &&arg) -> std::vector<double> { return arg.li_from_ui(result); }, v);
+    }
+    return result;
+  }
+
+  double jacobian(std::vector<double> const &li_vec) const {
+    double result = 1.0;
+    std::vector<double> li_vec_tmp = li_vec;
+    for (auto it = warpers.crbegin(); it != warpers.crend(); it++) { // REVERSE
+      result *= std::visit([&li_vec_tmp](auto &&arg) -> double { return arg.jacobian(li_vec_tmp); }, *it);
+      li_vec_tmp = ui_from_li(li_vec_tmp);
+    }
+    return result;
+  }
+
+  double operator()(std::vector<double> const &ui_vec) const {
+    double result = 1.0;
+    std::vector<double> ui_vec_tmp = ui_vec;
+    for (auto &v : warpers) { // FORWARD
+      result *= std::visit([&ui_vec_tmp](auto &&arg) -> double { return arg(ui_vec_tmp); }, v);
+      ui_vec_tmp = li_from_ui(ui_vec_tmp);
+    }
+    return result;
+  }
+};
+
+} // namespace keldy
