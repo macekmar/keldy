@@ -23,7 +23,7 @@
 #pragma once
 
 #include "../common.hpp"
-#include "plasma_1D.hpp"
+#include "product_1d.hpp"
 #include "../interfaces/gsl_interp_wrap.hpp"
 #include <algorithm>
 #include <any>

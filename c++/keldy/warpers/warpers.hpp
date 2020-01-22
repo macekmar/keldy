@@ -23,6 +23,7 @@
 #pragma once
 
 #include "warpers_common.hpp"
-#include "plasma_simple.hpp"
-#include "plasma_1D.hpp"
+#include "plasma_uv.hpp"
+#include "product_1d_simple.hpp"
+#include "product_1d.hpp"
 #include "plasma_projection.hpp"
