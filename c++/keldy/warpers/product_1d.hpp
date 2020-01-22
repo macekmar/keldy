@@ -35,7 +35,7 @@ namespace keldy {
 
 using gf_t = triqs::gfs::gf<triqs::gfs::retime, triqs::gfs::scalar_real_valued>;
 
-class warper_plasma_1D_t {
+class warper_product_1d_t {
  private:
   double t_max{};
   std::vector<double> fn_integrate_norm{};
@@ -46,10 +46,10 @@ class warper_plasma_1D_t {
 
  public:
   // Identity Constructor: should use this if nothing else is specified
-  warper_plasma_1D_t(double t_max_) : warper_plasma_1D_t{{identity_function{}}, t_max_, 4} {}
+  warper_product_1d_t(double t_max_) : warper_product_1d_t{{identity_function{}}, t_max_, 4} {}
 
-  warper_plasma_1D_t(std::vector<std::function<double(double)>> fn_, double t_max_,
-                     int nr_function_sample_points) // points vs resampling points
+  warper_product_1d_t(std::vector<std::function<double(double)>> fn_, double t_max_,
+                      int nr_function_sample_points) // points vs resampling points
      : t_max(t_max_), fn(std::move(fn_)) {
     for (int axis = 0; axis < fn.size(); axis++) {
       // Integrate Ansatz using Trapezoid Rule

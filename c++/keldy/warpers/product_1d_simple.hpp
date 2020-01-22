@@ -35,7 +35,7 @@ namespace keldy {
 
 using gf_t = triqs::gfs::gf<triqs::gfs::retime, triqs::gfs::scalar_real_valued>;
 
-class warper_plasma_simple_t {
+class warper_product_1d_simple_t {
  private:
   double t_max{};
   double f1_integrated_norm{};
@@ -45,12 +45,12 @@ class warper_plasma_simple_t {
 
  public:
   // Identity Constructor: should use this if nothing else is specified
-  warper_plasma_simple_t(double t_max_)
-     : warper_plasma_simple_t{identity_function{}, linear_function{}, linear_function{}, t_max_, 4} {}
+  warper_product_1d_simple_t(double t_max_)
+     : warper_product_1d_simple_t{identity_function{}, linear_function{}, linear_function{}, t_max_, 4} {}
 
   // Pass Warping Function: numerically perform integration
   // TODO: points vs resampling points
-  warper_plasma_simple_t(std::function<double(double)> f1_, double t_max_, int nr_function_sample_points)
+  warper_product_1d_simple_t(std::function<double(double)> f1_, double t_max_, int nr_function_sample_points)
      : t_max(t_max_), f1(std::move(f1_)) {
 
     // Integrate Ansatz using Trapezoid Rule
@@ -82,9 +82,9 @@ class warper_plasma_simple_t {
 
   // Constructor to use if f1, f1_integrated and f1_integrated_inverse can be provided analytically
   // To do:points vs resampling points
-  warper_plasma_simple_t(std::function<double(double)> f1_, std::function<double(double)> f1_integrated_,
-                         std::function<double(double)> f1_integrated_inverse_, double t_max_,
-                         int nr_function_sample_points)
+  warper_product_1d_simple_t(std::function<double(double)> f1_, std::function<double(double)> f1_integrated_,
+                             std::function<double(double)> f1_integrated_inverse_, double t_max_,
+                             int nr_function_sample_points)
      : t_max(t_max_), f1_integrated_norm(f1_integrated_(t_max)), f1(std::move(f1_)) {
 
     // check consistency of functions provided

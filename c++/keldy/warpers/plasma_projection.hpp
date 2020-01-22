@@ -97,14 +97,14 @@ class warper_plasma_projection_t {
   std::vector<double> fn_integrate_norm{};
   std::vector<gf_t> fn_integrated;
   std::vector<gf_t> fn_integrated_inverse;
-  warper_plasma_1D_t w_warper;
+  warper_product_1d_t w_warper;
 
   std::vector<hist_xi> xi;
 
   std::vector<gf_t> fn;
 
  public:
-  warper_plasma_projection_t(std::function<double(std::vector<double>)> integrand_, warper_plasma_1D_t w_warper_,
+  warper_plasma_projection_t(std::function<double(std::vector<double>)> integrand_, warper_product_1d_t w_warper_,
                              int order, int nr_function_sample_points)
      : integrand(std::move(integrand_)), w_warper(w_warper_), order(order) {
 
@@ -155,7 +155,7 @@ class warper_plasma_projection_t {
       bin_values(xi[axis], axis, w_pts, w_vals);
       convolve(xi[axis].values, gaussian);
 
-      // -- From here on the code is similar to warper_plasma_1D_t --
+      // -- From here on the code is similar to warper_product_1d_t --
 
       // Integrate Ansatz using Trapezoid Rule
       fn_integrated.push_back(gf_t({0.0, t_max, nr_function_sample_points}));

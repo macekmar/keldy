@@ -332,10 +332,10 @@ c.add_method("""void discard (int nr_discard)""",
 
 module.add_class(c)
 
-# The class warper_plasma_simple_t
+# The class warper_product_1d_simple_t
 c = class_(
         py_type = "WarperPlasmaSimpleT",  # name of the python class
-        c_type = "keldy::warper_plasma_simple_t",   # name of the C++ class
+        c_type = "keldy::warper_product_1d_simple_t",   # name of the C++ class
         doc = r"""""",   # doc of the C++ class
         hdf5 = False,
 )
@@ -361,10 +361,10 @@ c.add_method("""double operator() (std::vector<double> ui_vec)""",
 
 module.add_class(c)
 
-# The class warper_plasma_1D_t
+# The class warper_product_1d_t
 c = class_(
         py_type = "WarperPlasma1dT",  # name of the python class
-        c_type = "keldy::warper_plasma_1D_t",   # name of the C++ class
+        c_type = "keldy::warper_product_1d_t",   # name of the C++ class
         doc = r"""""",   # doc of the C++ class
         hdf5 = False,
 )
@@ -421,7 +421,7 @@ c = class_(
         hdf5 = False,
 )
 
-c.add_constructor("""(std::function<double(std::vector<double>)> integrand_, keldy::warper_plasma_1D_t w_warper_, int order, int nr_function_sample_points)""", doc = r"""""")
+c.add_constructor("""(std::function<double(std::vector<double>)> integrand_, keldy::warper_product_1d_t w_warper_, int order, int nr_function_sample_points)""", doc = r"""""")
 
 c.add_method("""std::vector<double> ui_from_li (std::vector<double> li_vec)""",
              doc = r"""""")
@@ -462,7 +462,7 @@ c.add_method("""uint64_t reduce_nr_points_run ()""",
 c.add_method("""uint64_t reduce_nr_points_in_domain ()""",
              doc = r"""""")
 
-c.add_method("""keldy::warper_plasma_simple_t get_warper ()""",
+c.add_method("""keldy::warper_product_1d_simple_t get_warper ()""",
              doc = r"""""")
 
 c.add_method("""keldy::impurity_oneband::integrand_g_direct get_integrand ()""",
@@ -492,7 +492,7 @@ c.add_method("""uint64_t reduce_nr_points_run ()""",
 c.add_method("""uint64_t reduce_nr_points_in_domain ()""",
              doc = r"""""")
 
-c.add_method("""keldy::warper_plasma_1D_t get_warper ()""",
+c.add_method("""keldy::warper_product_1d_t get_warper ()""",
              doc = r"""""")
 
 c.add_method("""keldy::impurity_oneband::integrand_g_direct get_integrand ()""",
@@ -639,7 +639,7 @@ c.add_method("""uint64_t reduce_nr_points_run ()""",
 c.add_method("""uint64_t reduce_nr_points_in_domain ()""",
              doc = r"""""")
 
-c.add_method("""keldy::warper_plasma_simple_t get_warper ()""",
+c.add_method("""keldy::warper_product_1d_simple_t get_warper ()""",
              doc = r"""""")
 
 c.add_method("""keldy::impurity_oneband::integrand_g_kernel get_integrand ()""",
@@ -671,7 +671,7 @@ c.add_method("""uint64_t reduce_nr_points_run ()""",
 c.add_method("""uint64_t reduce_nr_points_in_domain ()""",
              doc = r"""""")
 
-c.add_method("""keldy::warper_plasma_simple_t get_warper ()""",
+c.add_method("""keldy::warper_product_1d_simple_t get_warper ()""",
              doc = r"""""")
 
 c.add_method("""keldy::impurity_oneband::integrand_g_direct get_integrand ()""",
