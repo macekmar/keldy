@@ -54,7 +54,7 @@ inline std::vector<double> ui_from_vi(double t_max, std::vector<double> const &v
 
 class warper_plasma_uv_t {
  private:
-  double t_max{};
+  double t_max = 0.0; // default constructor
 
  public:
   warper_plasma_uv_t(double t_max_) : t_max{t_max_} {}

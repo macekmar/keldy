@@ -1,9 +1,11 @@
-#include <keldy/warpers/product_1d_simple.hpp>
+#include "keldy/warpers/plasma_uv.hpp"
+#include <keldy/warpers/warpers.hpp>
 
 #include <keldy/common.hpp>
 
 #include <itertools/itertools.hpp>
 #include <triqs/gfs.hpp>
+#include <triqs/test_tools/arrays.hpp>
 #include <triqs/test_tools/gfs.hpp>
 
 using namespace keldy;
@@ -35,12 +37,24 @@ TEST(ViUiMaps, OutOfOrder) { // NOLINT
   EXPECT_EQ(ui_from_vi(t_max, vi_out), std::vector<double>({6.0, 2.0, 1.0, 0.0}));
 }
 
-TEST(WarperPlasmaSimple, Initialize) { // NOLINT
-  double const t_max = 3.5;
-  auto f1 = [](double x) -> double { return 1. / ((1. + x) * (1. + x)); };
+TEST(PlasmaUVWaroper, Mapping) { // NOLINT
+  warper_plasma_uv_t w{10.0};
+  double t_max = 10.0;
+  std::vector<double> ui_times = {0.0, 2.0, 6.0, 1.0};
 
-  auto warper = warper_product_1d_simple_t(f1, t_max, 50);
+  std::vector<double> vi_out = w.li_from_ui(ui_times);
+  std::vector<double> vi_result = {4.0, 4.0, 1.0, 1.0};
+
+  EXPECT_EQ(vi_out, vi_result);
+
+  std::vector<double> ui_sorted = {6.0, 2.0, 1.0, 0.0};
+  EXPECT_EQ(w.ui_from_li(vi_out), ui_sorted);
+
+  EXPECT_EQ(w.jacobian(vi_out), 1.0);
+  EXPECT_EQ(w(ui_times), 1.0);
 }
+
+MAKE_MAIN; // NOLINT
 
 // double linear_function(double x) {
 //   if (x > 1 || x < 0) {
@@ -64,5 +78,3 @@ TEST(WarperPlasmaSimple, Initialize) { // NOLINT
 
 //   for (auto const &[f1, f2] : itertools::zip(f1_compare, warper.f1_integrated.data())) { EXPECT_DOUBLE_EQ(f1, f2); }
 // }
-
-MAKE_MAIN; // NOLINT

@@ -462,7 +462,7 @@ c.add_method("""uint64_t reduce_nr_points_run ()""",
 c.add_method("""uint64_t reduce_nr_points_in_domain ()""",
              doc = r"""""")
 
-c.add_method("""keldy::warper_product_1d_simple_t get_warper ()""",
+c.add_method("""keldy::warper_train_t get_warper ()""",
              doc = r"""""")
 
 c.add_method("""keldy::impurity_oneband::integrand_g_direct get_integrand ()""",
@@ -492,7 +492,7 @@ c.add_method("""uint64_t reduce_nr_points_run ()""",
 c.add_method("""uint64_t reduce_nr_points_in_domain ()""",
              doc = r"""""")
 
-c.add_method("""keldy::warper_product_1d_t get_warper ()""",
+c.add_method("""keldy::warper_train_t get_warper ()""",
              doc = r"""""")
 
 c.add_method("""keldy::impurity_oneband::integrand_g_direct get_integrand ()""",
@@ -639,7 +639,7 @@ c.add_method("""uint64_t reduce_nr_points_run ()""",
 c.add_method("""uint64_t reduce_nr_points_in_domain ()""",
              doc = r"""""")
 
-c.add_method("""keldy::warper_product_1d_simple_t get_warper ()""",
+c.add_method("""keldy::warper_train_t get_warper ()""",
              doc = r"""""")
 
 c.add_method("""keldy::impurity_oneband::integrand_g_kernel get_integrand ()""",
@@ -671,7 +671,7 @@ c.add_method("""uint64_t reduce_nr_points_run ()""",
 c.add_method("""uint64_t reduce_nr_points_in_domain ()""",
              doc = r"""""")
 
-c.add_method("""keldy::warper_product_1d_simple_t get_warper ()""",
+c.add_method("""keldy::warper_train_t get_warper ()""",
              doc = r"""""")
 
 c.add_method("""keldy::impurity_oneband::integrand_g_direct get_integrand ()""",

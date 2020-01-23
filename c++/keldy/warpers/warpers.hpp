@@ -39,10 +39,9 @@ using warper_variant =
    std::variant<warper_identity_t, warper_plasma_uv_t, warper_product_1d_simple_t, warper_product_1d_t>;
 
 class warper_train_t {
- private:
+ public:
   std::vector<warper_variant> warpers{};
 
- public:
   std::vector<double> ui_from_li(std::vector<double> const &li_vec) const {
     std::vector<double> result = li_vec;
     for (auto it = warpers.crbegin(); it != warpers.crend(); it++) { // REVERSE
@@ -63,8 +62,8 @@ class warper_train_t {
     double result = 1.0;
     std::vector<double> li_vec_tmp = li_vec;
     for (auto it = warpers.crbegin(); it != warpers.crend(); it++) { // REVERSE
-      result *= std::visit([&li_vec_tmp](auto &&arg) -> double { return arg.jacobian(li_vec_tmp); }, *it);
-      li_vec_tmp = ui_from_li(li_vec_tmp);
+      result *= std::visit([&li_vec_tmp](auto &&arg) { return arg.jacobian(li_vec_tmp); }, *it);
+      li_vec_tmp = std::visit([&li_vec_tmp](auto &&arg) { return arg.ui_from_li(li_vec_tmp); }, *it);
     }
     return result;
   }
@@ -74,7 +73,7 @@ class warper_train_t {
     std::vector<double> ui_vec_tmp = ui_vec;
     for (auto &v : warpers) { // FORWARD
       result *= std::visit([&ui_vec_tmp](auto &&arg) -> double { return arg(ui_vec_tmp); }, v);
-      ui_vec_tmp = li_from_ui(ui_vec_tmp);
+      ui_vec_tmp = std::visit([&ui_vec_tmp](auto &&arg) { return arg.li_from_ui(ui_vec_tmp); }, v);
     }
     return result;
   }

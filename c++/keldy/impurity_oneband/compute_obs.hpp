@@ -72,18 +72,21 @@ inline warper_product_1d_simple_t simple_plasma_warper_factory(std::string const
 }
 
 // Class to compute charge = G^{lesser}_{up,up}(t).
-class compute_charge_Q_direct : public integrator<dcomplex, integrand_g_direct, warper_product_1d_simple_t> {
+class compute_charge_Q_direct : public integrator<dcomplex, integrand_g_direct> {
  public:
   compute_charge_Q_direct(g0_model model, double time, int order, double cutoff_integrand,
                           std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)
      : integrator{dcomplex{0},
                   integrand_g_direct{g0_keldysh_contour_t{model}, gf_index_t{time, up, forward},
                                      gf_index_t{time, up, backward}, cutoff_integrand},
-                  warper_product_1d_simple_t{time},
+                  {},
                   order,
                   "sobol",
                   0} {
-    warper = simple_plasma_warper_factory(warper_function_name, integrand, time, nr_sample_points_warper, warper_scale);
+
+    warper.warpers.emplace_back(warper_plasma_uv_t(time));
+    warper.warpers.emplace_back(
+       simple_plasma_warper_factory(warper_function_name, integrand, time, nr_sample_points_warper, warper_scale));
   }
 
   compute_charge_Q_direct(model_param_t params, double time, int order, double cutoff_integrand,
@@ -97,18 +100,20 @@ class compute_charge_Q_direct : public integrator<dcomplex, integrand_g_direct, 
                                warper_scale} {};
 };
 
-class compute_charge_Q_direct_plasma_1D : public integrator<dcomplex, integrand_g_direct, warper_product_1d_t> {
+class compute_charge_Q_direct_plasma_1D : public integrator<dcomplex, integrand_g_direct> {
  public:
   compute_charge_Q_direct_plasma_1D(model_param_t params, double time, int order,
                                     std::vector<std::function<double(double)>> fn_, int nr_sample_points_warper)
      : integrator{dcomplex{0},
                   integrand_g_direct{g0_keldysh_contour_t{g0_model{g0_model_omega{params}, false}},
                                      gf_index_t{time, up, forward}, gf_index_t{time, up, backward}},
-                  warper_product_1d_t{time},
+                  {},
                   order,
                   "sobol",
                   0} {
-    warper = {fn_, time, nr_sample_points_warper};
+
+    warper.warpers.emplace_back(warper_plasma_uv_t(time));
+    warper.warpers.emplace_back(warper_product_1d_t{fn_, time, nr_sample_points_warper});
   }
 };
 
@@ -162,18 +167,20 @@ class compute_charge_Q_direct_cuba : public cuba_wrapper {
 };
 
 // Class to compute the current = -2e/hbar gamma Re[G^<_{lead-dot}(t, t)]
-class compute_current_J_direct : public integrator<dcomplex, integrand_g_direct, warper_product_1d_simple_t> {
+class compute_current_J_direct : public integrator<dcomplex, integrand_g_direct> {
  public:
   compute_current_J_direct(g0_model model, double time, int order, double cutoff_integrand,
                            std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)
      : integrator{dcomplex{0},
                   integrand_g_direct{g0_keldysh_contour_t{model}, gf_index_t{time, up, forward, 0, 1},
                                      gf_index_t{time, up, backward, 0, 0}, cutoff_integrand},
-                  warper_product_1d_simple_t{time},
+                  {},
                   order,
                   "sobol",
                   0} {
-    warper = simple_plasma_warper_factory(warper_function_name, integrand, time, nr_sample_points_warper, warper_scale);
+    warper.warpers.emplace_back(warper_plasma_uv_t(time));
+    warper.warpers.emplace_back(
+       simple_plasma_warper_factory(warper_function_name, integrand, time, nr_sample_points_warper, warper_scale));
   }
 
   compute_current_J_direct(model_param_t params, double time, int order, double cutoff_integrand,
@@ -203,19 +210,21 @@ inline std::function<double(double)> scalar_warper_function_factory_kernel(std::
   TRIQS_RUNTIME_ERROR << "Warper function name is not defined.";
 }
 
-class compute_gf_kernel : public integrator<kernel_binner, integrand_g_kernel, warper_product_1d_simple_t> {
+class compute_gf_kernel : public integrator<kernel_binner, integrand_g_kernel> {
  public:
   compute_gf_kernel(model_param_t params, double time, int order, std::string warper_function_name,
                     int nr_sample_points_warper)
      : integrator{kernel_binner{0.0, time, 100},
                   integrand_g_kernel{g0_keldysh_contour_t{g0_model{g0_model_omega{params}, false}},
                                      gf_index_t{time, up, forward}},
-                  warper_product_1d_simple_t{time},
+                  {},
                   order,
                   "sobol",
                   0} {
-    warper = {scalar_warper_function_factory_kernel(warper_function_name, integrand, time), time,
-              nr_sample_points_warper};
+
+    warper.warpers.emplace_back(warper_plasma_uv_t(time));
+    warper.warpers.emplace_back(warper_product_1d_simple_t{
+       scalar_warper_function_factory_kernel(warper_function_name, integrand, time), time, nr_sample_points_warper});
   }
 };
 

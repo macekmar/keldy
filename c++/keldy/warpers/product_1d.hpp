@@ -24,7 +24,6 @@
 
 #include "../common.hpp"
 #include "warpers_common.hpp"
-#include "plasma_uv.hpp"
 #include "../interfaces/gsl_interp_wrap.hpp"
 #include <algorithm>
 #include <any>
@@ -85,12 +84,11 @@ class warper_product_1d_t {
     for (auto [i, li] : itertools::enumerate(result)) {
       li = fn_integrated_inverse[i](li);
     }
-    return ui_from_vi(t_max, result);
+    return result;
   }
 
   std::vector<double> li_from_ui(std::vector<double> const &ui_vec) const {
-    auto result = vi_from_ui(t_max, ui_vec);
-    // map ui to vi
+    auto result = ui_vec;
     for (auto [i, ui] : itertools::enumerate(result)) {
       ui = fn_integrated[i](ui);
     }
@@ -107,8 +105,7 @@ class warper_product_1d_t {
 
   double operator()(std::vector<double> const &ui_vec) const {
     double result = 1.0;
-    auto vi_vec = vi_from_ui(t_max, ui_vec);
-    for (auto [i, vi] : itertools::enumerate(vi_vec)) {
+    for (auto [i, vi] : itertools::enumerate(ui_vec)) {
       result *= fn[i](vi);
     }
     return result;

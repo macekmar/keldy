@@ -36,7 +36,7 @@ template <typename T>
 constexpr bool is_binned_variable = false;
 // if (is_binned_variable<R>) {}
 
-template <typename R, typename I, typename W>
+template <typename R, typename I>
 class integrator {
  protected:
   mpi::communicator comm{};
@@ -49,8 +49,8 @@ class integrator {
   // Function that when called with a vector of times returns the integrand
   I integrand;
 
-  // Warper which defines the sample points transofrm [li -> ui] & Jacobian
-  W warper;
+  // Warpers which define the transform of sample points [li -> ui] & Jacobian
+  warper_train_t warper{};
 
   // Random number generator
   std::function<std::vector<double>()> rng;
@@ -80,7 +80,7 @@ class integrator {
     }
   }
 
-  integrator(R result_, I integrand_, W warper_, int dimension, const std::string &rng_name, int rng_seed)
+  integrator(R result_, I integrand_, warper_train_t warper_, int dimension, const std::string &rng_name, int rng_seed)
      : result(std::move(result_)), integrand(std::move(integrand_)), warper(std::move(warper_)) {
     if (dimension <= 0) {
       TRIQS_RUNTIME_ERROR << "Dimension of the integration space must be > 0.";
