@@ -59,10 +59,10 @@ int compare_3way(const contour_pt_t &a, const contour_pt_t &b);
 
 // Constraint: T floating point or complex floating point
 // Always assume beta >= 0
-template<typename T> 
+template <typename T>
 inline T n_fermi(T omega, double beta) {
   // Need this case to avoid ambiguity. If beta = +/- infinity, we get NaN.
-  if(omega == 0.){
+  if (omega == 0.) {
     return 0.5;
   }
   if (std::real(omega) > 0) {
