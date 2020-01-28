@@ -318,7 +318,7 @@ c = class_(
         hdf5 = False,
 )
 
-c.add_constructor("""(int dim, int rng_seed, int log_max_points_ = 31)""", doc = r"""""")
+c.add_constructor("""(int dim, int rng_state_seed, int log_max_points_ = 31)""", doc = r"""""")
 
 c.add_method("""std::vector<double> operator() ()""",
              name = "__call__",
