@@ -573,6 +573,35 @@ c.add_method("""double jacobian (std::vector<double> li_vec)""",
 c.add_method("""double operator() (std::vector<double> ui_vec)""",
              name = "__call__",
              doc = r"""""")
+
+module.add_class(c)
+
+# The class cuba_wrapper
+c = class_(
+        py_type = "CubaWrapper",  # name of the python class
+        c_type = "keldy::cuba_wrapper",   # name of the C++ class
+        doc = r"""""",   # doc of the C++ class
+        hdf5 = False,
+)
+
+c.add_constructor("""(std::function<double(std::vector<double>)> f, int dim, keldy::cuba_common_param in_)""", doc = r"""""")
+
+c.add_method("""double operator() (std::vector<double> x)""",
+             name = "__call__",
+             doc = r"""""")
+
+c.add_method("""void run_vegas (keldy::cuba_vegas_param in_v)""",
+             doc = r"""""")
+
+c.add_method("""void run_suave (keldy::cuba_suave_param in_s)""",
+             doc = r"""""")
+
+c.add_method("""void run_cuhre (int key_integration_order)""",
+             doc = r"""""")
+
+c.add_method("""keldy::cuba_output get_output ()""",
+             doc = r"""""")
+
 module.add_class(c)
 
 # The class compute_charge_Q_direct_gsl_vegas
