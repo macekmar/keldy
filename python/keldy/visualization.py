@@ -77,7 +77,7 @@ def integrand_warper_plot(computer, order, d, t_max, nb_times=100, plot_all=Fals
         v_arr = x_arr[:, None] * v_dir[None, :] + d * np.ones((1, order))
         u_arr = np.array([keldy.ui_from_vi(t_max, v) for v in v_arr])
 
-        values_v = [integrand(u) if is_u_valid(u) else np.nan for u in u_arr]
+        values_v = [integrand(u)[0] if is_u_valid(u) else np.nan for u in u_arr]
         plt.plot(x_arr, np.abs(values_v), '-', c=c, label='V=({})'.format(list2str(v_dir_int)))
 
         values_v = [warper(u) if is_u_valid(u) else np.nan for u in u_arr]
