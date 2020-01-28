@@ -44,7 +44,7 @@ namespace keldy::impurity_oneband {
 
 inline warper_plasma_simple_t simple_plasma_warper_factory(std::string const &label, integrand_g_direct const &f,
                                                            double time, int nr_sample_points_warper,
-                                                           double warper_scale) CPP2PY_IGNORE {
+                                                           double warper_scale) {
   if (label == "first_order") {
     return {[time, &f](double t) -> double { return std::abs(f(std::vector<double>{time - t}).first) + 1e-12; }, time,
             nr_sample_points_warper};
@@ -174,8 +174,7 @@ class compute_current_J_direct : public integrator<dcomplex, integrand_g_direct,
 // Kernal Method
 
 inline std::function<double(double)> scalar_warper_function_factory_kernel(std::string const &label,
-                                                                           integrand_g_kernel const &f,
-                                                                           double time) CPP2PY_IGNORE {
+                                                                           integrand_g_kernel const &f, double time) {
   if (label == "first_order") {
     return [time, &f](double t) -> double {
       return f(std::vector<double>{time - t}).first.sum_weights() + 1e-12;
