@@ -17,6 +17,7 @@ module.add_preamble("""
 #include <cpp2py/converters/function.hpp>
 #include <cpp2py/converters/pair.hpp>
 #include <cpp2py/converters/string.hpp>
+#include <cpp2py/converters/variant.hpp>
 #include <cpp2py/converters/vector.hpp>
 #include <triqs/cpp2py_converters/arrays.hpp>
 #include <triqs/cpp2py_converters/gf.hpp>
@@ -51,6 +52,31 @@ c.add_member(c_name = "k_idx",
 c.add_member(c_name = "timesplit_n",
              c_type = "int",
              read_only= True,
+             doc = r"""""")
+
+module.add_class(c)
+
+# The class warper_plasma_uv_t
+c = class_(
+        py_type = "WarperPlasmaUvT",  # name of the python class
+        c_type = "keldy::warper_plasma_uv_t",   # name of the C++ class
+        doc = r"""""",   # doc of the C++ class
+        hdf5 = False,
+)
+
+c.add_constructor("""(double t_max_)""", doc = r"""""")
+
+c.add_method("""std::vector<double> ui_from_li (std::vector<double> li_vec)""",
+             doc = r"""""")
+
+c.add_method("""std::vector<double> li_from_ui (std::vector<double> ui_vec)""",
+             doc = r"""""")
+
+c.add_method("""double jacobian (std::vector<double> li_vec)""",
+             doc = r"""""")
+
+c.add_method("""double operator() (std::vector<double> ui_vec)""",
+             name = "__call__",
              doc = r"""""")
 
 module.add_class(c)
@@ -334,7 +360,7 @@ module.add_class(c)
 
 # The class warper_product_1d_simple_t
 c = class_(
-        py_type = "WarperPlasmaSimpleT",  # name of the python class
+        py_type = "WarperProduct1dSimpleT",  # name of the python class
         c_type = "keldy::warper_product_1d_simple_t",   # name of the C++ class
         doc = r"""""",   # doc of the C++ class
         hdf5 = False,
@@ -361,9 +387,32 @@ c.add_method("""double operator() (std::vector<double> ui_vec)""",
 
 module.add_class(c)
 
+# The class warper_identity_t
+c = class_(
+        py_type = "WarperIdentityT",  # name of the python class
+        c_type = "keldy::warper_identity_t",   # name of the C++ class
+        doc = r"""""",   # doc of the C++ class
+        hdf5 = False,
+)
+
+c.add_method("""std::vector<double> ui_from_li (std::vector<double> li_vec)""",
+             doc = r"""""")
+
+c.add_method("""std::vector<double> li_from_ui (std::vector<double> ui_vec)""",
+             doc = r"""""")
+
+c.add_method("""double jacobian (std::vector<double> li_vec)""",
+             doc = r"""""")
+
+c.add_method("""double operator() (std::vector<double> ui_vec)""",
+             name = "__call__",
+             doc = r"""""")
+
+module.add_class(c)
+
 # The class warper_product_1d_t
 c = class_(
-        py_type = "WarperPlasma1dT",  # name of the python class
+        py_type = "WarperProduct1dT",  # name of the python class
         c_type = "keldy::warper_product_1d_t",   # name of the C++ class
         doc = r"""""",   # doc of the C++ class
         hdf5 = False,
@@ -498,6 +547,32 @@ c.add_method("""keldy::warper_train_t get_warper ()""",
 c.add_method("""keldy::impurity_oneband::integrand_g_direct get_integrand ()""",
              doc = r"""""")
 
+module.add_class(c)
+# The class warper_train_t
+c = class_(
+        py_type = "WarperTrainT",  # name of the python class
+        c_type = "keldy::warper_train_t",   # name of the C++ class
+        doc = r"""""",   # doc of the C++ class
+        hdf5 = False,
+)
+
+c.add_member(c_name = "warpers",
+             c_type = "std::vector<warper_variant>",
+             read_only= True,
+             doc = r"""""")
+
+c.add_method("""std::vector<double> ui_from_li (std::vector<double> li_vec)""",
+             doc = r"""""")
+
+c.add_method("""std::vector<double> li_from_ui (std::vector<double> ui_vec)""",
+             doc = r"""""")
+
+c.add_method("""double jacobian (std::vector<double> li_vec)""",
+             doc = r"""""")
+
+c.add_method("""double operator() (std::vector<double> ui_vec)""",
+             name = "__call__",
+             doc = r"""""")
 module.add_class(c)
 
 # The class compute_charge_Q_direct_gsl_vegas
