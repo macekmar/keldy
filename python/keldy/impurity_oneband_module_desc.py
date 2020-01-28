@@ -346,6 +346,8 @@ c = class_(
 
 c.add_constructor("""(int dim, int rng_state_seed, int log_max_points_ = 31)""", doc = r"""""")
 
+c.add_constructor("""(int dim, int rng_state_seed, bool do_shift, bool do_scramble, int rng_seed_shift, int log_max_points_ = 31)""", doc = r"""""")
+
 c.add_method("""std::vector<double> operator() ()""",
              name = "__call__",
              doc = r"""""")
@@ -499,6 +501,9 @@ c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time
 
 c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int order, double cutoff_integrand, std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)""", doc = r"""""")
 
+c.add_method("""void reset_rng (std::string rng_name, int rng_state_seed, bool do_shift = false, bool do_scramble = false, int rng_seed_shift = 0)""",
+             doc = r"""""")
+
 c.add_method("""void run (int nr_steps)""",
              doc = r"""""")
 
@@ -528,6 +533,9 @@ c = class_(
 )
 
 c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, std::vector<std::function<double(double)>> fn_, int nr_sample_points_warper)""", doc = r"""""")
+
+c.add_method("""void reset_rng (std::string rng_name, int rng_state_seed, bool do_shift = false, bool do_scramble = false, int rng_seed_shift = 0)""",
+             doc = r"""""")
 
 c.add_method("""void run (int nr_steps)""",
              doc = r"""""")
@@ -731,6 +739,9 @@ c = class_(
 
 c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, std::string warper_function_name, int nr_sample_points_warper)""", doc = r"""""")
 
+c.add_method("""void reset_rng (std::string rng_name, int rng_state_seed, bool do_shift = false, bool do_scramble = false, int rng_seed_shift = 0)""",
+             doc = r"""""")
+
 c.add_method("""void run (int nr_steps)""",
              doc = r"""""")
 
@@ -762,6 +773,9 @@ c = class_(
 c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, double cutoff_integrand, std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)""", doc = r"""""")
 
 c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int order, double cutoff_integrand, std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)""", doc = r"""""")
+
+c.add_method("""void reset_rng (std::string rng_name, int rng_state_seed, bool do_shift = false, bool do_scramble = false, int rng_seed_shift = 0)""",
+             doc = r"""""")
 
 c.add_method("""void run (int nr_steps)""",
              doc = r"""""")

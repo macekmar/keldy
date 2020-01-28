@@ -370,7 +370,7 @@ namespace qmc {
             reset();
         }
 
-        // digitalseq_b2g() {};
+        digitalseq_b2g() {};
 
         /** Constructor from input stream (e.g., file).
           *

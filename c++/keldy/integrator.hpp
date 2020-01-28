@@ -41,6 +41,8 @@ class integrator {
  protected:
   mpi::communicator comm{};
 
+  int dimension = 1;
+
   // Result of the integration and number of samples
   R result{};
   uint64_t n_points = 0;
@@ -80,17 +82,23 @@ class integrator {
     }
   }
 
-  integrator(R result_, I integrand_, warper_train_t warper_, int dimension, const std::string &rng_name,
-             int rng_state_seed)
-     : result(std::move(result_)), integrand(std::move(integrand_)), warper(std::move(warper_)) {
-    if (dimension <= 0) {
-      TRIQS_RUNTIME_ERROR << "Dimension of the integration space must be > 0.";
-    }
-    if (rng_name == "sobol") {
+  void reset_rng(std::string rng_name, int rng_state_seed, bool do_shift = false, bool do_scramble = false,
+                 int rng_seed_shift = 0) {
+    if (rng_name == "sobol_unshifted") {
       rng = sobol(dimension, rng_state_seed);
+    } else if (rng_name == "sobol") {
+      rng = sobol(dimension, rng_state_seed, do_shift, do_scramble, rng_seed_shift);
     } else {
       TRIQS_RUNTIME_ERROR << "No other rng available.";
     }
+  }
+
+  integrator(R result_, I integrand_, warper_train_t warper_, int dimension_, std::string rng_name, int rng_state_seed)
+     : dimension(dimension_), result(std::move(result_)), integrand(std::move(integrand_)), warper(std::move(warper_)) {
+    if (dimension <= 0) {
+      TRIQS_RUNTIME_ERROR << "Dimension of the integration space must be > 0.";
+    }
+    reset_rng(rng_name, rng_state_seed);
   }
 
   R reduce_result() const {
