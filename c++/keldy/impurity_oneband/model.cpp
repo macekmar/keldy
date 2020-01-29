@@ -229,8 +229,7 @@ void g0_model::make_g0_by_finite_contour(double left_end_pt, double right_end_pt
         return std::exp(-1_j * omega * t) * model.g0_dot_lesser(omega) / (2 * pi);
       };
 
-      std::tie(result, abserr) =
-         worker.qag(integrand_dot_lesser, left_end_pt, right_end_pt, abstol, reltol, GSL_INTEG_GAUSS61);
+      std::tie(result, abserr) = worker.qag_si(integrand_dot_lesser, left_end_pt, right_end_pt, abstol, reltol);
       g0_lesser_time[t](0, 0) = result;
       lesser_ft_error[t](0, 0) = abserr;
 
@@ -239,8 +238,7 @@ void g0_model::make_g0_by_finite_contour(double left_end_pt, double right_end_pt
           return std::exp(-1_j * omega * t) * model.g0_rightlead_dot_lesser(omega) / (2 * pi);
         };
 
-        std::tie(result, abserr) =
-           worker.qag(integrand_lead_lesser, left_end_pt, right_end_pt, abstol, reltol, GSL_INTEG_GAUSS61);
+        std::tie(result, abserr) = worker.qag_si(integrand_lead_lesser, left_end_pt, right_end_pt, abstol, reltol);
         g0_lesser_time[t](1, 0) = result;
         lesser_ft_error[t](1, 0) = abserr;
       }
@@ -250,8 +248,7 @@ void g0_model::make_g0_by_finite_contour(double left_end_pt, double right_end_pt
         return std::exp(-1_j * omega * t) * model.g0_dot_greater(omega) / (2 * pi);
       };
 
-      std::tie(result, abserr) =
-         worker.qag(integrand_dot_greater, left_end_pt, right_end_pt, abstol, reltol, GSL_INTEG_GAUSS61);
+      std::tie(result, abserr) = worker.qag_si(integrand_dot_greater, left_end_pt, right_end_pt, abstol, reltol);
       g0_greater_time[t](0, 0) = result;
       greater_ft_error[t](0, 0) = abserr;
 
@@ -260,8 +257,7 @@ void g0_model::make_g0_by_finite_contour(double left_end_pt, double right_end_pt
           return std::exp(-1_j * omega * t) * model.g0_rightlead_dot_greater(omega) / (2 * pi);
         };
 
-        std::tie(result, abserr) =
-           worker.qag(integrand_lead_greater, left_end_pt, right_end_pt, abstol, reltol, GSL_INTEG_GAUSS61);
+        std::tie(result, abserr) = worker.qag_si(integrand_lead_greater, left_end_pt, right_end_pt, abstol, reltol);
         g0_greater_time[t](1, 0) = result;
         greater_ft_error[t](1, 0) = abserr;
       }
