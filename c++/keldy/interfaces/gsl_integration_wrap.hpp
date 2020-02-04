@@ -98,6 +98,42 @@ class CPP2PY_IGNORE gsl_integration_wrapper {
     return std::make_pair(result_real + 1_j * result_imag, abserr_real + 1_j * abserr_imag);
   }
 
+  // Integrals on finite interval with known singularities
+
+  template <typename T,
+            typename std::enable_if<std::is_same_v<decltype(std::declval<T>()(std::declval<double>())), double>>::type
+               * = nullptr>
+  [[nodiscard]] std::pair<double, double> qagp(T const &f, std::vector<double> pts, double epsabs, double epsrel) {
+
+    gsl_function f_gsl{[](double x, void *param) -> double {
+                         auto &f = *static_cast<T *>(param);
+                         return f(x);
+                       },
+                       (void *)&f};
+
+    double result = 0.0;
+    double abserr = 0.0;
+
+    auto err_code =
+       gsl_integration_qagp(&f_gsl, &pts[0], pts.size(), epsabs, epsrel, max_n_intervals_, wsp, &result, &abserr);
+    error_handler(err_code, result, abserr);
+    return std::make_pair(result, abserr);
+  }
+
+  template <typename T,
+            typename std::enable_if<std::is_same_v<decltype(std::declval<T>()(std::declval<double>())), dcomplex>>::type
+               * = nullptr>
+  [[nodiscard]] std::pair<dcomplex, dcomplex> qagp(T const &f, std::vector<double> pts, double epsabs, double epsrel) {
+
+    auto f_real = [&f](double t) -> double { return std::real(f(t)); };
+    auto [result_real, abserr_real] = qagp(f_real, pts, epsabs, epsrel);
+
+    auto f_imag = [&f](double t) -> double { return std::imag(f(t)); };
+    auto [result_imag, abserr_imag] = qagp(f_imag, pts, epsabs, epsrel);
+
+    return std::make_pair(result_real + 1_j * result_imag, abserr_real + 1_j * abserr_imag);
+  }
+
   // Integrals with singularities or infinite intervals:
 
   template <typename T,

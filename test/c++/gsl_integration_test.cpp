@@ -36,6 +36,41 @@ TEST(gsl_integration, real_qag_stdfunc) { // NOLINT
 
 // *********
 
+TEST(gsl_integration, real_qagp_lambdas) { // NOLINT
+  auto gsl_default_handler = gsl_set_error_handler_off();
+
+  gsl_integration_wrapper worker(100);
+
+  std::cout << "Function 1" << std::endl;
+  auto function1 = [](double t) -> double { return std::sqrt(std::abs(t)); };
+  auto [result_1, abserr_1] = worker.qagp(function1, {-1., 0., 1.}, 1e-10, 1e-7);
+  EXPECT_NEAR(result_1, 1. + 1. / 3., 1e-7);
+
+  std::cout << "Function 2" << std::endl;
+  auto function2 = [](double t) -> double { return 1. / std::sqrt(std::abs(t)); };
+  auto [result_2, abserr_2] = worker.qagp(function2, {-1., 0., 1.}, 1e-10, 1e-7);
+  EXPECT_NEAR(result_2, 4., 1e-7);
+
+  std::cout << "Function 3" << std::endl;
+  auto function3 = [](double t) -> double { return (t < 0.) ? -1. / std::sqrt(-t) : 1. / std::sqrt(t); };
+  auto [result_3, abserr_3] = worker.qagp(function3, {-1., 0., 2.}, 1e-10, 1e-7);
+  EXPECT_NEAR(result_3, 2. * (std::sqrt(2.) - 1.), 1e-7);
+
+  std::cout << "Function 4" << std::endl;
+  auto function4 = [](double t) -> double { return t < 0. ? std::sqrt(1. + t) : 0.5 * std::sqrt(1. - t); };
+  auto [result_4, abserr_4] = worker.qagp(function4, {-1., 0., 1.}, 1e-10, 1e-7);
+  EXPECT_NEAR(result_4, 1., 1e-7);
+
+  std::cout << "Function 5" << std::endl;
+  auto function5 = [](double t) -> double { return t < 0. ? std::sqrt(1. + t) : 0.; };
+  auto [result_5, abserr_5] = worker.qagp(function5, {-1., 0., 1.}, 1e-10, 1e-7);
+  EXPECT_NEAR(result_5, 2. / 3., 1e-7);
+
+  gsl_set_error_handler(gsl_default_handler);
+}
+
+// *********
+
 TEST(gsl_integration, real_qag_si_lambdas) { // NOLINT
   auto gsl_default_handler = gsl_set_error_handler_off();
 
