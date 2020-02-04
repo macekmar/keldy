@@ -138,12 +138,18 @@ g0_model::g0_model(g0_model_omega model_omega_, bool make_dot_lead_)
     make_g0_by_fft();
 
   } else if (param_.ft_method == "contour") {
+    auto half_bias = std::abs(param_.bias_V / 2);
     if (param_.bath_type == "semicircle") { // semicircular DOS has a bounded support
-      make_g0_by_finite_contour(-2., 2.);
+      if (half_bias < 2.) {
+        make_g0_by_finite_contour({-2., -half_bias, half_bias, 2.});
+      } else {
+        make_g0_by_finite_contour({-2., 2.});
+      }
     } else {
+      // TODO: use qagp ?
       double margin = std::abs(std::max(param_.Gamma, 1. / param_.beta));
-      double left_turn_pt = std::min(-std::abs(param_.bias_V / 2), param_.eps_d) - margin;
-      double right_turn_pt = std::max(std::abs(param_.bias_V / 2), param_.eps_d) + margin;
+      double left_turn_pt = std::min(-half_bias, param_.eps_d) - margin;
+      double right_turn_pt = std::max(half_bias, param_.eps_d) + margin;
       make_g0_by_contour(left_turn_pt, right_turn_pt);
     }
 
@@ -199,7 +205,7 @@ void g0_model::make_g0_by_fft() {
  * This method is suitable only for bath dos with a finite support, like semi-circular.
  * omega is real in this method.
  */
-void g0_model::make_g0_by_finite_contour(double left_end_pt, double right_end_pt) {
+void g0_model::make_g0_by_finite_contour(std::vector<double> pts) {
   using namespace triqs::gfs;
   using namespace boost::math::double_constants;
 
@@ -229,7 +235,7 @@ void g0_model::make_g0_by_finite_contour(double left_end_pt, double right_end_pt
         return std::exp(-1_j * omega * t) * model.g0_dot_lesser(omega) / (2 * pi);
       };
 
-      std::tie(result, abserr) = worker.qag_si(integrand_dot_lesser, left_end_pt, right_end_pt, abstol, reltol);
+      std::tie(result, abserr) = worker.qagp(integrand_dot_lesser, pts, abstol, reltol);
       g0_lesser_time[t](0, 0) = result;
       lesser_ft_error[t](0, 0) = abserr;
 
@@ -238,7 +244,7 @@ void g0_model::make_g0_by_finite_contour(double left_end_pt, double right_end_pt
           return std::exp(-1_j * omega * t) * model.g0_rightlead_dot_lesser(omega) / (2 * pi);
         };
 
-        std::tie(result, abserr) = worker.qag_si(integrand_lead_lesser, left_end_pt, right_end_pt, abstol, reltol);
+        std::tie(result, abserr) = worker.qagp(integrand_lead_lesser, pts, abstol, reltol);
         g0_lesser_time[t](1, 0) = result;
         lesser_ft_error[t](1, 0) = abserr;
       }
@@ -248,7 +254,7 @@ void g0_model::make_g0_by_finite_contour(double left_end_pt, double right_end_pt
         return std::exp(-1_j * omega * t) * model.g0_dot_greater(omega) / (2 * pi);
       };
 
-      std::tie(result, abserr) = worker.qag_si(integrand_dot_greater, left_end_pt, right_end_pt, abstol, reltol);
+      std::tie(result, abserr) = worker.qagp(integrand_dot_greater, pts, abstol, reltol);
       g0_greater_time[t](0, 0) = result;
       greater_ft_error[t](0, 0) = abserr;
 
@@ -257,7 +263,7 @@ void g0_model::make_g0_by_finite_contour(double left_end_pt, double right_end_pt
           return std::exp(-1_j * omega * t) * model.g0_rightlead_dot_greater(omega) / (2 * pi);
         };
 
-        std::tie(result, abserr) = worker.qag_si(integrand_lead_greater, left_end_pt, right_end_pt, abstol, reltol);
+        std::tie(result, abserr) = worker.qagp(integrand_lead_greater, pts, abstol, reltol);
         g0_greater_time[t](1, 0) = result;
         greater_ft_error[t](1, 0) = abserr;
       }
