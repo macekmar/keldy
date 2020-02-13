@@ -44,7 +44,7 @@ struct hist_xi {
   std::vector<int> counts;
 };
 
-void bin_values(hist_xi &xi, int axis, std::vector<std::vector<double>> points, std::vector<double> values) {
+inline void bin_values(hist_xi &xi, int axis, std::vector<std::vector<double>> points, std::vector<double> values) {
   bool in_range;
   for (auto [i, point] : itertools::enumerate(points)) {
     in_range = point[axis] >= xi.bins.front() and point[axis] <= xi.bins.back();
@@ -69,7 +69,7 @@ void bin_values(hist_xi &xi, int axis, std::vector<std::vector<double>> points, 
   }
 };
 
-void convolve(std::vector<double> &signal, std::vector<double> window) {
+inline void convolve(std::vector<double> &signal, std::vector<double> window) {
   std::vector<double> conv;
   double c;
   double norm;
