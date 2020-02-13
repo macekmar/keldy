@@ -75,7 +75,7 @@ inline warper_product_1d_simple_t simple_plasma_warper_factory(std::string const
 class compute_charge_Q_direct : public integrator<dcomplex, integrand_g_direct> {
  public:
   compute_charge_Q_direct(g0_model model, double time, int order, double cutoff_integrand,
-                          std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)
+                          std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1, bool do_uv = true)
      : integrator{dcomplex{0},
                   integrand_g_direct{g0_keldysh_contour_t{model}, gf_index_t{time, up, forward},
                                      gf_index_t{time, up, backward}, cutoff_integrand},
@@ -84,20 +84,21 @@ class compute_charge_Q_direct : public integrator<dcomplex, integrand_g_direct> 
                   "sobol_unshifted",
                   0} {
 
-    warper.warpers.emplace_back(warper_plasma_uv_t(time));
+    if (do_uv) {warper.warpers.emplace_back(warper_plasma_uv_t(time));}
     warper.warpers.emplace_back(
        simple_plasma_warper_factory(warper_function_name, integrand, time, nr_sample_points_warper, warper_scale));
   }
 
   compute_charge_Q_direct(model_param_t params, double time, int order, double cutoff_integrand,
-                          std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)
+                          std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1, bool do_uv = true)
      : compute_charge_Q_direct{g0_model{g0_model_omega{params}, false},
                                time,
                                order,
                                cutoff_integrand,
                                warper_function_name,
                                nr_sample_points_warper,
-                               warper_scale} {};
+                               warper_scale,
+                               do_uv} {};
 };
 
 class compute_charge_Q_direct_plasma_1D : public integrator<dcomplex, integrand_g_direct> {
