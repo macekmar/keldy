@@ -360,6 +360,28 @@ c.add_method("""void discard (int nr_discard)""",
 
 module.add_class(c)
 
+# The class pseudo
+c = class_(
+        py_type = "Pseudo",  # name of the python class
+        c_type = "keldy::pseudo",   # name of the C++ class
+        doc = r"""""",   # doc of the C++ class
+        hdf5 = False,
+)
+
+c.add_constructor("""(int dim, int rng_state_seed)""", doc = r"""""")
+
+c.add_method("""std::vector<double> operator() ()""",
+             name = "__call__",
+             doc = r"""""")
+
+c.add_method("""void seed (int rng_state_seed)""",
+             doc = r"""""")
+
+c.add_method("""void discard (int nr_discard)""",
+             doc = r"""""")
+
+module.add_class(c)
+
 # The class warper_product_1d_simple_t
 c = class_(
         py_type = "WarperProduct1dSimpleT",  # name of the python class

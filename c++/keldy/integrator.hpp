@@ -88,6 +88,8 @@ class integrator {
       rng = sobol(dimension, rng_state_seed);
     } else if (rng_name == "sobol") {
       rng = sobol(dimension, rng_state_seed, do_shift, do_scramble, rng_seed_shift);
+    } else if (rng_name == "pseudo") {
+      rng = pseudo(dimension, rng_state_seed);
     } else {
       TRIQS_RUNTIME_ERROR << "No other rng available.";
     }

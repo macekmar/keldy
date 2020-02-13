@@ -25,8 +25,10 @@
 #include "common.hpp"
 #include "qrng_details/digitalseq_b2g.hpp"
 #include <triqs/utility/exceptions.hpp>
+#include <triqs/mc_tools/random_generator.hpp>
 #include <random>
 #include <algorithm>
+#include <gsl/gsl_rng.h>
 
 namespace keldy {
 
@@ -107,5 +109,33 @@ class sobol {
 };
 
 // Harmonic Generator
+
+// Pseudo random generator
+class pseudo{
+ public:
+  std::vector<double> operator()() { 
+    std::vector<double> result(dim);
+    std::generate(result.begin(), result.end(), [this](){ return gsl_rng_uniform(RNG); });
+    return result;
+  }
+
+  void seed(int rng_state_seed) {gsl_rng_set(RNG, rng_state_seed);}
+
+  /* discard is only useful for saving and restarting a simulation. */
+  void discard(int nr_discard) {
+    for (int i = 0; i < dim*nr_discard; i++) { gsl_rng_uniform(RNG); }
+  }
+
+  pseudo(int dim, int rng_state_seed): dim(dim) {
+    gsl_rng_env_setup();
+    RNG = gsl_rng_alloc(T);
+    seed(rng_state_seed);
+  };
+  // ~pseudo() {gsl_rng_free(RNG);} // it doesn-t work with destructor
+ private:
+  int dim;
+  const gsl_rng_type * T = gsl_rng_default;
+  gsl_rng * RNG; 
+};
 
 } // namespace keldy
