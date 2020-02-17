@@ -494,7 +494,7 @@ c = class_(
         hdf5 = False,
 )
 
-c.add_constructor("""(std::function<double(std::vector<double>)> integrand_, keldy::warper_product_1d_t w_warper_, int order, int nr_function_sample_points)""", doc = r"""""")
+c.add_constructor("""(std::function<std::pair<dcomplex, int>(std::vector<double>)> integrand_, keldy::warper_product_1d_t w_warper_, double t_max, int order, int nr_function_sample_points, int npts_mean, int n_window, double sigma)""", doc = r"""""")
 
 c.add_method("""std::vector<double> ui_from_li (std::vector<double> li_vec)""",
              doc = r"""""")
@@ -505,7 +505,14 @@ c.add_method("""std::vector<double> li_from_ui (std::vector<double> ui_vec)""",
 c.add_method("""double jacobian (std::vector<double> li_vec)""",
              doc = r"""""")
 
-c.add_method("""double evaluate_warping_function (std::vector<double> ui_vec)""",
+c.add_method("""double operator() (std::vector<double> ui_vec)""",
+             name = "__call__",
+             doc = r"""""")
+
+c.add_method("""std::vector<std::vector<double>> get_xi(int axis)""",
+             doc = r"""""")
+
+c.add_method("""void update_sigma(double sigma, int n_window)""",
              doc = r"""""")
 
 module.add_class(c)
@@ -578,6 +585,40 @@ c.add_method("""keldy::impurity_oneband::integrand_g_direct get_integrand ()""",
              doc = r"""""")
 
 module.add_class(c)
+
+# The class compute_charge_Q_direct_projection
+c = class_(
+        py_type = "ComputeChargeQDirectProjection",  # name of the python class
+        c_type = "keldy::impurity_oneband::compute_charge_Q_direct_projection",   # name of the C++ class
+        doc = r"""""",   # doc of the C++ class
+        hdf5 = False,
+)
+
+c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, std::vector<std::function<double(double)>> fn_, int nr_sample_points_warper, int npts_mean, int n_window, double sigma)""", doc = r"""""")
+
+c.add_method("""void reset_rng (std::string rng_name, int rng_state_seed, bool do_shift = false, bool do_scramble = false, int rng_seed_shift = 0)""",
+             doc = r"""""")
+
+c.add_method("""void run (int nr_steps)""",
+             doc = r"""""")
+
+c.add_method("""keldy::dcomplex reduce_result ()""",
+             doc = r"""""")
+
+c.add_method("""uint64_t reduce_nr_points_run ()""",
+             doc = r"""""")
+
+c.add_method("""uint64_t reduce_nr_points_in_domain ()""",
+             doc = r"""""")
+
+c.add_method("""keldy::warper_train_t get_warper ()""",
+             doc = r"""""")
+
+c.add_method("""keldy::impurity_oneband::integrand_g_direct get_integrand ()""",
+             doc = r"""""")
+
+module.add_class(c)
+
 # The class warper_train_t
 c = class_(
         py_type = "WarperTrainT",  # name of the python class
@@ -856,7 +897,7 @@ module.add_function ("std::vector<double> keldy::ui_from_vi (double t_max, std::
 
 module.add_function ("void keldy::bin_values (keldy::hist_xi xi, int axis, std::vector<std::vector<double>> points, std::vector<double> values)", doc = r"""""")
 
-module.add_function ("void keldy::convolve (std::vector<double> signal, std::vector<double> window)", doc = r"""""")
+module.add_function ("void keldy::convolve (std::vector<double> signal, std::vector<double> result, std::vector<double> window)", doc = r"""""")
 
 # Converter for model_param_t
 c = converter_(
