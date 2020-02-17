@@ -34,6 +34,7 @@
 #include <triqs/gfs.hpp>
 #include "../qrng.hpp"
 #include "plasma_uv.hpp"
+#include <iomanip>
 
 namespace keldy::warpers {
 
@@ -44,6 +45,7 @@ using gf_t = triqs::gfs::gf<triqs::gfs::retime, triqs::gfs::scalar_real_valued>;
 struct hist_xi {
   std::vector<double> bins;
   std::vector<double> values;
+  std::vector<double> y;
   std::vector<int> counts;
 };
 
@@ -72,14 +74,13 @@ inline void bin_values(hist_xi &xi, int axis, std::vector<std::vector<double>> p
   }
 };
 
-inline void convolve(std::vector<double> &signal, std::vector<double> window) {
+involve void convolve(std::vector<double> &signal, std::vector<double> &result, std::vector<double> &window) {
   std::vector<double> conv;
   double c;
   double norm;
   int Ns = signal.size();
   int Nwl = (window.size() - 1) / 2;
   int Nwr = window.size() - Nwl;
-
   for (int i = 0; i < Ns; i++) {
     c = 0.0;
     norm = 0.0;
@@ -89,14 +90,15 @@ inline void convolve(std::vector<double> &signal, std::vector<double> window) {
     }
     conv.push_back(c / norm);
   }
-  std::copy(conv.begin(), conv.end(), signal.begin());
+  std::copy(conv.begin(), conv.end(), result.begin());
 };
 
 class warper_plasma_projection_t {
  private:
   int order;
+  int nr_function_sample_points;
   double t_max{};
-  std::function<double(std::vector<double>)> integrand;
+  std::function<std::pair<dcomplex, int>(std::vector<double>)> integrand;
   std::vector<double> fn_integrate_norm{};
   std::vector<gf_t> fn_integrated;
   std::vector<gf_t> fn_integrated_inverse;
@@ -107,14 +109,11 @@ class warper_plasma_projection_t {
   std::vector<gf_t> fn;
 
  public:
-  warper_plasma_projection_t(std::function<double(std::vector<double>)> integrand_, warper_product_1d_t w_warper_,
-                             int order, int nr_function_sample_points)
-     : integrand(std::move(integrand_)), w_warper(w_warper_), order(order) {
+  warper_plasma_projection_t(std::function<std::pair<dcomplex, int>(std::vector<double>)> integrand_, warper_product_1d_t w_warper_,
+                             double t_max, int order, int nr_function_sample_points, int npts_mean, int n_window, double sigma)
+     : integrand(std::move(integrand_)), w_warper(w_warper_), t_max(t_max), order(order), nr_function_sample_points(nr_function_sample_points) {
 
     int n_bins = nr_function_sample_points;
-    int n_window = 50;
-    int npts_mean = 100;
-    double sigma = 0.3;
 
     sobol g = sobol(order, 0);
 
@@ -125,17 +124,9 @@ class warper_plasma_projection_t {
     for (int i = 0; i < npts_mean; i++) {
       w = g();
       w_pts.push_back(w);
-      u = w_warper.ui_from_li(w);
-      // w_vals.push_back( std::abs(integrand(u)/w_warper.evaluate_warping_function(u)) );
-      w_vals.push_back(std::abs(1.0 / w_warper.jacobian_forward(u)));
-    }
-
-    // Prepare a Gaussian window for convolution
-    std::vector<double> gaussian;
-    double x;
-    for (int i = 0; i < n_window; i++) {
-      x = (-1.0 + 2.0 * i / (n_window - 1)) / sigma;
-      gaussian.push_back(std::exp(-std::pow(x, 2.0)));
+      u = ui_from_vi(t_max, w_warper.ui_from_li(w));
+      double value = std::abs(integrand(u).first * w_warper.jacobian_reverse(w));
+      w_vals.push_back( value );
     }
 
     // Initialize xi
@@ -147,27 +138,49 @@ class warper_plasma_projection_t {
       for (auto const &t : fn_integrated[axis].mesh()) {
         xi_empty.bins.push_back(t - delta / 2.0);
         xi_empty.values.push_back(0);
+        xi_empty.y.push_back(0);
         xi_empty.counts.push_back(0);
       }
       xi_empty.bins.push_back(xi_empty.bins.back() + delta);
       xi.push_back(xi_empty);
     }
 
+    // Make histogram
     for (int axis = 0; axis < order; axis++) {
-      // Calculate projection
       bin_values(xi[axis], axis, w_pts, w_vals);
-      convolve(xi[axis].values, gaussian);
+    }
+    // Do a convolution
+    update_sigma(sigma, n_window);
+  };
+
+  void update_sigma(double sigma, int n_window) {
+    std::cout << std::fixed << std::setw( 15 ) << std::setprecision( 14 );
+    // Prepare a Gaussian window for convolution
+    std::vector<double> gaussian;
+    double x;
+    for (int i = 0; i < n_window; i++) {
+      x = (-1.0 + 2.0 * i / (n_window - 1)) / sigma;
+      gaussian.push_back(std::exp(-std::pow(x, 2.0)));
+    }
+    
+
+    for (int axis = 0; axis < order; axis++) {
+      convolve(xi[axis].values, xi[axis].y, gaussian);
 
       // -- From here on the code is similar to warper_product_1d_t --
 
       // Integrate Ansatz using Trapezoid Rule
-      fn_integrated.push_back(gf_t({0.0, t_max, nr_function_sample_points}));
+      fn_integrated.push_back(gf_t({0.0, 1.0, nr_function_sample_points}));
       double delta = fn_integrated[axis].mesh().delta();
       for (auto const &[i, t] : itertools::enumerate(fn_integrated[axis].mesh())) {
-        fn_integrated[axis][t] = xi[axis].values[i]; //fn[axis](t - delta / 2) * delta;
+        if (i==0) { 
+          fn_integrated[axis][t] = 0;
+        } else {
+          fn_integrated[axis][t] = 0.5*(xi[axis].y[i-1] + xi[axis].y[i])*delta;
+        }
       }
       auto &data = fn_integrated[axis].data();
-      data(0) = 0.0;
+
       std::partial_sum(data.begin(), data.end(), data.begin());
       fn_integrate_norm.push_back(data(data.size() - 1));
       data /= fn_integrate_norm[axis]; // normalize each axis separtely
@@ -184,13 +197,18 @@ class warper_plasma_projection_t {
         fn_integrated_inverse[axis][l] = interpolate(l);
       }
 
-      // // Interpolate projection on CDF
-      fn.push_back(gf_t({0.0, 1.0, 1 + 5 * (nr_function_sample_points - 1)}));
-      details::gsl_interp_wrapper_t interpolate_inv(gsl_interp_akima, mesh_time, data); //gsl_interp_steffen
-      for (auto l : fn[axis].mesh()) {
-        fn[axis][l] = interpolate_inv.derivative()(l);
+      // Interpolate projection on CDF
+      fn.push_back(gf_t({0.0, 1.0, nr_function_sample_points}));
+      for (auto const &[i, t] : itertools::enumerate(fn[axis].mesh())) {
+        fn[axis][t] = xi[axis].y[i];
+        // std::cout << t << " " << (xi[axis].bins[i] + xi[axis].bins[i+1])/2 << std::endl; // TODO
       }
     }
+  };
+
+  std::vector<std::vector<double>> get_xi(int axis) {
+    std::vector<double> counts(xi[axis].counts.begin(), xi[axis].counts.end());
+    return {xi[axis].bins, xi[axis].values, counts, xi[axis].y};
   };
 
   std::vector<double> ui_from_li(std::vector<double> const &li_vec) const {
@@ -198,11 +216,11 @@ class warper_plasma_projection_t {
     for (auto [i, li] : itertools::enumerate(result)) {
       li = fn_integrated_inverse[i](li);
     }
-    return ui_from_vi(t_max, result);
+    return result;
   }
 
   std::vector<double> li_from_ui(std::vector<double> const &ui_vec) const {
-    auto result = vi_from_ui(t_max, ui_vec);
+    auto result = ui_vec;
     // map ui to vi
     for (auto [i, ui] : itertools::enumerate(result)) {
       ui = fn_integrated[i](ui);
@@ -218,10 +236,10 @@ class warper_plasma_projection_t {
     return result;
   }
 
-  double evaluate_warping_function(std::vector<double> const &ui_vec) const {
+  double operator()(std::vector<double> const &ui_vec) const {
     double result = 1.0;
-    auto vi_vec = vi_from_ui(t_max, ui_vec);
-    for (auto [i, vi] : itertools::enumerate(vi_vec)) {
+    // auto vi_vec = vi_from_ui(t_max, ui_vec);
+    for (auto [i, vi] : itertools::enumerate(ui_vec)) {
       result *= fn[i](vi);
     }
     return result;

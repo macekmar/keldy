@@ -38,7 +38,7 @@ namespace keldy::warpers {
 
 // varient is default constructable to hold value of first alternative (if that is default constructable)
 using warper_variant =
-   std::variant<warper_identity_t, warper_plasma_uv_t, warper_product_1d_simple_t, warper_product_1d_t>;
+   std::variant<warper_identity_t, warper_plasma_uv_t, warper_product_1d_simple_t, warper_product_1d_t, warper_plasma_projection_t>;
 
 class warper_train_t {
  private:
