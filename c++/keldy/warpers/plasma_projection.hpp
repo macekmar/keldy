@@ -31,7 +31,13 @@
 #include <numeric>
 #include <triqs/gfs.hpp>
 #include "../qrng.hpp"
-#include <iomanip>
+#include <triqs/arrays.hpp>
+
+#include <complex>
+#include <cmath>
+
+#include <mpi/mpi.hpp>
+#include <triqs/arrays/mpi.hpp>
 
 namespace keldy {
 
@@ -39,51 +45,46 @@ using namespace triqs::gfs;
 
 using gf_t = triqs::gfs::gf<triqs::gfs::retime, triqs::gfs::scalar_real_valued>;
 
-struct hist_xi {
-  std::vector<double> bins;
-  std::vector<double> values;
-  std::vector<double> y;
-  std::vector<int> counts;
-};
-
-inline void bin_values(hist_xi &xi, int axis, std::vector<std::vector<double>> points, std::vector<double> values) {
-  bool in_range;
-  for (auto [i, point] : itertools::enumerate(points)) {
-    in_range = point[axis] >= xi.bins.front() and point[axis] <= xi.bins.back();
-    if (in_range) {
-      for (auto [j, bin] : itertools::enumerate(xi.values)) {
-        if (point[axis] >= xi.bins[j] and point[axis] <= xi.bins[j + 1]) {
-          xi.values[j] += values[i];
-          xi.counts[j] += 1;
-          break;
-        }
-      }
-    } else {
-      TRIQS_RUNTIME_ERROR << "out of bin range";
+class hist_xi {
+  public:
+  triqs::arrays::array<double, 1> bin_times;
+  triqs::arrays::array<double, 1> values;
+  triqs::arrays::array<double, 1> counts; // TODO: should be int, complicates get_xi and others...
+  triqs::arrays::array<double, 1> y;
+  double t_min;
+  double t_max;
+  double delta;
+  int num_bins; 
+  hist_xi(double t_min_, double t_max_, int num_bins_) : t_min(t_min_), t_max(t_max_), num_bins(num_bins_) {
+    bin_times = triqs::arrays::array<double, 1>(num_bins + 1);
+    delta = (t_max - t_min)/(num_bins - 1);
+    for (int i = 0; i < num_bins + 1; i++) {
+      bin_times(i) = -delta/2.0 + i*delta;
     }
-  }
-  for (int i = 0; i < xi.values.size(); i++) {
-    if (xi.counts[i] != 0) {
-      xi.values[i] = xi.values[i] / xi.counts[i];
-    } else {
-      xi.values[i] = 0;
-    }
+    values = triqs::arrays::array<double, 1>(num_bins);
+    values() = 0;
+    counts = triqs::arrays::array<double, 1>(num_bins); // TODO: should be int
+    counts() = 0;
+    y = triqs::arrays::array<double, 1>(num_bins);
+    y() = 0;
   }
 };
 
-involve void convolve(std::vector<double> &signal, std::vector<double> &result, std::vector<double> &window) {
+
+inline void convolve(triqs::arrays::array<double, 1> &signal, triqs::arrays::array<double, 1> &result, triqs::arrays::array<double, 1> &window) {
+// TODO: check norm at the right end
   std::vector<double> conv;
   double c;
   double norm;
   int Ns = signal.size();
-  int Nwl = (window.size() - 1) / 2;
+  int Nwl = (window.size()+1) / 2;
   int Nwr = window.size() - Nwl;
   for (int i = 0; i < Ns; i++) {
     c = 0.0;
     norm = 0.0;
-    for (int j = std::max(-Nwl, -Ns + 1 + i); j <= std::min(Nwr, i); j++) {
-      c += window[j + Nwl] * signal[i - j];
-      norm += window[j + Nwl];
+    for (int j = std::max(-Nwl, -Ns + i); j <= std::min(Nwr, i); j++) {
+      c += window(j + Nwl) * signal(i - j - 1);
+      norm += window(j + Nwl);
     }
     conv.push_back(c / norm);
   }
@@ -93,119 +94,138 @@ involve void convolve(std::vector<double> &signal, std::vector<double> &result, 
 class warper_plasma_projection_t {
  private:
   int order;
-  int nr_function_sample_points;
+  int num_bins;
   double t_max{};
   std::function<std::pair<dcomplex, int>(std::vector<double>)> integrand;
   std::vector<double> fn_integrate_norm{};
   std::vector<gf_t> fn_integrated;
   std::vector<gf_t> fn_integrated_inverse;
   warper_product_1d_t w_warper;
-
   std::vector<hist_xi> xi;
+  triqs::arrays::array<double, 1> values;
 
   std::vector<gf_t> fn;
 
  public:
-  warper_plasma_projection_t(std::function<std::pair<dcomplex, int>(std::vector<double>)> integrand_, warper_product_1d_t w_warper_,
-                             double t_max, int order, int nr_function_sample_points, int npts_mean, int n_window, double sigma)
-     : integrand(std::move(integrand_)), w_warper(w_warper_), t_max(t_max), order(order), nr_function_sample_points(nr_function_sample_points) {
 
-    int n_bins = nr_function_sample_points;
+  void gather_data(int npts_mean) {
+    int bin;
+    double value;
+    // int mpi_rank = comm.rank();
+    // int mpi_size = comm.size();
 
-    sobol g = sobol(order, 0);
-
-    // Generate points and calculate their values
-    std::vector<double> u, w;
-    std::vector<std::vector<double>> w_pts;
-    std::vector<double> w_vals;
+    sobol g = sobol(order, 0); // TODO: different generators
     for (int i = 0; i < npts_mean; i++) {
-      w = g();
-      w_pts.push_back(w);
-      u = ui_from_vi(t_max, w_warper.ui_from_li(w));
-      double value = std::abs(integrand(u).first * w_warper.jacobian(w));
-      w_vals.push_back( value );
-    }
+      auto w = g();
 
-    // Initialize xi
-    for (int axis = 0; axis < order; axis++) {
-      fn_integrated.push_back(gf_t({0.0, 1.0, nr_function_sample_points}));
+      // if (i % mpi_size != mpi_rank) {
+      //   continue;
+      // }  
 
-      hist_xi xi_empty;
-      double delta = fn_integrated[axis].mesh().delta();
-      for (auto const &t : fn_integrated[axis].mesh()) {
-        xi_empty.bins.push_back(t - delta / 2.0);
-        xi_empty.values.push_back(0);
-        xi_empty.y.push_back(0);
-        xi_empty.counts.push_back(0);
+      auto u = ui_from_vi(t_max, w_warper.ui_from_li(w));  // TODO: Should have pass warper train
+      value = std::abs(integrand(u).first * w_warper.jacobian(w));
+      values(i) = std::real(std::pow(std::complex<double>(0,1), order+1)*integrand(u).first);
+
+      for (int axis = 0; axis < order; axis++) {
+        bin = int(floor((w[axis] - xi[axis].t_min - (-xi[axis].delta/2.0)) / xi[axis].delta));
+        if (bin < 0 or bin > xi[axis].num_bins - 1) {
+          TRIQS_RUNTIME_ERROR << "out of bin range";
+        }
+        xi[axis].values(bin) += value;
+        xi[axis].counts(bin)++;
       }
-      xi_empty.bins.push_back(xi_empty.bins.back() + delta);
-      xi.push_back(xi_empty);
     }
+    // for (int axis = 0; axis < order; axis++) {
+    //   xi[axis].values = mpi::mpi_all_reduce(xi[axis].values, comm);
+    //   xi[axis].counts = mpi::mpi_all_reduce(xi[axis].counts, comm);
+    // }
 
-    // Make histogram
     for (int axis = 0; axis < order; axis++) {
-      bin_values(xi[axis], axis, w_pts, w_vals);
+      for (int bin = 0; bin < xi[axis].num_bins; bin++) {
+        if (xi[axis].counts(bin) > 0) {
+          xi[axis].values(bin) = xi[axis].values(bin)/xi[axis].counts(bin);
+        } else {
+          xi[axis].values(bin) = 0.0;
+        }
+      }
     }
-    // Do a convolution
+  };
+
+  warper_plasma_projection_t(std::function<std::pair<dcomplex, int>(std::vector<double>)> integrand_, warper_product_1d_t w_warper_,
+                             double t_max, int order, int num_bins, int npts_mean, int n_window_, double sigma)
+     : integrand(std::move(integrand_)), w_warper(w_warper_), t_max(t_max), order(order), num_bins(num_bins) {
+
+    int n_window = n_window_ % 2 == 0 ? n_window_ + 1 : n_window_;
+
+    // Initialize xi;
+    for (int axis = 0; axis < order; axis++) {
+      xi.push_back(hist_xi(0, 1, num_bins));
+    }
+    values = triqs::arrays::array<double, 1>(npts_mean);
+    gather_data(npts_mean);
+
+    // Fill function vectors
+    // TODO: should the number of bins be different (smaller) than the number of interpolation points?
+    for (int axis = 0; axis < order; axis++) {
+      fn_integrated.push_back(gf_t({0.0, 1.0, num_bins}));
+      fn_integrate_norm.push_back(0);
+      fn_integrated_inverse.push_back(gf_t({0.0, 1.0, 1 + 5 * (num_bins - 1)}));
+      fn.push_back(gf_t({0.0, 1.0, num_bins}));
+    }
     update_sigma(sigma, n_window);
   };
 
-  void update_sigma(double sigma, int n_window) {
-    std::cout << std::fixed << std::setw( 15 ) << std::setprecision( 14 );
-    // Prepare a Gaussian window for convolution
-    std::vector<double> gaussian;
-    double x;
+  void update_sigma(double sigma, int n_window) {   
+    // Prepare a window for convolution
+    triqs::arrays::array<double, 1> window(n_window);
+    auto gaussian_window = [n_window, sigma](int i) { 
+      double x = (-1.0 + 2.0 * i / (n_window - 1)) / sigma;
+      return std::exp(-std::pow(x, 2.0));};
+
     for (int i = 0; i < n_window; i++) {
-      x = (-1.0 + 2.0 * i / (n_window - 1)) / sigma;
-      gaussian.push_back(std::exp(-std::pow(x, 2.0)));
+      window(i) = gaussian_window(i);
     }
     
-
+    // Convolve and update functions
     for (int axis = 0; axis < order; axis++) {
-      convolve(xi[axis].values, xi[axis].y, gaussian);
+      convolve(xi[axis].values, xi[axis].y, window);
 
       // -- From here on the code is similar to warper_product_1d_t --
-
       // Integrate Ansatz using Trapezoid Rule
-      fn_integrated.push_back(gf_t({0.0, 1.0, nr_function_sample_points}));
       double delta = fn_integrated[axis].mesh().delta();
       for (auto const &[i, t] : itertools::enumerate(fn_integrated[axis].mesh())) {
         if (i==0) { 
           fn_integrated[axis][t] = 0;
         } else {
-          fn_integrated[axis][t] = 0.5*(xi[axis].y[i-1] + xi[axis].y[i])*delta;
+          fn_integrated[axis][t] = 0.5*(xi[axis].y(i-1) + xi[axis].y(i))*delta;
         }
       }
       auto &data = fn_integrated[axis].data();
 
       std::partial_sum(data.begin(), data.end(), data.begin());
-      fn_integrate_norm.push_back(data(data.size() - 1));
+      fn_integrate_norm[axis] = data(data.size() - 1);
       data /= fn_integrate_norm[axis]; // normalize each axis separtely
 
       // Inverse Function via interpolation
-      triqs::arrays::array<double, 1> mesh_time(nr_function_sample_points);
+      triqs::arrays::array<double, 1> mesh_time(num_bins);
       for (auto const &[i, t] : itertools::enumerate(fn_integrated[axis].mesh())) {
         mesh_time(i) = t;
       }
-
-      fn_integrated_inverse.push_back(gf_t({0.0, 1.0, 1 + 5 * (nr_function_sample_points - 1)}));
+      
       details::gsl_interp_wrapper_t interpolate(gsl_interp_akima, data, mesh_time); //gsl_interp_steffen
       for (auto l : fn_integrated_inverse[axis].mesh()) {
         fn_integrated_inverse[axis][l] = interpolate(l);
       }
 
-      // Interpolate projection on CDF
-      fn.push_back(gf_t({0.0, 1.0, nr_function_sample_points}));
+      // Interpolate convolution
       for (auto const &[i, t] : itertools::enumerate(fn[axis].mesh())) {
-        fn[axis][t] = xi[axis].y[i];
-        // std::cout << t << " " << (xi[axis].bins[i] + xi[axis].bins[i+1])/2 << std::endl; // TODO
+        fn[axis][t] = xi[axis].y(i);
       }
     }
   };
 
-  std::vector<std::vector<double>> get_xi(int axis) {
-    std::vector<double> counts(xi[axis].counts.begin(), xi[axis].counts.end());
-    return {xi[axis].bins, xi[axis].values, counts, xi[axis].y};
+  std::vector<triqs::arrays::array<double, 1>> get_xi(int axis) {
+    return {xi[axis].bin_times, xi[axis].values, xi[axis].counts, xi[axis].y, values};
   };
 
   std::vector<double> ui_from_li(std::vector<double> const &li_vec) const {

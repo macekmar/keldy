@@ -103,7 +103,7 @@ class compute_charge_Q_direct : public integrator<dcomplex, integrand_g_direct> 
 
 class compute_charge_Q_direct_plasma_1D : public integrator<dcomplex, integrand_g_direct> {
  public:
-  compute_charge_Q_direct_plasma_1D(model_param_t params, double time, int order,
+  compute_charge_Q_direct_plasma_1D(model_param_t params, double time, int order, 
                                     std::vector<std::function<double(double)>> fn_, int nr_sample_points_warper)
      : integrator{dcomplex{0},
                   integrand_g_direct{g0_keldysh_contour_t{g0_model{g0_model_omega{params}, false}},
@@ -120,22 +120,24 @@ class compute_charge_Q_direct_plasma_1D : public integrator<dcomplex, integrand_
 
 class compute_charge_Q_direct_projection : public integrator<dcomplex, integrand_g_direct> {
  public:
-  compute_charge_Q_direct_projection(model_param_t params, double time, int order,
+  compute_charge_Q_direct_projection(model_param_t params, double time, int order, double cutoff_integrand,
                                     std::vector<std::function<double(double)>> fn_, int nr_sample_points_warper,
-                                    int npts_mean, int n_window, double sigma)
+                                    int num_bins, int npts_mean, int n_window, double sigma)
      : integrator{dcomplex{0},
                   integrand_g_direct{g0_keldysh_contour_t{g0_model{g0_model_omega{params}, false}},
-                                     gf_index_t{time, up, forward}, gf_index_t{time, up, backward}},
+                                     gf_index_t{time, up, forward}, gf_index_t{time, up, backward}, cutoff_integrand},
                   {},
                   order,
                   "sobol_unshifted",
                   0} {
 
     warper_product_1d_t warper_w(fn_, time, nr_sample_points_warper);
-    warper_plasma_projection_t warper_proj(integrand, warper_w, time, order, nr_sample_points_warper, npts_mean, n_window, sigma);
 
     warper.warpers.emplace_back(warper_plasma_uv_t(time));
     warper.warpers.emplace_back(warper_w);
+
+    warper_plasma_projection_t warper_proj(integrand, warper_w, time, order, num_bins, npts_mean, n_window, sigma);
+
     warper.warpers.emplace_back(warper_proj);
   }
 };

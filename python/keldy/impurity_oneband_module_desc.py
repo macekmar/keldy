@@ -469,18 +469,23 @@ c = class_(
         hdf5 = False,
 )
 
-c.add_member(c_name = "bins",
-             c_type = "std::vector<double>",
+c.add_member(c_name = "bin_times",
+             c_type = "triqs::arrays:array<double, 1>",
              read_only= True,
              doc = r"""""")
 
 c.add_member(c_name = "values",
-             c_type = "std::vector<double>",
+             c_type = "triqs::arrays:array<double, 1>",
              read_only= True,
              doc = r"""""")
 
 c.add_member(c_name = "counts",
-             c_type = "std::vector<int>",
+             c_type = "triqs::arrays:array<double, 1>",
+             read_only= True,
+             doc = r"""""")
+
+c.add_member(c_name = "y",
+             c_type = "triqs::arrays:array<double, 1>",
              read_only= True,
              doc = r"""""")
 
@@ -509,7 +514,7 @@ c.add_method("""double operator() (std::vector<double> ui_vec)""",
              name = "__call__",
              doc = r"""""")
 
-c.add_method("""std::vector<std::vector<double>> get_xi(int axis)""",
+c.add_method("""std::vector<triqs::arrays::array<double, 1>> get_xi(int axis)""",
              doc = r"""""")
 
 c.add_method("""void update_sigma(double sigma, int n_window)""",
@@ -594,7 +599,7 @@ c = class_(
         hdf5 = False,
 )
 
-c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, std::vector<std::function<double(double)>> fn_, int nr_sample_points_warper, int npts_mean, int n_window, double sigma)""", doc = r"""""")
+c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, double cutoff_integrand, std::vector<std::function<double(double)>> fn_, int nr_sample_points_warper, int num_bins, int npts_mean, int n_window, double sigma)""", doc = r"""""")
 
 c.add_method("""void reset_rng (std::string rng_name, int rng_state_seed, bool do_shift = false, bool do_scramble = false, int rng_seed_shift = 0)""",
              doc = r"""""")
@@ -895,9 +900,7 @@ module.add_function ("std::vector<double> keldy::vi_from_ui (double t_max, std::
 
 module.add_function ("std::vector<double> keldy::ui_from_vi (double t_max, std::vector<double> v_times)", doc = r"""""")
 
-module.add_function ("void keldy::bin_values (keldy::hist_xi xi, int axis, std::vector<std::vector<double>> points, std::vector<double> values)", doc = r"""""")
-
-module.add_function ("void keldy::convolve (std::vector<double> signal, std::vector<double> result, std::vector<double> window)", doc = r"""""")
+module.add_function ("void keldy::convolve (triqs::arrays::array<double, 1> signal, triqs::arrays::array<double, 1> result, triqs::arrays::array<double, 1> window)", doc = r"""""")
 
 # Converter for model_param_t
 c = converter_(
