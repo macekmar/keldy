@@ -105,6 +105,7 @@ class warper_plasma_projection_t {
   std::vector<gf_t> fn_integrated;
   std::vector<gf_t> fn_integrated_inverse;
   warper_product_1d_t w_warper;
+  // warper_train_t warper_train;
   std::vector<hist_xi> xi;
   triqs::arrays::array<double, 1> values;
 
@@ -115,16 +116,17 @@ class warper_plasma_projection_t {
   void gather_data(int npts_mean) {
     int bin;
     double value;
-    // int mpi_rank = comm.rank();
-    // int mpi_size = comm.size();
+    mpi::communicator comm {};
+    int mpi_rank = comm.rank();
+    int mpi_size = comm.size();
 
     sobol g = sobol(order, 0); // TODO: different generators
     for (int i = 0; i < npts_mean; i++) {
       auto w = g();
 
-      // if (i % mpi_size != mpi_rank) {
-      //   continue;
-      // }  
+      if (i % mpi_size != mpi_rank) {
+        continue;
+      }  
 
       auto u = ui_from_vi(t_max, w_warper.ui_from_li(w));  // TODO: Should have pass warper train
       value = std::abs(integrand(u).first * w_warper.jacobian(w));
@@ -139,10 +141,10 @@ class warper_plasma_projection_t {
         xi[axis].counts(bin)++;
       }
     }
-    // for (int axis = 0; axis < order; axis++) {
-    //   xi[axis].values = mpi::mpi_all_reduce(xi[axis].values, comm);
-    //   xi[axis].counts = mpi::mpi_all_reduce(xi[axis].counts, comm);
-    // }
+    for (int axis = 0; axis < order; axis++) {
+      xi[axis].values = mpi::mpi_all_reduce(xi[axis].values, comm);
+      xi[axis].counts = mpi::mpi_all_reduce(xi[axis].counts, comm);
+    }
 
     for (int axis = 0; axis < order; axis++) {
       for (int bin = 0; bin < xi[axis].num_bins; bin++) {
