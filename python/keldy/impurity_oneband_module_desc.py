@@ -499,7 +499,7 @@ c = class_(
         hdf5 = False,
 )
 
-c.add_constructor("""(std::function<std::pair<dcomplex, int>(std::vector<double>)> integrand_, keldy::warper_product_1d_t w_warper_, double t_max, int order, int nr_function_sample_points, int npts_mean, int n_window, double sigma)""", doc = r"""""")
+c.add_constructor("""(std::function<std::pair<dcomplex, int>(std::vector<double>)> integrand_, keldy::warper_product_1d_simple_t w_warper_, double t_max, int order, int nr_sample_points_warper_, int num_bins, int npts_mean, int n_window_, double sigma)""", doc = r"""""")
 
 c.add_method("""std::vector<double> ui_from_li (std::vector<double> li_vec)""",
              doc = r"""""")
@@ -599,7 +599,7 @@ c = class_(
         hdf5 = False,
 )
 
-c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, double cutoff_integrand, std::vector<std::function<double(double)>> fn_, int nr_sample_points_warper, int num_bins, int npts_mean, int n_window, double sigma)""", doc = r"""""")
+c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, double cutoff_integrand, std::string warper_function_name, int nr_sample_points_warper, double warper_scale, int num_bins, int npts_mean, int n_window, double sigma)""", doc = r"""""")
 
 c.add_method("""void reset_rng (std::string rng_name, int rng_state_seed, bool do_shift = false, bool do_scramble = false, int rng_seed_shift = 0)""",
              doc = r"""""")
