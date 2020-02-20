@@ -97,11 +97,19 @@ inline void convolve(triqs::arrays::array<double, 1> &signal, triqs::arrays::arr
 };
 
 inline void kernel_smoothing(triqs::arrays::array<double, 1> &x_in, triqs::arrays::array<double, 1> &x_out, triqs::arrays::array<double, 1> &y_in, triqs::arrays::array<double, 1> &y_out, double sigma) {
+  mpi::communicator comm {};
+  int mpi_rank = comm.rank();
+  int mpi_size = comm.size();
+
   auto gaussian = [sigma](double x, double x0) { return std::exp( -std::pow( (x - x0) / sigma, 2 ) ); };
   auto sum = [](double r, double x) {return r + x;};
   triqs::arrays::array<double, 1> kernel(x_in.size());
 
   for (int i = 0; i < y_out.size(); i++) {
+    if (i % mpi_size != mpi_rank) {
+      continue;
+    }  
+
     kernel() = 0.0; 
     for (auto const &[j, x_] : itertools::enumerate(x_in)) {
       kernel(j) = gaussian(x_, x_out(i));
@@ -109,6 +117,7 @@ inline void kernel_smoothing(triqs::arrays::array<double, 1> &x_in, triqs::array
     // \sum_i K(x_0, x_i)*y_i / \sum_i K(x_0, x_i)
     y_out(i) = triqs::arrays::fold(sum)(kernel*y_in, 0) / triqs::arrays::fold(sum)(kernel, 0);
   }
+  y_out = mpi::mpi_all_reduce(y_out, comm);
 }
 
 inline double LOOCV(triqs::arrays::array<double, 1> x_in, triqs::arrays::array<double, 1> y_in, double sigma) {
@@ -127,7 +136,6 @@ inline double LOOCV(triqs::arrays::array<double, 1> x_in, triqs::arrays::array<d
     auto y_estim = triqs::arrays::fold(sum)(kernel*y_in, 0) / triqs::arrays::fold(sum)(kernel, 0);
     err += std::pow( y - y_estim, 2);
   }
-
   return err;
 }
 
@@ -171,7 +179,7 @@ class warper_plasma_projection_t {
 
   std::vector<gf_t> fn;
   std::vector<double> sigmas;
-
+  mpi::communicator comm {};
  public:
 
   void gather_data(int npts_mean) {
@@ -244,7 +252,6 @@ class warper_plasma_projection_t {
   };
 
   void update_sigma(double sigma, bool optimize_sigma = true) {   
-    mpi::communicator comm {};
     //Smooth and update functions
     for (int axis = 0; axis < order; axis++) {
       triqs::arrays::array<double, 1> bin_centers(xi[axis].y.size());
@@ -260,12 +267,13 @@ class warper_plasma_projection_t {
       }
       auto f = [bin_centers, y](double s){ return LOOCV(bin_centers, y, s);};
       if (optimize_sigma) {
-        sigma = golden_section(f, 0.001, 1.0);
+        sigma = golden_section(f, 0.0003, 1.0);
+        if (comm.rank() == 0) {
+          std::cout << "Optimal sigma = " << sigma << "axis" << axis << std::endl;
+        }
       }
       sigmas[axis] = sigma;
-      if (comm.rank() == 0) {
-      std::cout << "Optimal sigma = " << sigma << std::endl;
-      }
+      
 
       
       triqs::arrays::array<double, 1> mesh_time(nr_sample_points_warper);

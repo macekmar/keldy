@@ -120,12 +120,12 @@ class compute_charge_Q_direct_plasma_1D : public integrator<dcomplex, integrand_
 
 class compute_charge_Q_direct_projection : public integrator<dcomplex, integrand_g_direct> {
  public:
-  compute_charge_Q_direct_projection(model_param_t params, double time, int order, double cutoff_integrand,
+  compute_charge_Q_direct_projection(g0_model model, double time, int order, double cutoff_integrand,
                                     std::string warper_function_name, int nr_sample_points_warper, double warper_scale,
                                     int num_bins, int npts_mean, double sigma, bool optimize_sigma = true)
      : integrator{dcomplex{0},
-                  integrand_g_direct{g0_keldysh_contour_t{g0_model{g0_model_omega{params}, false}},
-                                     gf_index_t{time, up, forward}, gf_index_t{time, up, backward}, cutoff_integrand},
+                  integrand_g_direct{g0_keldysh_contour_t{model}, gf_index_t{time, up, forward},
+                                     gf_index_t{time, up, backward}, cutoff_integrand},
                   {},
                   order,
                   "sobol_unshifted",
@@ -140,6 +140,17 @@ class compute_charge_Q_direct_projection : public integrator<dcomplex, integrand
 
     warper.warpers.emplace_back(warper_proj);
   }
+  compute_charge_Q_direct_projection(model_param_t params, double time, int order, double cutoff_integrand,
+                                    std::string warper_function_name, int nr_sample_points_warper, double warper_scale,
+                                    int num_bins, int npts_mean, double sigma, bool optimize_sigma = true)
+     : compute_charge_Q_direct_projection{g0_model{g0_model_omega{params}, false},
+                               time,
+                               order,
+                               cutoff_integrand,
+                               warper_function_name,
+                               nr_sample_points_warper,
+                               warper_scale,
+                               num_bins, npts_mean, sigma, optimize_sigma} {};
 };
 
 class CPP2PY_IGNORE adapt_integrand {
