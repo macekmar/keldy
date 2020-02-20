@@ -122,7 +122,7 @@ class compute_charge_Q_direct_projection : public integrator<dcomplex, integrand
  public:
   compute_charge_Q_direct_projection(model_param_t params, double time, int order, double cutoff_integrand,
                                     std::string warper_function_name, int nr_sample_points_warper, double warper_scale,
-                                    int num_bins, int npts_mean, double sigma)
+                                    int num_bins, int npts_mean, double sigma, bool optimize_sigma = true)
      : integrator{dcomplex{0},
                   integrand_g_direct{g0_keldysh_contour_t{g0_model{g0_model_omega{params}, false}},
                                      gf_index_t{time, up, forward}, gf_index_t{time, up, backward}, cutoff_integrand},
@@ -136,7 +136,7 @@ class compute_charge_Q_direct_projection : public integrator<dcomplex, integrand
     warper.warpers.emplace_back(warper_plasma_uv_t(time));
     warper.warpers.emplace_back(warper_w);
 
-    warper_plasma_projection_t warper_proj(integrand, warper_w, time, order, nr_sample_points_warper, num_bins, npts_mean, sigma);
+    warper_plasma_projection_t warper_proj(integrand, warper_w, time, order, nr_sample_points_warper, num_bins, npts_mean, sigma, optimize_sigma);
 
     warper.warpers.emplace_back(warper_proj);
   }
