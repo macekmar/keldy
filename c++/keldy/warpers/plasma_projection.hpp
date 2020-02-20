@@ -174,6 +174,7 @@ class warper_plasma_projection_t {
   triqs::arrays::array<double, 1> values;
 
   std::vector<gf_t> fn;
+  std::vector<double> sigmas;
 
  public:
 
@@ -222,13 +223,10 @@ class warper_plasma_projection_t {
   };
 
   warper_plasma_projection_t(std::function<std::pair<dcomplex, int>(std::vector<double>)> integrand_, warper_product_1d_simple_t w_warper_,
-                             double t_max, int order, int nr_sample_points_warper_, int num_bins, int npts_mean, int n_window_, double sigma)
+                             double t_max, int order, int nr_sample_points_warper_, int num_bins, int npts_mean, double sigma)
      :  integrand(std::move(integrand_)), w_warper(w_warper_), 
         t_max(t_max), order(order), nr_sample_points_warper(nr_sample_points_warper_), 
         num_bins(num_bins) {
-
-    int n_window = n_window_ % 2 == 0 ? n_window_ + 1 : n_window_;
-
     // Initialize xi;
     for (int axis = 0; axis < order; axis++) {
       xi.push_back(hist_xi(0, 1, num_bins, nr_sample_points_warper));
@@ -243,11 +241,13 @@ class warper_plasma_projection_t {
       fn_integrate_norm.push_back(0);
       fn_integrated_inverse.push_back(gf_t({0.0, 1.0, 1 + 5 * (nr_sample_points_warper - 1)}));
       fn.push_back(gf_t({0.0, 1.0, nr_sample_points_warper}));
+      sigmas.push_back(0);
     }
-    update_sigma(sigma, n_window);
+    update_sigma(sigma, true);
   };
 
-  void update_sigma(double sigma, int n_window) {   
+  void update_sigma(double sigma, bool optimize_sigma = true) {   
+    mpi::communicator comm {};
     //Smooth and update functions
     for (int axis = 0; axis < order; axis++) {
       triqs::arrays::array<double, 1> bin_centers(xi[axis].y.size());
@@ -262,9 +262,13 @@ class warper_plasma_projection_t {
        y(i) = xi[axis].values(i);
       }
       auto f = [bin_centers, y](double s){ return LOOCV(bin_centers, y, s);};
-      sigma = golden_section(f, 0.001, 1.0);
+      if (optimize_sigma) {
+        sigma = golden_section(f, 0.001, 1.0);
+      }
+      sigmas[axis] = sigma;
+      if (comm.rank() == 0) {
       std::cout << "Optimal sigma = " << sigma << std::endl;
-      
+      }
 
       
       triqs::arrays::array<double, 1> mesh_time(nr_sample_points_warper);
@@ -308,6 +312,9 @@ class warper_plasma_projection_t {
   std::vector<triqs::arrays::array<double, 1>> get_xi(int axis) {
     return {xi[axis].bin_times, xi[axis].values, xi[axis].counts, xi[axis].y, xi[axis].y_interpolated, values};
   };
+  std::vector<double> get_sigmas() {
+    return sigmas;
+  }
 
   std::vector<double> ui_from_li(std::vector<double> const &li_vec) const {
     std::vector<double> result = li_vec;
