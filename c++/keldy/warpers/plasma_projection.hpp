@@ -223,7 +223,8 @@ class warper_plasma_projection_t {
   };
 
   warper_plasma_projection_t(std::function<std::pair<dcomplex, int>(std::vector<double>)> integrand_, warper_product_1d_simple_t w_warper_,
-                             double t_max, int order, int nr_sample_points_warper_, int num_bins, int npts_mean, double sigma)
+                             double t_max, int order, int nr_sample_points_warper_, int num_bins, int npts_mean, 
+                             double sigma, bool optimize_sigma = true)
      :  integrand(std::move(integrand_)), w_warper(w_warper_), 
         t_max(t_max), order(order), nr_sample_points_warper(nr_sample_points_warper_), 
         num_bins(num_bins) {
@@ -243,7 +244,7 @@ class warper_plasma_projection_t {
       fn.push_back(gf_t({0.0, 1.0, nr_sample_points_warper}));
       sigmas.push_back(0);
     }
-    update_sigma(sigma, true);
+    update_sigma(sigma, optimize_sigma);
   };
 
   void update_sigma(double sigma, bool optimize_sigma = true) {   
