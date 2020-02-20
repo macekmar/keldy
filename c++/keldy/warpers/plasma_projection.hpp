@@ -36,7 +36,7 @@
 #include "plasma_uv.hpp"
 #include <iomanip>
 #include <triqs/arrays.hpp>
-
+#include <gsl/gsl_min.h>
 #include <complex>
 #include <cmath>
 
@@ -99,6 +99,64 @@ inline void convolve(triqs::arrays::array<double, 1> &signal, triqs::arrays::arr
   }
   std::copy(conv.begin(), conv.end(), result.begin());
 };
+
+inline void kernel_smoothing(triqs::arrays::array<double, 1> &x_in, triqs::arrays::array<double, 1> &x_out, triqs::arrays::array<double, 1> &y_in, triqs::arrays::array<double, 1> &y_out, double sigma) {
+  auto gaussian = [sigma](double x, double x0) { return std::exp( -std::pow( (x - x0) / sigma, 2 ) ); };
+  auto sum = [](double r, double x) {return r + x;};
+  triqs::arrays::array<double, 1> kernel(x_in.size());
+
+  for (int i = 0; i < y_out.size(); i++) {
+    kernel() = 0.0; 
+    for (auto const &[j, x_] : itertools::enumerate(x_in)) {
+      kernel(j) = gaussian(x_, x_out(i));
+    }
+    // \sum_i K(x_0, x_i)*y_i / \sum_i K(x_0, x_i)
+    y_out(i) = triqs::arrays::fold(sum)(kernel*y_in, 0) / triqs::arrays::fold(sum)(kernel, 0);
+  }
+}
+
+inline double LOOCV(triqs::arrays::array<double, 1> x_in, triqs::arrays::array<double, 1> y_in, double sigma) {
+
+  auto gaussian = [sigma](double x, double x0) { return std::exp( -std::pow( (x - x0) / sigma, 2 ) ); };
+  auto sum = [](double r, double x) {return r + x;};
+
+  triqs::arrays::array<double, 1> kernel(x_in.size());
+  double err = 0;
+  for (auto const &[i, y] : itertools::enumerate(y_in)) {
+    kernel() = 0.0; 
+    for (auto const &[j, x] : itertools::enumerate(x_in)) {
+      kernel(j) = gaussian(x, x_in(i));
+    }
+    kernel(i) = 0; // This excludes i-th point
+    auto y_estim = triqs::arrays::fold(sum)(kernel*y_in, 0) / triqs::arrays::fold(sum)(kernel, 0);
+    err += std::pow( y - y_estim, 2);
+  }
+
+  return err;
+}
+
+inline double golden_section(std::function<double(double)> f, double a, double b, int max_iter = 20) {
+  //https://en.wikipedia.org/wiki/Golden-section_search
+  double gr = 1.618033988749895;
+  double c, d;
+  double tol = 1e-8;
+  int iter = 0;
+  c = b - (b - a) / gr;
+  d = a + (b - a) / gr;
+  while (std::abs(c - d) > tol or iter < max_iter) {
+    if (f(c) < f(d)) {
+      b = d;
+    } else {
+      a = c;
+    }
+    // We recompute both c and d here to avoid loss of precision which may lead to incorrect results or infinite loop
+    c = b - (b - a) / gr;
+    d = a + (b - a) / gr;
+    iter++;
+  }
+
+  return (a+b)/2;
+}
 
 class warper_plasma_projection_t {
  private:
@@ -190,31 +248,38 @@ class warper_plasma_projection_t {
   };
 
   void update_sigma(double sigma, int n_window) {   
-    // Prepare a window for convolution
-    triqs::arrays::array<double, 1> window(n_window);
-    auto gaussian_window = [n_window, sigma](int i) { 
-      double x = (-1.0 + 2.0 * i / (n_window - 1)) / sigma;
-      return std::exp(-std::pow(x, 2.0));};
-
-    for (int i = 0; i < n_window; i++) {
-      window(i) = gaussian_window(i);
-    }
-    
-    // Convolve and update functions
+    //Smooth and update functions
     for (int axis = 0; axis < order; axis++) {
-      convolve(xi[axis].values, xi[axis].y, window);
-
-      // Interpolate convolution
       triqs::arrays::array<double, 1> bin_centers(xi[axis].y.size());
       bin_centers() = 0;
       for (int i = 0; i < bin_centers.size(); i++) {
         bin_centers(i) = (xi[axis].bin_times(i) + xi[axis].bin_times(i+1))/2.0;
       }
-      details::gsl_interp_wrapper_t interpolate1(gsl_interp_akima, bin_centers, xi[axis].y);
 
-      for (auto const &[i, t] : itertools::enumerate(fn[axis].mesh())) {
-        fn[axis][t] = interpolate1(t);
+      triqs::arrays::array<double, 1> y(xi[axis].y.size()); // TODO: how to pass xi[axis].values to lambda?
+      y() = 0;
+      for (int i = 0; i <y.size(); i++) {
+       y(i) = xi[axis].values(i);
       }
+      auto f = [bin_centers, y](double s){ return LOOCV(bin_centers, y, s);};
+      sigma = golden_section(f, 0.001, 1.0);
+      std::cout << "Optimal sigma = " << sigma << std::endl;
+      
+
+      
+      triqs::arrays::array<double, 1> mesh_time(nr_sample_points_warper);
+      for (auto const &[i, t] : itertools::enumerate(fn[axis].mesh())) {
+        mesh_time(i) = t;
+      }
+      kernel_smoothing(bin_centers, bin_centers, xi[axis].values, xi[axis].y, sigma);
+      kernel_smoothing(bin_centers, mesh_time, xi[axis].values, fn[axis].data(), sigma);
+
+      // Interpolate convolution
+      // details::gsl_interp_wrapper_t interpolate1(gsl_interp_akima, bin_centers, xi[axis].y);
+
+      // for (auto const &[i, t] : itertools::enumerate(fn[axis].mesh())) {
+      //   fn[axis][t] = interpolate1(t);
+      // }
       // -- From here on the code is similar to warper_product_1d_t --
       // Integrate Ansatz using Trapezoid Rule
       double delta = fn_integrated[axis].mesh().delta();
@@ -228,30 +293,15 @@ class warper_plasma_projection_t {
       auto &data = fn_integrated[axis].data();
       xi[axis].y_interpolated() = data;
 
-      
-      // std::cout << data;
-
       std::partial_sum(data.begin(), data.end(), data.begin());
       fn_integrate_norm[axis] = data(data.size() - 1);
       data /= fn_integrate_norm[axis]; // normalize each axis separtely
 
       // Inverse Function via interpolation
-      triqs::arrays::array<double, 1> mesh_time(nr_sample_points_warper);
-      for (auto const &[i, t] : itertools::enumerate(fn_integrated[axis].mesh())) {
-        mesh_time(i) = t;
-      }
-
-      
-      // std::cout << mesh_time;
-      // std::cout << bin_centers;
-      // std::cout << xi[axis].y;
-
       details::gsl_interp_wrapper_t interpolate(gsl_interp_akima, data, mesh_time); //gsl_interp_steffen
       for (auto l : fn_integrated_inverse[axis].mesh()) {
         fn_integrated_inverse[axis][l] = interpolate(l);
       }
-      // std::cout << std::endl << "done" << std::endl;
-
     }
   };
 
