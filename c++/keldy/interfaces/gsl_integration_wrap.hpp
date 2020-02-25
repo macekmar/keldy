@@ -105,6 +105,11 @@ class CPP2PY_IGNORE gsl_integration_wrapper {
                * = nullptr>
   [[nodiscard]] std::pair<double, double> qagp(T const &f, std::vector<double> pts, double epsabs, double epsrel) {
 
+    // check singularities are unique and in ascending order (required by gsl, but gsl do not raise an error!)
+    if (!std::is_sorted(pts.begin(), pts.end(), std::less_equal<double>{})) {
+      TRIQS_RUNTIME_ERROR << "Known singularities must be given unique and in ascending order.";
+    }
+
     gsl_function f_gsl{[](double x, void *param) -> double {
                          auto &f = *static_cast<T *>(param);
                          return f(x);

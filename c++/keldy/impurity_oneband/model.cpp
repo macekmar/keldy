@@ -209,6 +209,10 @@ void g0_model::make_g0_by_finite_contour(std::vector<double> pts) {
   using namespace triqs::gfs;
   using namespace boost::math::double_constants;
 
+  // sort and remove duplicates from pts
+  std::sort(pts.begin(), pts.end());
+  pts.erase(std::unique(pts.begin(), pts.end()), pts.end());
+
   auto param_ = model_omega.get_param();
 
   auto time_mesh = gf_mesh<retime>({-param_.time_max, param_.time_max, param_.nr_time_points_gf});
