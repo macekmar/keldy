@@ -193,9 +193,32 @@ class compute_current_J_direct : public integrator<dcomplex, integrand_g_direct>
                                 nr_sample_points_warper,
                                 warper_scale} {};
 };
-
 // ******************************************************************************************************************************************************
 // Kernal Method
+
+inline warper_product_1d_simple_t simple_plasma_warper_factory_kernel(std::string const &label,
+                                                                      integrand_g_kernel const &f, double time,
+                                                                      int nr_sample_points_warper,
+                                                                      double warper_scale) {
+  if (label == "inverse_square") {
+    return {[warper_scale](double t) -> double {
+              return warper_scale * warper_scale / ((warper_scale + t) * (warper_scale + t));
+            },
+            [warper_scale](double t) -> double { return warper_scale * t / (warper_scale + t); },
+            [warper_scale](double l) -> double { return warper_scale * l / (warper_scale - l); }, time,
+            nr_sample_points_warper};
+  }
+  if (label == "exponential") {
+    return {[warper_scale](double t) -> double { return std::exp(-(t / warper_scale)); },
+            [warper_scale](double t) -> double { return warper_scale * (1 - std::exp(-t / warper_scale)); },
+            [warper_scale](double l) -> double { return -warper_scale * std::log(1 - l / warper_scale); }, time,
+            nr_sample_points_warper};
+  }
+  if (label == "identity") {
+    return {time};
+  }
+  TRIQS_RUNTIME_ERROR << "Warper function name is not defined.";
+}
 
 inline std::function<double(double)> scalar_warper_function_factory_kernel(std::string const &label,
                                                                            integrand_g_kernel const &f, double time) {
@@ -225,6 +248,20 @@ class compute_gf_kernel : public integrator<kernel_binner, integrand_g_kernel> {
     warper.warpers.emplace_back(warper_plasma_uv_t(time));
     warper.warpers.emplace_back(warper_product_1d_simple_t{
        scalar_warper_function_factory_kernel(warper_function_name, integrand, time), time, nr_sample_points_warper});
+  }
+
+  compute_gf_kernel(g0_model model, double time, int order, std::string warper_function_name,
+                    int nr_sample_points_warper, double warper_scale)
+     : integrator{kernel_binner{0.0, time, 100},
+                  integrand_g_kernel{g0_keldysh_contour_t{model}, gf_index_t{time, up, forward}},
+                  {},
+                  order,
+                  "sobol_unshifted",
+                  0} {
+
+    warper.warpers.emplace_back(warper_plasma_uv_t(time));
+    warper.warpers.emplace_back(simple_plasma_warper_factory_kernel(warper_function_name, integrand, time,
+                                                                    nr_sample_points_warper, warper_scale));
   }
 };
 
