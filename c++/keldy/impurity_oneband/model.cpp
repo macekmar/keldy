@@ -87,16 +87,15 @@ g0_model_omega::g0_model_omega(model_param_t const &parameters) : param_(paramet
   }
 
   if (param_.bath_type == "semicircle") {
-    bath_hybrid_R_left_ = [Gamma = param_.Gamma](dcomplex omega) -> dcomplex {
-      auto omega2 = omega / 2.;
-      if (std::imag(omega2) == 0.) {
-        if (std::abs(std::real(omega2)) < 1) {
-          return (Gamma / 2) * (omega2 - 1_j * std::sqrt(1 - omega2 * omega2));
-        }
-        auto sgn_omega = (1 - 2 * int(std::signbit(std::real(omega2))));
-        return (Gamma / 2) * (omega2 - sgn_omega * std::sqrt(omega2 * omega2 - 1));
+    bath_hybrid_R_left_ = [Gamma = param_.Gamma, D = param_.D](dcomplex omega) -> dcomplex {
+      if (std::imag(omega) != 0.) {
+        TRIQS_RUNTIME_ERROR << "Semicircular hybridization function out of the real axis is not implemented.";
       }
-      return omega2 - 1_j * std::sqrt(Gamma * Gamma / 4. - omega2 * omega2);
+      if (std::abs(std::real(omega)) < D) {
+        return 0.5 * (Gamma / D) * (omega - 1_j * std::sqrt(D * D - omega * omega));
+      }
+      auto sgn_omega = (1 - 2 * int(std::signbit(std::real(omega))));
+      return 0.5 * (Gamma / D) * (omega - sgn_omega * std::sqrt(omega * omega - D * D));
     };
     bath_hybrid_R_right_ = bath_hybrid_R_left_;
 

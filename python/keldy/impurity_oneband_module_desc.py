@@ -868,6 +868,11 @@ c.add_member(c_name = "alpha",
              initializer = """ 0.0 """,
              doc = r"""""")
 
+c.add_member(c_name = "D",
+             c_type = "double",
+             initializer = """ 2.0 """,
+             doc = r"""""")
+
 c.add_member(c_name = "bath_type",
              c_type = "std::string",
              initializer = """ "flatband" """,
