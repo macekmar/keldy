@@ -22,9 +22,9 @@ def _ordered_axes(n):
         v_dir[:i] = 1
         yield v_dir
 
-def integrand_warper_plot(computer, order, d, t_max, nr_times=100, plot_all=False, axes=None):
+def integrand_warper_plot(computer, order, d, t_max, nr_times=100, plot_all=False, axes=None, warper_prefactor=1.):
     """
-    Plot the integrand and warper in absolute value along some axes in v space.
+    Plot the integrand weight and warper in absolute value along some axes in v space.
 
     A plot of |f(V + D)| is produced as a function of v, where:
       V = P({v, ..., v, 0, ..., 0})    with P a given permutation
@@ -39,6 +39,7 @@ def integrand_warper_plot(computer, order, d, t_max, nr_times=100, plot_all=Fals
     `nr_times` is the number of points to plot
     `plot_all` is a boolean. If True all permutations P are displayed, if False only a subset of them (for clarity).
     `axes` (optionnal) a list of axes along which the integrand is plotted. Each axis is a list of 0s and 1s of length `order`. If provided, `plot_all` is ignored.
+    `warper_prefactor` prefactor to warper in plot.
     """
     integrand = computer.get_integrand()
     warper = computer.get_warper()
@@ -77,11 +78,15 @@ def integrand_warper_plot(computer, order, d, t_max, nr_times=100, plot_all=Fals
         v_arr = x_arr[:, None] * v_dir[None, :] + d * np.ones((1, order))
         u_arr = np.array([keldy.ui_from_vi(t_max, v) for v in v_arr])
 
-        values_v = [integrand(u)[0] if is_u_valid(u) else np.nan for u in u_arr]
-        plt.plot(x_arr, np.abs(values_v), '-', c=c, label='V=({})'.format(list2str(v_dir_int)))
+        try: # for kernel
+            values_v = [integrand(u)[0].sum_weights() if is_u_valid(u) else np.nan for u in u_arr]
+        except AttributeError: # sum_weights not an attribute for non-kernel
+            values_v = [np.abs(integrand(u)[0]) if is_u_valid(u) else np.nan for u in u_arr]
+
+        plt.plot(x_arr, values_v, '-', c=c, label='V=({})'.format(list2str(v_dir_int)))
 
         values_v = [warper(u) if is_u_valid(u) else np.nan for u in u_arr]
-        plt.plot(x_arr, np.abs(values_v), '--', c=c)
+        plt.plot(x_arr, warper_prefactor * np.abs(values_v), '--', c=c)
 
     plt.legend(loc=0)
     plt.xlabel(r'v')
