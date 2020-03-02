@@ -87,15 +87,17 @@ g0_model_omega::g0_model_omega(model_param_t const &parameters) : param_(paramet
   }
 
   if (param_.bath_type == "semicircle") {
-    bath_hybrid_R_left_ = [Gamma = param_.Gamma, D = param_.D](dcomplex omega) -> dcomplex {
+    bath_hybrid_R_left_ = [Gamma = param_.Gamma, half_bandwidth = param_.half_bandwidth](dcomplex omega) -> dcomplex {
       if (std::imag(omega) != 0.) {
         TRIQS_RUNTIME_ERROR << "Semicircular hybridization function out of the real axis is not implemented.";
       }
-      if (std::abs(std::real(omega)) < D) {
-        return 0.5 * (Gamma / D) * (omega - 1_j * std::sqrt(D * D - omega * omega));
+      if (std::abs(std::real(omega)) < half_bandwidth) {
+        return 0.5 * (Gamma / half_bandwidth)
+           * (omega - 1_j * std::sqrt(half_bandwidth * half_bandwidth - omega * omega));
       }
       auto sgn_omega = (1 - 2 * int(std::signbit(std::real(omega))));
-      return 0.5 * (Gamma / D) * (omega - sgn_omega * std::sqrt(omega * omega - D * D));
+      return 0.5 * (Gamma / half_bandwidth)
+         * (omega - sgn_omega * std::sqrt(omega * omega - half_bandwidth * half_bandwidth));
     };
     bath_hybrid_R_right_ = bath_hybrid_R_left_;
 
@@ -139,10 +141,10 @@ g0_model::g0_model(g0_model_omega model_omega_, bool make_dot_lead_)
   } else if (param_.ft_method == "contour") {
     auto half_bias = std::abs(param_.bias_V / 2);
     if (param_.bath_type == "semicircle") { // semicircular DOS has a bounded support
-      if (half_bias < 2.) {
-        make_g0_by_finite_contour({-2., -half_bias, half_bias, 2.});
+      if (half_bias < param_.half_bandwidth) {
+        make_g0_by_finite_contour({-param_.half_bandwidth, -half_bias, half_bias, param_.half_bandwidth});
       } else {
-        make_g0_by_finite_contour({-2., 2.});
+        make_g0_by_finite_contour({-param_.half_bandwidth, param_.half_bandwidth});
       }
     } else {
       // TODO: use qagp ?

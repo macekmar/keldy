@@ -868,7 +868,7 @@ c.add_member(c_name = "alpha",
              initializer = """ 0.0 """,
              doc = r"""""")
 
-c.add_member(c_name = "D",
+c.add_member(c_name = "half_bandwidth",
              c_type = "double",
              initializer = """ 2.0 """,
              doc = r"""""")

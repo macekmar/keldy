@@ -41,7 +41,7 @@ class CPP2PY_IGNORE model_param_t {
   double eps_d = 0.0;
   double Gamma = 1.0;
   double alpha = 0.0;
-  double D = 2.;
+  double half_bandwidth = 2.;
   std::string bath_type = "semicircle";
   // ********
   double time_max = +100.0; // (time_limit_min = - time_limit_max)

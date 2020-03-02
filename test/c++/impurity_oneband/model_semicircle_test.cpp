@@ -34,7 +34,7 @@ TEST(g0_model, Semicirc_fft) { // NOLINT
   params.time_max = 100.0;
   params.nr_time_points_gf = 10000;
   params.alpha = 0.0;
-  params.D = 2.0;
+  params.half_bandwidth = 2.0;
   params.bath_type = "semicircle";
   params.ft_method = "fft";
 
@@ -59,7 +59,7 @@ TEST(g0_model, Semicirc_contour) { // NOLINT
   params.time_max = 100.0;
   params.nr_time_points_gf = 1000;
   params.alpha = 0.0;
-  params.D = 2.0;
+  params.half_bandwidth = 2.0;
   params.bath_type = "semicircle";
   params.ft_method = "contour";
 
@@ -93,7 +93,7 @@ TEST(g0_model, Semicirc_contour_outliers) { // NOLINT
   params.time_max = 50.0;
   params.nr_time_points_gf = 5001;
   params.alpha = 0.0;
-  params.D = 2.0;
+  params.half_bandwidth = 2.0;
   params.bath_type = "semicircle";
   params.ft_method = "contour";
 
