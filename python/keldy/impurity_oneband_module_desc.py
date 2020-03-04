@@ -701,6 +701,14 @@ c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time
 
 c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int order, std::string warper_function_name, int nr_sample_points_warper, double warper_scale, int nr_bins = 100)""", doc = r"""""")
 
+<<<<<<< HEAD
+=======
+c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int order, std::string warper_function_name, bool alternate, int nr_sample_points_warper, double warper_scale, int nb_bins = 100)""", doc = r"""""")
+
+c.add_method("""void reset_rng (std::string rng_name, int rng_state_seed, bool do_shift = false, bool do_scramble = false, int rng_seed_shift = 0)""",
+             doc = r"""""")
+
+>>>>>>> [warper] odd-even warper
 c.add_method("""void run (int nr_steps)""",
              doc = r"""""")
 
