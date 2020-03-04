@@ -37,6 +37,7 @@ void h5_write(triqs::h5::group &h5group, std::string const &subgroup_name, model
   h5_write(grp, "eps_d", c.eps_d);
   h5_write(grp, "Gamma", c.Gamma);
   h5_write(grp, "alpha", c.alpha);
+  h5_write(grp, "half_bandwidth", c.half_bandwidth);
   h5_write(grp, "bath_type", c.bath_type);
   h5_write(grp, "time_max", c.time_max);
   h5_write(grp, "nr_time_points_gf", c.nr_time_points_gf);
@@ -50,6 +51,7 @@ void h5_read(triqs::h5::group &h5group, std::string const &subgroup_name, model_
   h5_read(grp, "eps_d", c.eps_d);
   h5_read(grp, "Gamma", c.Gamma);
   h5_read(grp, "alpha", c.alpha);
+  h5_read(grp, "half_bandwidth", c.half_bandwidth);
   h5_read(grp, "bath_type", c.bath_type);
   h5_read(grp, "time_max", c.time_max);
   h5_read(grp, "nr_time_points_gf", c.nr_time_points_gf);
