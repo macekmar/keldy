@@ -84,7 +84,8 @@ class integrator {
   }
 
   triqs::arrays::array<double, 2> gather_data(int nr_points, std::function<std::vector<double>()> rng) {
-    triqs::arrays::array<double, 2> values(nr_points, 3);
+    dcomplex im_unit (0.0,1.0);
+    triqs::arrays::array<double, 2> values(nr_points, 5);
     values() = 0;
 
     int mpi_rank = comm.rank();
@@ -98,9 +99,12 @@ class integrator {
       std::vector<double> ui_vec = warper.ui_from_li(li_vec);
 
       auto [eval, in_domain] = integrand(ui_vec);
-      values(i,0) = std::abs(eval);
-      values(i,1) = in_domain;
-      values(i,2) = warper.jacobian(li_vec);
+      auto [min, max] = std::minmax_element(ui_vec.begin(), ui_vec.end());
+      values(i,0) = *min;
+      values(i,1) = *max;
+      values(i,2) = ((-im_unit)*std::pow(im_unit, ui_vec.size())*eval).real();
+      values(i,3) = in_domain;
+      values(i,4) = warper.jacobian(li_vec);
     }
 
     values = mpi::mpi_all_reduce(values, comm);

@@ -544,6 +544,9 @@ c.add_method("""void reset_rng (std::string rng_name, int rng_state_seed, bool d
 c.add_method("""void run (int nr_steps)""",
              doc = r"""""")
 
+c.add_method("""triqs::arrays::array<double, 2> gather_data (int nr_steps, std::function<std::vector<double>()> rng)""",
+             doc = r"""""")
+
 c.add_method("""keldy::dcomplex reduce_result ()""",
              doc = r"""""")
 
@@ -575,6 +578,9 @@ c.add_method("""void reset_rng (std::string rng_name, int rng_state_seed, bool d
              doc = r"""""")
 
 c.add_method("""void run (int nr_steps)""",
+             doc = r"""""")
+
+c.add_method("""triqs::arrays::array<double, 2> gather_data (int nr_steps, std::function<std::vector<double>()> rng)""",
              doc = r"""""")
 
 c.add_method("""keldy::dcomplex reduce_result ()""",
@@ -610,6 +616,9 @@ c.add_method("""void reset_rng (std::string rng_name, int rng_state_seed, bool d
              doc = r"""""")
 
 c.add_method("""void run (int nr_steps)""",
+             doc = r"""""")
+
+c.add_method("""triqs::arrays::array<double, 2> gather_data (int nr_steps, std::function<std::vector<double>()> rng)""",
              doc = r"""""")
 
 c.add_method("""keldy::dcomplex reduce_result ()""",
