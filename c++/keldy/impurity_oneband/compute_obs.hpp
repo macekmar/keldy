@@ -236,8 +236,8 @@ inline std::function<double(double)> scalar_warper_function_factory_kernel(std::
 class compute_gf_kernel : public integrator<kernel_binner, integrand_g_kernel> {
  public:
   compute_gf_kernel(model_param_t params, double time, int order, std::string warper_function_name,
-                    int nr_sample_points_warper, int nb_bins = 100)
-     : integrator{kernel_binner{0.0, time, nb_bins},
+                    int nr_sample_points_warper, int nr_bins = 100)
+     : integrator{kernel_binner{0.0, time, nr_bins},
                   integrand_g_kernel{g0_keldysh_contour_t{g0_model{g0_model_omega{params}, false}},
                                      gf_index_t{time, up, forward}},
                   {},
@@ -251,8 +251,8 @@ class compute_gf_kernel : public integrator<kernel_binner, integrand_g_kernel> {
   }
 
   compute_gf_kernel(g0_model model, double time, int order, std::string warper_function_name,
-                    int nr_sample_points_warper, double warper_scale, int nb_bins = 100)
-     : integrator{kernel_binner{0.0, time, nb_bins},
+                    int nr_sample_points_warper, double warper_scale, int nr_bins = 100)
+     : integrator{kernel_binner{0.0, time, nr_bins},
                   integrand_g_kernel{g0_keldysh_contour_t{model}, gf_index_t{time, up, forward}},
                   {},
                   order,

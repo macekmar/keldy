@@ -22,7 +22,7 @@ def _ordered_axes(n):
         v_dir[:i] = 1
         yield v_dir
 
-def integrand_warper_plot(computer, order, d, t_max, nb_times=100, plot_all=False, axes=None):
+def integrand_warper_plot(computer, order, d, t_max, nr_times=100, plot_all=False, axes=None):
     """
     Plot the integrand and warper in absolute value along some axes in v space.
 
@@ -36,7 +36,7 @@ def integrand_warper_plot(computer, order, d, t_max, nb_times=100, plot_all=Fals
     `order` is the dimension of the integrand
     `d` is a positive real number
     `t_max` is the positive real t_max with which `computer` has been constructed
-    `nb_times` is the number of points to plot
+    `nr_times` is the number of points to plot
     `plot_all` is a boolean. If True all permutations P are displayed, if False only a subset of them (for clarity).
     `axes` (optionnal) a list of axes along which the integrand is plotted. Each axis is a list of 0s and 1s of length `order`. If provided, `plot_all` is ignored.
     """
@@ -59,7 +59,7 @@ def integrand_warper_plot(computer, order, d, t_max, nb_times=100, plot_all=Fals
     plt.plot([], [], '-k', label='integrand')
     plt.plot([], [], '--k', label='warper')
 
-    x_arr = np.linspace(0., t_max, nb_times)
+    x_arr = np.linspace(0., t_max, nr_times)
 
     if axes is None:
         if plot_all:
