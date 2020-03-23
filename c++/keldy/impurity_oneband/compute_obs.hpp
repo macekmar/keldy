@@ -28,6 +28,7 @@
 #include "keldy/warpers/product_1d_simple.hpp"
 #include "model.hpp"
 #include "wick_direct.hpp"
+#include "wick_direct_time.hpp"
 #include "wick_kernel.hpp"
 
 #include "../common.hpp"
@@ -144,6 +145,62 @@ class compute_current_J_direct : public integrator<dcomplex, integrand_g_direct>
                                 nr_sample_points_warper,
                                 warper_scale} {};
 };
+// ****************************************************************************
+// Profumo + Time evolution methods
+
+inline warper_product_1d_simple_t simple_plasma_warper_factory(std::string const &label, double time,
+                                                               int nr_sample_points_warper, double warper_scale) {
+  if (label == "inverse_square") {
+    return {[warper_scale](double t) -> double {
+              return warper_scale * warper_scale / ((warper_scale + t) * (warper_scale + t));
+            },
+            [warper_scale](double t) -> double { return warper_scale * t / (warper_scale + t); },
+            [warper_scale](double l) -> double { return warper_scale * l / (warper_scale - l); }, time,
+            nr_sample_points_warper};
+  }
+  if (label == "exponential") {
+    return {[warper_scale](double t) -> double { return std::exp(-(t / warper_scale)); },
+            [warper_scale](double t) -> double { return warper_scale * (1 - std::exp(-t / warper_scale)); },
+            [warper_scale](double l) -> double { return -warper_scale * std::log(1 - l / warper_scale); }, time,
+            nr_sample_points_warper};
+  }
+  if (label == "identity") {
+    return {time};
+  }
+  TRIQS_RUNTIME_ERROR << "Warper function name is not defined.";
+}
+
+// Class to compute charge = G^{lesser}_{up,up}(t).
+class compute_charge_Q_direct_time : public integrator<binner_1d<dcomplex>, integrand_g_direct_time> {
+ public:
+  compute_charge_Q_direct_time(g0_model model, double time, int order, int nr_time_slices, double cutoff_integrand,
+                               std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)
+     : integrator{binner_1d<dcomplex>(0., time, nr_time_slices),
+                  integrand_g_direct_time{g0_keldysh_contour_t{model}, gf_index_t{time, up, forward},
+                                          gf_index_t{time, up, backward}, cutoff_integrand},
+                  {},
+                  order,
+                  "sobol_unshifted",
+                  0} {
+
+    warper.warpers.emplace_back(warper_plasma_uv_t(time));
+    warper.warpers.emplace_back(
+       simple_plasma_warper_factory(warper_function_name, time, nr_sample_points_warper, warper_scale));
+  }
+
+  compute_charge_Q_direct_time(model_param_t params, double time, int order, int nr_time_slices,
+                               double cutoff_integrand, std::string warper_function_name, int nr_sample_points_warper,
+                               double warper_scale = 1)
+     : compute_charge_Q_direct_time{g0_model{g0_model_omega{params}, false},
+                                    time,
+                                    order,
+                                    nr_time_slices,
+                                    cutoff_integrand,
+                                    warper_function_name,
+                                    nr_sample_points_warper,
+                                    warper_scale} {};
+};
+
 // ******************************************************************************************************************************************************
 // Kernal Method
 
