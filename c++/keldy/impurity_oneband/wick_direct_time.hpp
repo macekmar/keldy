@@ -43,7 +43,6 @@ struct singleton_binner {
   };
 };
 
-template <typename data_t>
 class binner_1d {
   double t_min = 0.0;
   double t_max = 1.0;
@@ -52,7 +51,7 @@ class binner_1d {
 
   int nr_point_dropped = 0;
 
-  array<data_t, 1> values;
+  array<dcomplex, 1> values;
   array<uint64_t, 1> nr_values;
   array<double, 1> bin_times;
 
@@ -79,7 +78,7 @@ class binner_1d {
 
   /// Includes boundary points, so t_min <= t <= t_max. t_max gets put in last bin
   // CHECK THIS TO BE CORRECT!
-  void accumulate(double time, data_t value) {
+  void accumulate(double time, dcomplex value) {
     if (t_min <= time && time < t_max) {
       int bin = int((time - t_min) / bin_size);
       values(bin) += value;
@@ -103,13 +102,11 @@ class binner_1d {
     return *this;
   }
 
-  template <typename data_t_>
-  friend binner_1d<data_t_> mpi_reduce(binner_1d<data_t_> const &a, mpi::communicator c, int root, bool all, MPI_Op op);
+  friend binner_1d mpi_reduce(binner_1d const &a, mpi::communicator c, int root, bool all, MPI_Op op);
 };
 
-template <typename data_t>
-inline binner_1d<data_t> CPP2PY_IGNORE mpi_reduce(binner_1d<data_t> const &in, mpi::communicator c = {}, int root = 0,
-                                                  bool all = false, MPI_Op op = MPI_SUM) {
+inline binner_1d CPP2PY_IGNORE mpi_reduce(binner_1d const &in, mpi::communicator c = {}, int root = 0, bool all = false,
+                                          MPI_Op op = MPI_SUM) {
   if (op != MPI_SUM) {
     TRIQS_RUNTIME_ERROR << "mpi_reduce of binner_1d can only be performed with op = MPI_SUM";
   }
@@ -126,7 +123,7 @@ inline binner_1d<data_t> CPP2PY_IGNORE mpi_reduce(binner_1d<data_t> const &in, m
     TRIQS_RUNTIME_ERROR << "binner_1d to mpi_reduce are not defined with same bins. This is not supported!";
   }
 
-  binner_1d<data_t> out;
+  binner_1d out;
   // since bins are the same, just copy local values
   out.t_min = in.t_min;
   out.t_max = in.t_max;

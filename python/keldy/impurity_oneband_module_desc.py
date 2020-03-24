@@ -620,6 +620,75 @@ c.add_method("""warpers::warper_train_t get_warper ()""",
 
 module.add_class(c)
 
+
+# The class binner_1d
+c = class_(
+        py_type = "Binner1D",  # name of the python class
+        c_type = "keldy::impurity_oneband::binner_1d",   # name of the C++ class
+        doc = r"""""",   # doc of the C++ class
+        hdf5 = False,
+)
+
+c.add_constructor("""()""", doc = r"""""")
+
+c.add_constructor("""(double t_min_, double t_max_, int n_bins_)""", doc = r"""""")
+
+c.add_method("""triqs::arrays::array<std::complex<double>, 1> get_values ()""",
+             doc = r"""""")
+
+c.add_method("""triqs::arrays::array<unsigned long, 1> get_nr_values ()""",
+             doc = r"""""")
+
+c.add_method("""triqs::arrays::array<double, 1> get_bin_times ()""",
+             doc = r"""""")
+
+c.add_method("""double get_bin_size ()""",
+             doc = r"""""")
+
+c.add_method("""int get_nr_point_dropped ()""",
+             doc = r"""""")
+
+c.add_method("""void accumulate (double time, keldy::dcomplex value)""",
+             doc = r"""Includes boundary points, so t_min <= t <= t_max. t_max gets put in last bin""")
+
+module.add_class(c)
+
+
+# The class compute_charge_Q_direct_time
+c = class_(
+        py_type = "ComputeChargeQDirectTime",  # name of the python class
+        c_type = "keldy::impurity_oneband::compute_charge_Q_direct_time",   # name of the C++ class
+        doc = r"""""",   # doc of the C++ class
+        hdf5 = False,
+)
+
+c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, int nr_time_slices, double cutoff_integrand, std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)""", doc = r"""""")
+
+c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int order, int nr_time_slices, double cutoff_integrand, std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)""", doc = r"""""")
+
+c.add_method("""void reset_rng (std::string rng_name, int rng_state_seed, bool do_shift = false, bool do_scramble = false, int rng_seed_shift = 0)""",
+             doc = r"""""")
+
+c.add_method("""void run (int nr_steps)""",
+             doc = r"""""")
+
+c.add_method("""keldy::impurity_oneband::binner_1d reduce_result ()""",
+             doc = r"""""")
+
+c.add_method("""uint64_t reduce_nr_points_run ()""",
+             doc = r"""""")
+
+c.add_method("""uint64_t reduce_nr_points_in_domain ()""",
+             doc = r"""""")
+
+c.add_method("""keldy::warper_train_t get_warper ()""",
+             doc = r"""""")
+
+c.add_method("""keldy::impurity_oneband::integrand_g_direct_time get_integrand ()""",
+             doc = r"""""")
+
+module.add_class(c)
+
 # The class compute_gf_kernel
 c = class_(
         py_type = "ComputeGfKernel",  # name of the python class

@@ -171,11 +171,11 @@ inline warper_product_1d_simple_t simple_plasma_warper_factory(std::string const
 }
 
 // Class to compute charge = G^{lesser}_{up,up}(t).
-class compute_charge_Q_direct_time : public integrator<binner_1d<dcomplex>, integrand_g_direct_time> {
+class compute_charge_Q_direct_time : public integrator<binner_1d, integrand_g_direct_time> {
  public:
   compute_charge_Q_direct_time(g0_model model, double time, int order, int nr_time_slices, double cutoff_integrand,
                                std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)
-     : integrator{binner_1d<dcomplex>(0., time, nr_time_slices),
+     : integrator{binner_1d(0., time, nr_time_slices),
                   integrand_g_direct_time{g0_keldysh_contour_t{model}, gf_index_t{time, up, forward},
                                           gf_index_t{time, up, backward}, cutoff_integrand},
                   {},
