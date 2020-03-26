@@ -1,28 +1,31 @@
 keldy
 
-Copyright (C) 2019, The Simons Foundation
+Copyright (c) 2019-2020 The Simons Foundation
+Copyright (c) 2019-2020 CEA: Commissariat à l’énergie atomique
+                             et aux énergies alternatives
 
-authors: Philipp Dumitrescu
+authors: Philipp Dumitrescu, Corentin Bertrand, Marjan Maček, Olivier Parcollet
 
 keldy is free software: you can redistribute it and/or modify it under the
 terms of the GNU General Public License as published by the Free Software
 Foundation, either version 3 of the License, or (at your option) any later
 version.
- 
+
 keldy is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-PARTICULAR PURPOSE. See the GNU General Public License for more details.
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+details.
 
 You should have received a copy of the GNU General Public License along with
-keldy (in the file COPYING.txt in this directory). If not, see
-<http://www.gnu.org/licenses/>.
+keldy. If not, see <http://www.gnu.org/licenses/>.
 
----
+------
 
 keldy is based on real-time-diag-mc [License: GPLv3], by the authors:
-authors: O. Parcollet, P. Seth, A. Maillard, C. Bertrand, M. Macek
+authors: O. Parcollet, P. Seth, A. Maillard, C. Bertrand, M. Maček
 
-keldy incorporates code from the keldy template [License: GPLv3]:
+keldy incorporates code from the app4triqs template [License: GPLv3]:
 Copyright (C) 2017-2018, N. Wentzell, O. Parcollet
 Copyright (C) 2018-2019, The Simons Foundation
 authors: N. Wentzell, D. Simons, H. Strand, O. Parcollet
+
