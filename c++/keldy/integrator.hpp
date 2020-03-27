@@ -113,8 +113,8 @@ class integrator {
   uint64_t reduce_nr_points_in_domain() const { return mpi::all_reduce(n_integrand_evals_in_domain, comm); }
 
   // For Python Visualzation Purposes:
-  auto get_integrand() const { return integrand; }
-  auto get_warper() const { return warper; }
+  I get_integrand() const { return integrand; }
+  warpers::warper_train_t get_warper() const { return warper; }
 };
 
 } // namespace keldy
