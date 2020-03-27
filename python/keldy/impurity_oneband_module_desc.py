@@ -1,5 +1,5 @@
 # Generated automatically using the command :
-# c++2py ../../c++/keldy/impurity_oneband/compute_obs.hpp --members_read_only -N keldy -N keldy::impurity_oneband -a keldy -m impurity_oneband_module -o impurity_oneband_module -C pytriqs --cxxflags="-std=c++17 " --includes ../../c++
+# c++2py ../../c++/keldy/impurity_oneband/compute_obs.hpp --members_read_only -N keldy -N keldy::warpers -N keldy::impurity_oneband -a keldy -m impurity_oneband_module -o impurity_oneband_module -C pytriqs --cxxflags="-std=c++17 " --includes ../../c++
 from cpp2py.wrap_generator import *
 
 # The module
@@ -25,6 +25,7 @@ module.add_preamble("""
 #include <triqs/cpp2py_converters/h5.hpp>
 
 using namespace keldy;
+using namespace keldy::warpers;
 using namespace keldy::impurity_oneband;
 """)
 
@@ -59,12 +60,41 @@ module.add_class(c)
 # The class warper_plasma_uv_t
 c = class_(
         py_type = "WarperPlasmaUvT",  # name of the python class
-        c_type = "keldy::warper_plasma_uv_t",   # name of the C++ class
+        c_type = "keldy::warpers::warper_plasma_uv_t",   # name of the C++ class
         doc = r"""""",   # doc of the C++ class
         hdf5 = False,
 )
 
 c.add_constructor("""(double t_max_)""", doc = r"""""")
+
+c.add_method("""std::vector<double> ui_from_li (std::vector<double> li_vec)""",
+             doc = r"""""")
+
+c.add_method("""std::vector<double> li_from_ui (std::vector<double> ui_vec)""",
+             doc = r"""""")
+
+c.add_method("""double jacobian (std::vector<double> li_vec)""",
+             doc = r"""""")
+
+c.add_method("""double operator() (std::vector<double> ui_vec)""",
+             name = "__call__",
+             doc = r"""""")
+
+module.add_class(c)
+
+# The class warper_product_1d_simple_t
+c = class_(
+        py_type = "WarperProduct1dSimpleT",  # name of the python class
+        c_type = "keldy::warpers::warper_product_1d_simple_t",   # name of the C++ class
+        doc = r"""""",   # doc of the C++ class
+        hdf5 = False,
+)
+
+c.add_constructor("""(double t_max_)""", doc = r"""""")
+
+c.add_constructor("""(std::function<double (double)> f1_, double t_max_, int nr_function_sample_points)""", doc = r"""""")
+
+c.add_constructor("""(std::function<double (double)> f1_, std::function<double (double)> f1_integrated_, std::function<double (double)> f1_integrated_inverse_, double t_max_, int nr_function_sample_points)""", doc = r"""""")
 
 c.add_method("""std::vector<double> ui_from_li (std::vector<double> li_vec)""",
              doc = r"""""")
@@ -200,7 +230,7 @@ c.add_member(c_name = "g0_lesser",
              doc = r"""Lesser Green function $G^{<}_{\sigma}(t)$; block spin $\sigma$ {up, down}""")
 
 c.add_member(c_name = "lesser_ft_error",
-             c_type = "array<double, 2>",
+             c_type = "gf<triqs::gfs::retime, triqs::gfs::matrix_valued>",
              read_only= True,
              doc = r"""""")
 
@@ -210,7 +240,7 @@ c.add_member(c_name = "g0_greater",
              doc = r"""Greater Green function $G^{>}_{\sigma}(t)$; block spin $\sigma$ {up, down}""")
 
 c.add_member(c_name = "greater_ft_error",
-             c_type = "array<double, 2>",
+             c_type = "gf<triqs::gfs::retime, triqs::gfs::matrix_valued>",
              read_only= True,
              doc = r"""""")
 
@@ -258,7 +288,7 @@ c = class_(
 
 c.add_constructor("""(keldy::impurity_oneband::g0_keldysh_contour_t g0_, keldy::impurity_oneband::gf_index_t external_A_, keldy::impurity_oneband::gf_index_t external_B_, double cutoff_ = 0.)""", doc = r"""""")
 
-c.add_method("""std::pair<keldy::impurity_oneband::integrand_g_direct::result_t,int> operator() (std::vector<double> times, bool keep_u_hypercube = true)""",
+c.add_method("""std::pair<keldy::impurity_oneband::integrand_g_direct::result_t, int> operator() (std::vector<double> times, bool keep_u_hypercube = true)""",
              name = "__call__",
              doc = r"""Returns integrand for the specified times""")
 
@@ -277,7 +307,7 @@ c.add_member(c_name = "data",
              read_only= True,
              doc = r"""""")
 
-c.add_method("""void bin_data (std::pair<gf_index_t,dcomplex> in)""",
+c.add_method("""void bin_data (std::pair<gf_index_t, dcomplex> in)""",
              doc = r"""""")
 
 c.add_method("""double sum_weights ()""",
@@ -303,7 +333,7 @@ c.add_constructor("""(double t_min_, double t_max_, int n_bins_)""", doc = r""""
 c.add_method("""triqs::arrays::array<std::complex<double>, 2> get_values ()""",
              doc = r"""""")
 
-c.add_method("""triqs::arrays::array<unsigned long, 2> get_nr_values ()""",
+c.add_method("""triqs::arrays::array<unsigned long long, 2> get_nr_values ()""",
              doc = r"""""")
 
 c.add_method("""triqs::arrays::array<double, 1> get_bin_times ()""",
@@ -330,7 +360,7 @@ c = class_(
 
 c.add_constructor("""(keldy::impurity_oneband::g0_keldysh_contour_t g0_, keldy::impurity_oneband::gf_index_t g_idx_X_)""", doc = r"""""")
 
-c.add_method("""std::pair<keldy::impurity_oneband::integrand_g_kernel::result_t,int> operator() (std::vector<double> times)""",
+c.add_method("""std::pair<keldy::impurity_oneband::integrand_g_kernel::result_t, int> operator() (std::vector<double> times)""",
              name = "__call__",
              doc = r"""""")
 
@@ -360,39 +390,10 @@ c.add_method("""void discard (int nr_discard)""",
 
 module.add_class(c)
 
-# The class warper_product_1d_simple_t
-c = class_(
-        py_type = "WarperProduct1dSimpleT",  # name of the python class
-        c_type = "keldy::warper_product_1d_simple_t",   # name of the C++ class
-        doc = r"""""",   # doc of the C++ class
-        hdf5 = False,
-)
-
-c.add_constructor("""(double t_max_)""", doc = r"""""")
-
-c.add_constructor("""(std::function<double(double)> f1_, double t_max_, int nr_function_sample_points)""", doc = r"""""")
-
-c.add_constructor("""(std::function<double(double)> f1_, std::function<double(double)> f1_integrated_, std::function<double(double)> f1_integrated_inverse_, double t_max_, int nr_function_sample_points)""", doc = r"""""")
-
-c.add_method("""std::vector<double> ui_from_li (std::vector<double> li_vec)""",
-             doc = r"""""")
-
-c.add_method("""std::vector<double> li_from_ui (std::vector<double> ui_vec)""",
-             doc = r"""""")
-
-c.add_method("""double jacobian (std::vector<double> li_vec)""",
-             doc = r"""""")
-
-c.add_method("""double operator() (std::vector<double> ui_vec)""",
-             name = "__call__",
-             doc = r"""""")
-
-module.add_class(c)
-
 # The class warper_identity_t
 c = class_(
         py_type = "WarperIdentityT",  # name of the python class
-        c_type = "keldy::warper_identity_t",   # name of the C++ class
+        c_type = "keldy::warpers::warper_identity_t",   # name of the C++ class
         doc = r"""""",   # doc of the C++ class
         hdf5 = False,
 )
@@ -415,14 +416,14 @@ module.add_class(c)
 # The class warper_product_1d_t
 c = class_(
         py_type = "WarperProduct1dT",  # name of the python class
-        c_type = "keldy::warper_product_1d_t",   # name of the C++ class
+        c_type = "keldy::warpers::warper_product_1d_t",   # name of the C++ class
         doc = r"""""",   # doc of the C++ class
         hdf5 = False,
 )
 
 c.add_constructor("""(double t_max_)""", doc = r"""""")
 
-c.add_constructor("""(std::vector<std::function<double(double)>> fn_, double t_max_, int nr_function_sample_points)""", doc = r"""""")
+c.add_constructor("""(std::vector<std::function<double (double)> > fn_, double t_max_, int nr_function_sample_points)""", doc = r"""""")
 
 c.add_method("""std::vector<double> ui_from_li (std::vector<double> li_vec)""",
              doc = r"""""")
@@ -442,7 +443,7 @@ module.add_class(c)
 # The class hist_xi
 c = class_(
         py_type = "HistXi",  # name of the python class
-        c_type = "keldy::hist_xi",   # name of the C++ class
+        c_type = "keldy::warpers::hist_xi",   # name of the C++ class
         doc = r"""""",   # doc of the C++ class
         hdf5 = False,
 )
@@ -467,12 +468,12 @@ module.add_class(c)
 # The class warper_plasma_projection_t
 c = class_(
         py_type = "WarperPlasmaProjectionT",  # name of the python class
-        c_type = "keldy::warper_plasma_projection_t",   # name of the C++ class
+        c_type = "keldy::warpers::warper_plasma_projection_t",   # name of the C++ class
         doc = r"""""",   # doc of the C++ class
         hdf5 = False,
 )
 
-c.add_constructor("""(std::function<double(std::vector<double>)> integrand_, keldy::warper_product_1d_t w_warper_, int order, int nr_function_sample_points)""", doc = r"""""")
+c.add_constructor("""(std::function<double (std::vector<double>)> integrand_, keldy::warpers::warper_product_1d_t w_warper_, int order, int nr_function_sample_points)""", doc = r"""""")
 
 c.add_method("""std::vector<double> ui_from_li (std::vector<double> li_vec)""",
              doc = r"""""")
@@ -488,78 +489,10 @@ c.add_method("""double evaluate_warping_function (std::vector<double> ui_vec)"""
 
 module.add_class(c)
 
-
-# The class compute_charge_Q_direct
-c = class_(
-        py_type = "ComputeChargeQDirect",  # name of the python class
-        c_type = "keldy::impurity_oneband::compute_charge_Q_direct",   # name of the C++ class
-        doc = r"""""",   # doc of the C++ class
-        hdf5 = False,
-)
-
-c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, double cutoff_integrand, std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)""", doc = r"""""")
-
-c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int order, double cutoff_integrand, std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)""", doc = r"""""")
-
-c.add_method("""void reset_rng (std::string rng_name, int rng_state_seed, bool do_shift = false, bool do_scramble = false, int rng_seed_shift = 0)""",
-             doc = r"""""")
-
-c.add_method("""void run (int nr_steps)""",
-             doc = r"""""")
-
-c.add_method("""keldy::dcomplex reduce_result ()""",
-             doc = r"""""")
-
-c.add_method("""uint64_t reduce_nr_points_run ()""",
-             doc = r"""""")
-
-c.add_method("""uint64_t reduce_nr_points_in_domain ()""",
-             doc = r"""""")
-
-c.add_method("""keldy::warper_train_t get_warper ()""",
-             doc = r"""""")
-
-c.add_method("""keldy::impurity_oneband::integrand_g_direct get_integrand ()""",
-             doc = r"""""")
-
-module.add_class(c)
-
-# The class compute_charge_Q_direct_plasma_1D
-c = class_(
-        py_type = "ComputeChargeQDirectPlasma1d",  # name of the python class
-        c_type = "keldy::impurity_oneband::compute_charge_Q_direct_plasma_1D",   # name of the C++ class
-        doc = r"""""",   # doc of the C++ class
-        hdf5 = False,
-)
-
-c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, std::vector<std::function<double(double)>> fn_, int nr_sample_points_warper)""", doc = r"""""")
-
-c.add_method("""void reset_rng (std::string rng_name, int rng_state_seed, bool do_shift = false, bool do_scramble = false, int rng_seed_shift = 0)""",
-             doc = r"""""")
-
-c.add_method("""void run (int nr_steps)""",
-             doc = r"""""")
-
-c.add_method("""keldy::dcomplex reduce_result ()""",
-             doc = r"""""")
-
-c.add_method("""uint64_t reduce_nr_points_run ()""",
-             doc = r"""""")
-
-c.add_method("""uint64_t reduce_nr_points_in_domain ()""",
-             doc = r"""""")
-
-c.add_method("""keldy::warper_train_t get_warper ()""",
-             doc = r"""""")
-
-c.add_method("""keldy::impurity_oneband::integrand_g_direct get_integrand ()""",
-             doc = r"""""")
-
-module.add_class(c)
 # The class warper_train_t
 c = class_(
         py_type = "WarperTrainT",  # name of the python class
-        c_type = "keldy::warper_train_t",   # name of the C++ class
+        c_type = "keldy::warpers::warper_train_t",   # name of the C++ class
         doc = r"""""",   # doc of the C++ class
         hdf5 = False,
 )
@@ -592,7 +525,7 @@ c = class_(
         hdf5 = False,
 )
 
-c.add_constructor("""(std::function<double(std::vector<double>)> f, int dim, keldy::cuba_common_param in_)""", doc = r"""""")
+c.add_constructor("""(std::function<double (std::vector<double>)> f, int dim, keldy::cuba_common_param in_)""", doc = r"""""")
 
 c.add_method("""double operator() (std::vector<double> x)""",
              name = "__call__",
@@ -608,6 +541,74 @@ c.add_method("""void run_cuhre (int key_integration_order)""",
              doc = r"""""")
 
 c.add_method("""keldy::cuba_output get_output ()""",
+             doc = r"""""")
+
+module.add_class(c)
+
+# The class compute_charge_Q_direct
+c = class_(
+        py_type = "ComputeChargeQDirect",  # name of the python class
+        c_type = "keldy::impurity_oneband::compute_charge_Q_direct",   # name of the C++ class
+        doc = r"""""",   # doc of the C++ class
+        hdf5 = False,
+)
+
+c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int order, double cutoff_integrand, std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)""", doc = r"""""")
+
+c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, double cutoff_integrand, std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)""", doc = r"""""")
+
+c.add_method("""void run (int nr_steps)""",
+             doc = r"""""")
+
+c.add_method("""void reset_rng (std::string rng_name, int rng_state_seed, bool do_shift = false, bool do_scramble = false, int rng_seed_shift = 0)""",
+             doc = r"""""")
+
+c.add_method("""dcomplex reduce_result ()""",
+             doc = r"""""")
+
+c.add_method("""uint64_t reduce_nr_points_run ()""",
+             doc = r"""""")
+
+c.add_method("""uint64_t reduce_nr_points_in_domain ()""",
+             doc = r"""""")
+
+c.add_method("""keldy::impurity_oneband::integrand_g_direct get_integrand ()""",
+             doc = r"""""")
+
+c.add_method("""warpers::warper_train_t get_warper ()""",
+             doc = r"""""")
+
+module.add_class(c)
+
+# The class compute_charge_Q_direct_plasma_1D
+c = class_(
+        py_type = "ComputeChargeQDirectPlasma1d",  # name of the python class
+        c_type = "keldy::impurity_oneband::compute_charge_Q_direct_plasma_1D",   # name of the C++ class
+        doc = r"""""",   # doc of the C++ class
+        hdf5 = False,
+)
+
+c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, std::vector<std::function<double (double)> > fn_, int nr_sample_points_warper)""", doc = r"""""")
+
+c.add_method("""void run (int nr_steps)""",
+             doc = r"""""")
+
+c.add_method("""void reset_rng (std::string rng_name, int rng_state_seed, bool do_shift = false, bool do_scramble = false, int rng_seed_shift = 0)""",
+             doc = r"""""")
+
+c.add_method("""dcomplex reduce_result ()""",
+             doc = r"""""")
+
+c.add_method("""uint64_t reduce_nr_points_run ()""",
+             doc = r"""""")
+
+c.add_method("""uint64_t reduce_nr_points_in_domain ()""",
+             doc = r"""""")
+
+c.add_method("""keldy::impurity_oneband::integrand_g_direct get_integrand ()""",
+             doc = r"""""")
+
+c.add_method("""warpers::warper_train_t get_warper ()""",
              doc = r"""""")
 
 module.add_class(c)
@@ -666,41 +667,6 @@ c.add_method("""keldy::gsl_monte_vegas_params_wrap get_params ()""",
 
 module.add_class(c)
 
-
-
-# Converter for gsl_monte_vegas_params_wrap
-c = converter_(
-        c_type = "keldy::gsl_monte_vegas_params_wrap",
-        doc = r"""""",
-)
-c.add_member(c_name = "alpha",
-             c_type = "double",
-             initializer = """  """,
-             doc = r"""""")
-
-c.add_member(c_name = "iterations",
-             c_type = "size_t",
-             initializer = """  """,
-             doc = r"""""")
-
-c.add_member(c_name = "stage",
-             c_type = "int",
-             initializer = """  """,
-             doc = r"""""")
-
-c.add_member(c_name = "mode",
-             c_type = "int",
-             initializer = """  """,
-             doc = r"""""")
-
-c.add_member(c_name = "verbose",
-             c_type = "int",
-             initializer = """  """,
-             doc = r"""""")
-
-
-module.add_converter(c)
-
 # The class compute_charge_Q_direct_cuba
 c = class_(
         py_type = "ComputeChargeQDirectCuba",  # name of the python class
@@ -729,6 +695,41 @@ c.add_method("""keldy::cuba_output get_output ()""",
 
 module.add_class(c)
 
+# The class compute_current_J_direct
+c = class_(
+        py_type = "ComputeCurrentJDirect",  # name of the python class
+        c_type = "keldy::impurity_oneband::compute_current_J_direct",   # name of the C++ class
+        doc = r"""""",   # doc of the C++ class
+        hdf5 = False,
+)
+
+c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int order, double cutoff_integrand, std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)""", doc = r"""""")
+
+c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, double cutoff_integrand, std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)""", doc = r"""""")
+
+c.add_method("""void run (int nr_steps)""",
+             doc = r"""""")
+
+c.add_method("""void reset_rng (std::string rng_name, int rng_state_seed, bool do_shift = false, bool do_scramble = false, int rng_seed_shift = 0)""",
+             doc = r"""""")
+
+c.add_method("""dcomplex reduce_result ()""",
+             doc = r"""""")
+
+c.add_method("""uint64_t reduce_nr_points_run ()""",
+             doc = r"""""")
+
+c.add_method("""uint64_t reduce_nr_points_in_domain ()""",
+             doc = r"""""")
+
+c.add_method("""keldy::impurity_oneband::integrand_g_direct get_integrand ()""",
+             doc = r"""""")
+
+c.add_method("""warpers::warper_train_t get_warper ()""",
+             doc = r"""""")
+
+module.add_class(c)
+
 # The class compute_gf_kernel
 c = class_(
         py_type = "ComputeGfKernel",  # name of the python class
@@ -741,102 +742,170 @@ c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time
 
 c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int order, std::string warper_function_name, int nr_sample_points_warper, double warper_scale, int nr_bins = 100)""", doc = r"""""")
 
-c.add_method("""void reset_rng (std::string rng_name, int rng_state_seed, bool do_shift = false, bool do_scramble = false, int rng_seed_shift = 0)""",
-             doc = r"""""")
-
 c.add_method("""void run (int nr_steps)""",
              doc = r"""""")
 
-c.add_method("""keldy::impurity_oneband::kernel_binner reduce_result ()""",
+c.add_method("""void reset_rng (std::string rng_name, int rng_state_seed, bool do_shift = false, bool do_scramble = false, int rng_seed_shift = 0)""",
+             doc = r"""""")
+
+c.add_method("""kernel_binner reduce_result ()""",
              doc = r"""""")
 
 c.add_method("""uint64_t reduce_nr_points_run ()""",
              doc = r"""""")
 
 c.add_method("""uint64_t reduce_nr_points_in_domain ()""",
-             doc = r"""""")
-
-c.add_method("""keldy::warper_train_t get_warper ()""",
              doc = r"""""")
 
 c.add_method("""keldy::impurity_oneband::integrand_g_kernel get_integrand ()""",
              doc = r"""""")
 
-module.add_class(c)
-
-# The class compute_current_J_direct
-c = class_(
-        py_type = "ComputeCurrentJDirect",  # name of the python class
-        c_type = "keldy::impurity_oneband::compute_current_J_direct",   # name of the C++ class
-        doc = r"""""",   # doc of the C++ class
-        hdf5 = False,
-)
-
-c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, double cutoff_integrand, std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)""", doc = r"""""")
-
-c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int order, double cutoff_integrand, std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)""", doc = r"""""")
-
-c.add_method("""void reset_rng (std::string rng_name, int rng_state_seed, bool do_shift = false, bool do_scramble = false, int rng_seed_shift = 0)""",
-             doc = r"""""")
-
-c.add_method("""void run (int nr_steps)""",
-             doc = r"""""")
-
-c.add_method("""keldy::dcomplex reduce_result ()""",
-             doc = r"""""")
-
-c.add_method("""uint64_t reduce_nr_points_run ()""",
-             doc = r"""""")
-
-c.add_method("""uint64_t reduce_nr_points_in_domain ()""",
-             doc = r"""""")
-
-c.add_method("""keldy::warper_train_t get_warper ()""",
-             doc = r"""""")
-
-c.add_method("""keldy::impurity_oneband::integrand_g_direct get_integrand ()""",
+c.add_method("""warpers::warper_train_t get_warper ()""",
              doc = r"""""")
 
 module.add_class(c)
 
 module.add_function ("int keldy::compare_3way (keldy::contour_pt_t a, keldy::contour_pt_t b)", doc = r"""""")
 
+module.add_function ("std::vector<double> keldy::warpers::vi_from_ui (double t_max, std::vector<double> u_times)", doc = r"""""")
+
+module.add_function ("std::vector<double> keldy::warpers::ui_from_vi (double t_max, std::vector<double> v_times)", doc = r"""""")
+
 module.add_function ("void keldy::impurity_oneband::fake (**keldy::impurity_oneband::model_param_t)", doc = r"""
 
 
 
-+-------------------+-------------+------------+---------------+
-| Parameter Name    | Type        | Default    | Documentation |
-+===================+=============+============+===============+
-| beta              | double      | 1.0        |               |
-+-------------------+-------------+------------+---------------+
-| bias_V            | double      | 0.0        |               |
-+-------------------+-------------+------------+---------------+
-| eps_d             | double      | 0.0        |               |
-+-------------------+-------------+------------+---------------+
-| Gamma             | double      | 1.0        |               |
-+-------------------+-------------+------------+---------------+
-| alpha             | double      | 0.0        |               |
-+-------------------+-------------+------------+---------------+
-| bath_type         | std::string | "flatband" |               |
-+-------------------+-------------+------------+---------------+
-| time_max          | double      | +100.0     |               |
-+-------------------+-------------+------------+---------------+
-| nr_time_points_gf | int         | 1000       |               |
-+-------------------+-------------+------------+---------------+
-| ft_method         | std::string | "fft"      |               |
-+-------------------+-------------+------------+---------------+
++-------------------+-------------+--------------+---------------+
+| Parameter Name    | Type        | Default      | Documentation |
++===================+=============+==============+===============+
+| beta              | double      | 1.0          |               |
++-------------------+-------------+--------------+---------------+
+| bias_V            | double      | 0.0          |               |
++-------------------+-------------+--------------+---------------+
+| eps_d             | double      | 0.0          |               |
++-------------------+-------------+--------------+---------------+
+| Gamma             | double      | 1.0          |               |
++-------------------+-------------+--------------+---------------+
+| alpha             | double      | 0.0          |               |
++-------------------+-------------+--------------+---------------+
+| half_bandwidth    | double      | 2.           |               |
++-------------------+-------------+--------------+---------------+
+| bath_type         | std::string | "semicircle" |               |
++-------------------+-------------+--------------+---------------+
+| time_max          | double      | +100.0       |               |
++-------------------+-------------+--------------+---------------+
+| nr_time_points_gf | int         | 1000         |               |
++-------------------+-------------+--------------+---------------+
+| ft_method         | std::string | "fft"        |               |
++-------------------+-------------+--------------+---------------+
 """)
+
+module.add_function ("void keldy::impurity_oneband::h5_write (triqs::h5::group h5group, std::string subgroup_name, keldy::impurity_oneband::model_param_t c)", doc = r"""""")
+
+module.add_function ("void keldy::impurity_oneband::h5_read (triqs::h5::group h5group, std::string subgroup_name, keldy::impurity_oneband::model_param_t c)", doc = r"""""")
 
 module.add_function ("bool keldy::impurity_oneband::equivalent_without_timesplit (keldy::impurity_oneband::gf_index_t lhs, keldy::impurity_oneband::gf_index_t rhs)", doc = r"""""")
 
-module.add_function ("std::vector<double> keldy::vi_from_ui (double t_max, std::vector<double> u_times)", doc = r"""""")
+module.add_function ("void keldy::warpers::bin_values (keldy::warpers::hist_xi xi, int axis, std::vector<std::vector<double> > points, std::vector<double> values)", doc = r"""""")
 
-module.add_function ("std::vector<double> keldy::ui_from_vi (double t_max, std::vector<double> v_times)", doc = r"""""")
+module.add_function ("void keldy::warpers::convolve (std::vector<double> signal, std::vector<double> window)", doc = r"""""")
 
-module.add_function ("void keldy::bin_values (keldy::hist_xi xi, int axis, std::vector<std::vector<double>> points, std::vector<double> values)", doc = r"""""")
+module.add_function ("void keldy::fake_output (**keldy::cuba_output)", doc = r"""
 
-module.add_function ("void keldy::convolve (std::vector<double> signal, std::vector<double> window)", doc = r"""""")
+
+
++----------------+--------+---------+---------------+
+| Parameter Name | Type   | Default | Documentation |
++================+========+=========+===============+
+| n_regions      | int    | 0       |               |
++----------------+--------+---------+---------------+
+| n_eval         | int    | 0       |               |
++----------------+--------+---------+---------------+
+| error_flag     | int    | 0       |               |
++----------------+--------+---------+---------------+
+| result         | double | 0.0     |               |
++----------------+--------+---------+---------------+
+| error          | double | 0.0     |               |
++----------------+--------+---------+---------------+
+| chi_sq_prob    | double | 0.0     |               |
++----------------+--------+---------+---------------+
+""")
+
+module.add_function ("void keldy::fake_common (**keldy::cuba_common_param)", doc = r"""
+
+
+
++-------------------------------+-------------+----------+---------------+
+| Parameter Name                | Type        | Default  | Documentation |
++===============================+=============+==========+===============+
+| n_dim                         | int         | 0        |               |
++-------------------------------+-------------+----------+---------------+
+| n_components                  | int         | 1        |               |
++-------------------------------+-------------+----------+---------------+
+| n_points_vectorization        | int         | 1        |               |
++-------------------------------+-------------+----------+---------------+
+| error_eps_rel                 | double      | 1e-12    |               |
++-------------------------------+-------------+----------+---------------+
+| error_eps_abs                 | double      | 1e-12    |               |
++-------------------------------+-------------+----------+---------------+
+| flags                         | int         | 0        |               |
++-------------------------------+-------------+----------+---------------+
+| verbosity                     | int         | 0        |               |
++-------------------------------+-------------+----------+---------------+
+| use_last_sampleset_only       | bool        | false    |               |
++-------------------------------+-------------+----------+---------------+
+| sample_function_smoothing_off | bool        | false    |               |
++-------------------------------+-------------+----------+---------------+
+| store_state_after_run         | bool        | false    |               |
++-------------------------------+-------------+----------+---------------+
+| rng_type                      | std::string | "sobol"  |               |
++-------------------------------+-------------+----------+---------------+
+| seed                          | int         | 1        |               |
++-------------------------------+-------------+----------+---------------+
+| randlux_level                 | int         | 0        |               |
++-------------------------------+-------------+----------+---------------+
+| min_number_evaluations        | int         | 1000     |               |
++-------------------------------+-------------+----------+---------------+
+| max_number_evaluations        | int         | int(1e9) |               |
++-------------------------------+-------------+----------+---------------+
+""")
+
+module.add_function ("void keldy::fake_vegas (**keldy::cuba_vegas_param)", doc = r"""
+
+
+
++--------------------------------+------+---------+---------------+
+| Parameter Name                 | Type | Default | Documentation |
++================================+======+=========+===============+
+| n_evals_per_iteration_start    | int  | 1000    |               |
++--------------------------------+------+---------+---------------+
+| n_evals_per_iteration_increase | int  | 500     |               |
++--------------------------------+------+---------+---------------+
+| n_samples_per_batch            | int  | 1000    |               |
++--------------------------------+------+---------+---------------+
+| internal_store_grid_nr         | int  | 0       |               |
++--------------------------------+------+---------+---------------+
+""")
+
+module.add_function ("void keldy::fake_suave (**keldy::cuba_suave_param)", doc = r"""
+
+
+
++---------------------------------+--------+---------+---------------+
+| Parameter Name                  | Type   | Default | Documentation |
++=================================+========+=========+===============+
+| n_new_evals_each_subdivision    | int    | 5000    |               |
++---------------------------------+--------+---------+---------------+
+| n_min_samples_region_threashold | int    | 500     |               |
++---------------------------------+--------+---------+---------------+
+| flatness_parameter_p            | double | 50.0    |               |
++---------------------------------+--------+---------+---------------+
+""")
+
+module.add_function ("warpers::warper_product_1d_simple_t keldy::impurity_oneband::simple_plasma_warper_factory (std::string label, keldy::impurity_oneband::integrand_g_direct f, double time, int nr_sample_points_warper, double warper_scale)", doc = r"""""")
+
+module.add_function ("warpers::warper_product_1d_simple_t keldy::impurity_oneband::simple_plasma_warper_factory_kernel (std::string label, keldy::impurity_oneband::integrand_g_kernel f, double time, int nr_sample_points_warper, double warper_scale)", doc = r"""""")
+
 
 # Converter for model_param_t
 c = converter_(
@@ -870,12 +939,12 @@ c.add_member(c_name = "alpha",
 
 c.add_member(c_name = "half_bandwidth",
              c_type = "double",
-             initializer = """ 2.0 """,
+             initializer = """ 2. """,
              doc = r"""""")
 
 c.add_member(c_name = "bath_type",
              c_type = "std::string",
-             initializer = """ "flatband" """,
+             initializer = """ "semicircle" """,
              doc = r"""""")
 
 c.add_member(c_name = "time_max",
@@ -1059,6 +1128,38 @@ c.add_member(c_name = "n_min_samples_region_threashold",
 c.add_member(c_name = "flatness_parameter_p",
              c_type = "double",
              initializer = """ 50.0 """,
+             doc = r"""""")
+
+module.add_converter(c)
+
+# Converter for gsl_monte_vegas_params_wrap
+c = converter_(
+        c_type = "keldy::gsl_monte_vegas_params_wrap",
+        doc = r"""""",
+)
+c.add_member(c_name = "alpha",
+             c_type = "double",
+             initializer = """  """,
+             doc = r"""""")
+
+c.add_member(c_name = "iterations",
+             c_type = "size_t",
+             initializer = """  """,
+             doc = r"""""")
+
+c.add_member(c_name = "stage",
+             c_type = "int",
+             initializer = """  """,
+             doc = r"""""")
+
+c.add_member(c_name = "mode",
+             c_type = "int",
+             initializer = """  """,
+             doc = r"""""")
+
+c.add_member(c_name = "verbose",
+             c_type = "int",
+             initializer = """  """,
              doc = r"""""")
 
 module.add_converter(c)
