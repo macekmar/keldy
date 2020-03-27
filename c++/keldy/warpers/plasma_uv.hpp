@@ -29,7 +29,7 @@
 #include <functional>
 #include <numeric>
 
-namespace keldy {
+namespace keldy::warpers {
 
 // Coordinate Transforms (ui <-> vi):
 inline std::vector<double> vi_from_ui(double t_max, std::vector<double> const &u_times) {
@@ -72,4 +72,4 @@ class warper_plasma_uv_t {
   [[nodiscard]] double operator()([[maybe_unused]] std::vector<double> const &ui_vec) const { return 1.0; }
 };
 
-} // namespace keldy
+} // namespace keldy::warpers

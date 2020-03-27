@@ -10,6 +10,8 @@
 #include <triqs/utility/macros.hpp>
 
 using namespace keldy;
+using namespace keldy::warpers;
+
 using namespace triqs::arrays;
 
 TEST(WarperTrain, ConstructionAddingWarpers) { // NOLINT

@@ -52,7 +52,7 @@ class integrator {
   I integrand;
 
   // Warpers which define the transform of sample points [li -> ui] & Jacobian
-  warper_train_t warper{};
+  warpers::warper_train_t warper{};
 
   // Random number generator
   std::function<std::vector<double>()> rng;
@@ -93,7 +93,8 @@ class integrator {
     }
   }
 
-  integrator(R result_, I integrand_, warper_train_t warper_, int dimension_, std::string rng_name, int rng_state_seed)
+  integrator(R result_, I integrand_, warpers::warper_train_t warper_, int dimension_, std::string rng_name,
+             int rng_state_seed)
      : dimension(dimension_), result(std::move(result_)), integrand(std::move(integrand_)), warper(std::move(warper_)) {
     if (dimension <= 0) {
       TRIQS_RUNTIME_ERROR << "Dimension of the integration space must be > 0.";

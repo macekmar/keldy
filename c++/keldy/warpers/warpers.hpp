@@ -34,7 +34,7 @@
 #include <variant>
 #include <vector>
 
-namespace keldy {
+namespace keldy::warpers {
 
 // varient is default constructable to hold value of first alternative (if that is default constructable)
 using warper_variant =
@@ -81,4 +81,4 @@ class warper_train_t {
   }
 };
 
-} // namespace keldy
+} // namespace keldy::warpers

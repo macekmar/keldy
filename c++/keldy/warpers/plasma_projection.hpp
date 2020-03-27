@@ -33,8 +33,9 @@
 #include <numeric>
 #include <triqs/gfs.hpp>
 #include "../qrng.hpp"
+#include "plasma_uv.hpp"
 
-namespace keldy {
+namespace keldy::warpers {
 
 using namespace triqs::gfs;
 
@@ -226,4 +227,4 @@ class warper_plasma_projection_t {
     return result;
   }
 };
-} // namespace keldy
+} // namespace keldy::warpers

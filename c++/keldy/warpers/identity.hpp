@@ -25,7 +25,7 @@
 #include "../common.hpp"
 #include <vector>
 
-namespace keldy {
+namespace keldy::warpers {
 
 class warper_identity_t {
  public:
@@ -38,4 +38,4 @@ class warper_identity_t {
   [[nodiscard]] double operator()([[maybe_unused]] std::vector<double> const &ui_vec) const { return 1.0; }
 };
 
-} // namespace keldy
+} // namespace keldy::warpers

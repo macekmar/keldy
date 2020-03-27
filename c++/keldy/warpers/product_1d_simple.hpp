@@ -31,7 +31,7 @@
 #include <numeric>
 #include <triqs/gfs.hpp>
 
-namespace keldy {
+namespace keldy::warpers {
 
 using gf_t = triqs::gfs::gf<triqs::gfs::retime, triqs::gfs::scalar_real_valued>;
 
@@ -142,4 +142,4 @@ class warper_product_1d_simple_t {
   }
 };
 
-} // namespace keldy
+} // namespace keldy::warpers

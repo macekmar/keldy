@@ -9,6 +9,7 @@
 #include <triqs/test_tools/gfs.hpp>
 
 using namespace keldy;
+using namespace keldy::warpers;
 using namespace triqs::arrays;
 
 TEST(ViUiMaps, Simple) { // NOLINT
