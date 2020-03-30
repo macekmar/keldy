@@ -1,3 +1,4 @@
+#include "keldy/warpers/plasma_uv.hpp"
 #include "keldy/warpers/plasma_projection.hpp"
 #include "./warper_tests_common.hpp"
 
