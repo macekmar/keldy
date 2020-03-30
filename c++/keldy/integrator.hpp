@@ -98,7 +98,7 @@ class integrator {
       }
       std::vector<double> ui_vec = warper.ui_from_li(li_vec);
 
-      auto [eval, in_domain] = integrand(ui_vec);
+      auto [eval, in_domain] = integrand(ui_vec, false);
       auto [min, max] = std::minmax_element(ui_vec.begin(), ui_vec.end());
       values(i,0) = *min;
       values(i,1) = *max;
