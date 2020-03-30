@@ -99,7 +99,7 @@ class warper_product_1d_simple_t {
 
     f1_integrated = gf_t({0.0, t_max, nr_function_sample_points});
     for (auto const &t : f1_integrated.mesh()) {
-      f1_integrated[t] = f1_integrated_(t);
+      f1_integrated[t] = (f1_integrated_(t) - f1_integrated_(0.)) / (f1_integrated_norm - f1_integrated_(0.));
     }
 
     f1_integrated_inverse = gf_t({0.0, 1.0, 1 + 5 * (nr_function_sample_points - 1)});
