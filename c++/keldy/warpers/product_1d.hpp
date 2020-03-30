@@ -48,7 +48,7 @@ class warper_product_1d_t {
 
  public:
   // Identity Constructor: should use this if nothing else is specified
-  warper_product_1d_t(double t_max_) : warper_product_1d_t{{identity_function{}}, t_max_, 4} {}
+  warper_product_1d_t(double t_max_) : warper_product_1d_t{{identity_function{}}, t_max_, 8} {}
 
   warper_product_1d_t(std::vector<std::function<double(double)>> fn_, double t_max_,
                       int nr_function_sample_points) // points vs resampling points
