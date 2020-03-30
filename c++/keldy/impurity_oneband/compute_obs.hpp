@@ -35,7 +35,6 @@
 #include "../warpers/warpers.hpp"
 
 #include "../interfaces/gsl_vegas_wrap.hpp"
-#include "../interfaces/cuba_interface.hpp"
 
 #include <triqs/utility/first_include.hpp>
 #include <string>
@@ -156,18 +155,6 @@ class compute_charge_Q_direct_gsl_vegas : public gsl_vegas_wrapper_t {
         order, 1.0, gsl_rng_name} {}
 };
 
-// Class to compute charge = G^{lesser}_{up,up}(t).
-class compute_charge_Q_direct_cuba : public cuba_wrapper {
- public:
-  compute_charge_Q_direct_cuba(model_param_t params, double time, int order, double cutoff_integrand,
-                               cuba_common_param in, double warper_scale = 1)
-     : cuba_wrapper{adapt_integrand{time,
-                                    integrand_g_direct{g0_keldysh_contour_t{g0_model{g0_model_omega{params}, false}},
-                                                       gf_index_t{time, up, forward}, gf_index_t{time, up, backward},
-                                                       cutoff_integrand},
-                                    warper_scale},
-                    order, std::move(in)} {}
-};
 
 // Class to compute the current = -2e/hbar gamma Re[G^<_{lead-dot}(t, t)]
 class compute_current_J_direct : public integrator<dcomplex, integrand_g_direct> {
