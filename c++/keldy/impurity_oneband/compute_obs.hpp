@@ -34,8 +34,6 @@
 #include "../integrator.hpp"
 #include "../warpers/warpers.hpp"
 
-#include "../interfaces/gsl_vegas_wrap.hpp"
-
 #include <triqs/utility/first_include.hpp>
 #include <string>
 #include <algorithm>
@@ -118,43 +116,6 @@ class compute_charge_Q_direct_plasma_1D : public integrator<dcomplex, integrand_
     warper.warpers.emplace_back(warpers::warper_product_1d_t{fn_, time, nr_sample_points_warper});
   }
 };
-
-class CPP2PY_IGNORE adapt_integrand {
-  // double time_max_;
-  integrand_g_direct integrand_;
-  warpers::warper_product_1d_simple_t pre_warper;
-
- public:
-  adapt_integrand(double time_max, integrand_g_direct integrand, double warper_scale)
-     : //time_max_(time_max),
-       integrand_(std::move(integrand)),
-       pre_warper{simple_plasma_warper_factory("inverse_square", integrand_, time_max, int(1e6), warper_scale)} {};
-
-  double operator()(std::vector<double> const &li_vec) {
-    std::vector<double> ui_vec = pre_warper.ui_from_li(li_vec);
-
-    auto [eval, in_domain] = integrand_(ui_vec);
-    eval *= pre_warper.jacobian(li_vec);
-
-    int order = li_vec.size();
-    return std::real(-std::pow(1_j, 1 + order) * eval);
-  }
-};
-
-// Class to compute charge = G^{lesser}_{up,up}(t).
-class compute_charge_Q_direct_gsl_vegas : public gsl_vegas_wrapper_t {
- public:
-  compute_charge_Q_direct_gsl_vegas(model_param_t params, double time, int order, double cutoff_integrand,
-                                    std::string gsl_rng_name, double warper_scale = 1)
-     : gsl_vegas_wrapper_t{
-        adapt_integrand{time,
-                        integrand_g_direct{g0_keldysh_contour_t{g0_model{g0_model_omega{params}, false}},
-                                           gf_index_t{time, up, forward}, gf_index_t{time, up, backward},
-                                           cutoff_integrand},
-                        warper_scale},
-        order, 1.0, gsl_rng_name} {}
-};
-
 
 // Class to compute the current = -2e/hbar gamma Re[G^<_{lead-dot}(t, t)]
 class compute_current_J_direct : public integrator<dcomplex, integrand_g_direct> {

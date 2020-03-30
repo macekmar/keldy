@@ -37,7 +37,7 @@ struct CPP2PY_IGNORE gsl_monte_vegas_params_wrap {
   int verbose;
 };
 
-class CPP2PY_IGNORE gsl_vegas_wrapper_t {
+class gsl_vegas_wrapper_t {
  private:
   using gsl_integrand_t = double (*)(double *, size_t, void *);
 

@@ -1,5 +1,5 @@
 # Generated automatically using the command :
-# c++2py /Users/pdumitrescu/Documents/coding/repos/keldy/c++/keldy/interfaces/gsl_vegas_wrap.hpp -C pytriqs --cxxflags="-std=c++17 " --includes ../../c++ --includes /usr/local/Cellar/gsl/2.6/include/gsl --only="gsl_vegas_wrapper_t"
+# c++2py ../../c++/keldy/interfaces/gsl_vegas_wrap.hpp -C pytriqs --cxxflags="-std=c++17 " --includes ../../c++ --members_read_only -N keldy
 from cpp2py.wrap_generator import *
 
 # The module
@@ -16,6 +16,7 @@ module.add_preamble("""
 #include <cpp2py/converters/string.hpp>
 #include <cpp2py/converters/vector.hpp>
 
+using namespace keldy;
 """)
 
 
@@ -27,7 +28,7 @@ c = class_(
         hdf5 = False,
 )
 
-c.add_constructor("""(std::function<double(std::vector<double>)> f, int dim, double hypercube_extent, std::string gsl_rng_name)""", doc = r"""""")
+c.add_constructor("""(std::function<double (std::vector<double>)> f, int dim, double hypercube_extent, std::string gsl_rng_name)""", doc = r"""""")
 
 c.add_method("""double operator() (std::vector<double> x)""",
              name = "__call__",

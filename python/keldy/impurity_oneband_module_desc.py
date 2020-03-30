@@ -585,60 +585,6 @@ c.add_method("""warpers::warper_train_t get_warper ()""",
 
 module.add_class(c)
 
-# The class compute_charge_Q_direct_gsl_vegas
-c = class_(
-        py_type = "ComputeChargeQDirectGslVegas",  # name of the python class
-        c_type = "keldy::impurity_oneband::compute_charge_Q_direct_gsl_vegas",   # name of the C++ class
-        doc = r"""""",   # doc of the C++ class
-        hdf5 = False,
-)
-
-c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, double cutoff_integrand, std::string gsl_rng_name, double warper_scale = 1)""", doc = r"""""")
-
-c.add_method("""double operator() (std::vector<double> x)""",
-             name = "__call__",
-             doc = r"""""")
-
-c.add_method("""double get_result ()""",
-             doc = r"""""")
-
-c.add_method("""double get_error ()""",
-             doc = r"""""")
-
-c.add_method("""uint64_t get_nr_points_run ()""",
-             doc = r"""""")
-
-c.add_method("""double chisq ()""",
-             doc = r"""""")
-
-c.add_method("""void run (int nr_steps)""",
-             doc = r"""""")
-
-c.add_method("""void set_params (**keldy::gsl_monte_vegas_params_wrap)""",
-             doc = r"""
-
-
-
-+----------------+--------+---------+---------------+
-| Parameter Name | Type   | Default | Documentation |
-+================+========+=========+===============+
-| alpha          | double | --      |               |
-+----------------+--------+---------+---------------+
-| iterations     | size_t | --      |               |
-+----------------+--------+---------+---------------+
-| stage          | int    | --      |               |
-+----------------+--------+---------+---------------+
-| mode           | int    | --      |               |
-+----------------+--------+---------+---------------+
-| verbose        | int    | --      |               |
-+----------------+--------+---------+---------------+
-""")
-
-c.add_method("""keldy::gsl_monte_vegas_params_wrap get_params ()""",
-             doc = r"""""")
-
-module.add_class(c)
-
 # The class compute_current_J_direct
 c = class_(
         py_type = "ComputeCurrentJDirect",  # name of the python class
@@ -812,38 +758,6 @@ c.add_member(c_name = "nr_time_points_gf",
 c.add_member(c_name = "ft_method",
              c_type = "std::string",
              initializer = """ "fft" """,
-             doc = r"""""")
-
-module.add_converter(c)
-
-# Converter for gsl_monte_vegas_params_wrap
-c = converter_(
-        c_type = "keldy::gsl_monte_vegas_params_wrap",
-        doc = r"""""",
-)
-c.add_member(c_name = "alpha",
-             c_type = "double",
-             initializer = """  """,
-             doc = r"""""")
-
-c.add_member(c_name = "iterations",
-             c_type = "size_t",
-             initializer = """  """,
-             doc = r"""""")
-
-c.add_member(c_name = "stage",
-             c_type = "int",
-             initializer = """  """,
-             doc = r"""""")
-
-c.add_member(c_name = "mode",
-             c_type = "int",
-             initializer = """  """,
-             doc = r"""""")
-
-c.add_member(c_name = "verbose",
-             c_type = "int",
-             initializer = """  """,
              doc = r"""""")
 
 module.add_converter(c)
