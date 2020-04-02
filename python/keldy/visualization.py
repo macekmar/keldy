@@ -2,10 +2,9 @@
 Utility functions for visualization of the integrand and/or warper.
 """
 
-import numpy as np
-from matplotlib import pyplot as plt
-
-import keldy.impurity_oneband_module as keldy
+import numpy as _np
+from matplotlib import pyplot as _plt
+from . import warpers as _warpers
 
 def _gray_code(n):
     """
@@ -17,7 +16,7 @@ def _gray_code(n):
         yield [int(c) for c in list("{0:0{1}b}".format(gray, n))]
 
 def _ordered_axes(n):
-    v_dir = np.zeros((n,), dtype=int)
+    v_dir = _np.zeros((n,), dtype=int)
     for i in range(n+1):
         v_dir[:i] = 1
         yield v_dir
@@ -56,11 +55,11 @@ def integrand_warper_plot(computer, order, d, t_max, nr_times=100, plot_all=Fals
     def is_u_valid(u):
         return (u >= 0.).all() and (u <= t_max).all()
 
-    colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-    plt.plot([], [], '-k', label='integrand')
-    plt.plot([], [], '--k', label='warper')
+    colors = _plt.rcParams['axes.prop_cycle'].by_key()['color']
+    _plt.plot([], [], '-k', label='integrand')
+    _plt.plot([], [], '--k', label='warper')
 
-    x_arr = np.linspace(0., t_max, nr_times)
+    x_arr = _np.linspace(0., t_max, nr_times)
 
     if axes is None:
         if plot_all:
@@ -72,27 +71,27 @@ def integrand_warper_plot(computer, order, d, t_max, nr_times=100, plot_all=Fals
         v_dir_gen = axes
 
     for i, v_dir_int in enumerate(v_dir_gen):
-        v_dir = np.array(v_dir_int, dtype=float)
+        v_dir = _np.array(v_dir_int, dtype=float)
         c = colors[i % len(colors)]
 
-        v_arr = x_arr[:, None] * v_dir[None, :] + d * np.ones((1, order))
-        u_arr = np.array([keldy.ui_from_vi(t_max, v) for v in v_arr])
+        v_arr = x_arr[:, None] * v_dir[None, :] + d * _np.ones((1, order))
+        u_arr = _np.array([_warpers.ui_from_vi(t_max, v) for v in v_arr])
 
         try: # for kernel
-            values_v = [integrand(u)[0].sum_weights() if is_u_valid(u) else np.nan for u in u_arr]
+            values_v = [integrand(u)[0].sum_weights() if is_u_valid(u) else _np.nan for u in u_arr]
         except AttributeError: # sum_weights not an attribute for non-kernel
-            values_v = [np.abs(integrand(u)[0]) if is_u_valid(u) else np.nan for u in u_arr]
+            values_v = [_np.abs(integrand(u)[0]) if is_u_valid(u) else _np.nan for u in u_arr]
 
-        plt.plot(x_arr, values_v, '-', c=c, label='V=({})'.format(list2str(v_dir_int)))
+        _plt.plot(x_arr, values_v, '-', c=c, label='V=({})'.format(list2str(v_dir_int)))
 
-        values_v = [warper(u) if is_u_valid(u) else np.nan for u in u_arr]
-        plt.plot(x_arr, warper_prefactor * np.abs(values_v), '--', c=c)
+        values_v = [warper(u) if is_u_valid(u) else _np.nan for u in u_arr]
+        _plt.plot(x_arr, warper_prefactor * _np.abs(values_v), '--', c=c)
 
-    plt.legend(loc=0)
-    plt.xlabel(r'v')
-    plt.ylabel(r'|f(V+D)|   (refer to docstring)')
-    plt.title(r'Order n={}, shift d={}'.format(order, d))
-    plt.semilogy()
+    _plt.legend(loc=0)
+    _plt.xlabel(r'v')
+    _plt.ylabel(r'|f(V+D)|   (refer to docstring)')
+    _plt.title(r'Order n={}, shift d={}'.format(order, d))
+    _plt.semilogy()
 
     return x_arr
 
