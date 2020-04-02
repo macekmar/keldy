@@ -560,13 +560,13 @@ module.add_function ("void keldy::impurity_oneband::h5_read (triqs::h5::group h5
 
 module.add_function ("bool keldy::impurity_oneband::equivalent_without_timesplit (keldy::impurity_oneband::gf_index_t lhs, keldy::impurity_oneband::gf_index_t rhs)", doc = r"""""")
 
-module.add_function ("warpers::warper_product_1d_t keldy::impurity_oneband::alternate_product_plasma_warper_factory (std::string label, int order, double time, int nr_sample_points_warper, double warper_scale)", doc = r"""""")
+module.add_function ("keldy::warpers::warper_product_1d_t keldy::impurity_oneband::alternate_product_plasma_warper_factory (std::string label, int order, double time, int nr_sample_points_warper, double warper_scale)", doc = r"""""")
 
-module.add_function ("warpers::warper_product_1d_simple_t keldy::impurity_oneband::simple_plasma_warper_factory (std::string label, keldy::impurity_oneband::integrand_g_direct f, double time, int nr_sample_points_warper, double warper_scale)", doc = r"""""")
+module.add_function ("keldy::warpers::warper_product_1d_simple_t keldy::impurity_oneband::simple_plasma_warper_factory (std::string label, keldy::impurity_oneband::integrand_g_direct f, double time, int nr_sample_points_warper, double warper_scale)", doc = r"""""")
 
-module.add_function ("warpers::warper_product_1d_simple_t keldy::impurity_oneband::simple_plasma_warper_factory (std::string label, double time, int nr_sample_points_warper, double warper_scale)", doc = r"""""")
+module.add_function ("keldy::warpers::warper_product_1d_simple_t keldy::impurity_oneband::simple_plasma_warper_factory (std::string label, double time, int nr_sample_points_warper, double warper_scale)", doc = r"""""")
 
-module.add_function ("warpers::warper_product_1d_simple_t keldy::impurity_oneband::simple_plasma_warper_factory_kernel (std::string label, keldy::impurity_oneband::integrand_g_kernel f, double time, int nr_sample_points_warper, double warper_scale)", doc = r"""""")
+module.add_function ("keldy::warpers::warper_product_1d_simple_t keldy::impurity_oneband::simple_plasma_warper_factory_kernel (std::string label, keldy::impurity_oneband::integrand_g_kernel f, double time, int nr_sample_points_warper, double warper_scale)", doc = r"""""")
 
 
 # Converter for model_param_t
