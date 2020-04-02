@@ -2,7 +2,7 @@
 #
 # keldy
 #
-# Copyright (C) 2019, The Simons Foundation
+# Copyright (C) 2019-2020, The Simons Foundation
 # authors: Philipp Dumitrescu
 #
 # keldy is free software: you can redistribute it and/or modify it under the
