@@ -6,7 +6,7 @@ from cpp2py.wrap_generator import *
 module = module_(full_name = "impurity_oneband", doc = r"", app_name = "keldy")
 
 # Imports
-module.add_imports(*['keldy.common', 'keldy.impurity_oneband', 'keldy.warpers', 'pytriqs.gf'])
+module.add_imports(*['keldy.common', 'keldy.warpers', 'pytriqs.gf'])
 
 # Add here all includes
 module.add_include("keldy/impurity_oneband/compute_obs.hpp")
