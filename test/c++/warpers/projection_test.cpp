@@ -5,6 +5,8 @@
 #include <triqs/test_tools/arrays.hpp>
 
 using namespace keldy;
+using namespace keldy::warpers;
+
 using namespace triqs::arrays;
 
 /// --------------------------------------------------------
