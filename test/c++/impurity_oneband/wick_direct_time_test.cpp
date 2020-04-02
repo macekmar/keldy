@@ -2,6 +2,7 @@
 #include <keldy/impurity_oneband/compute_obs.hpp>
 #include <keldy/impurity_oneband/wick_direct_time.hpp>
 #include <keldy/impurity_oneband/wick_direct.hpp>
+#include <triqs/test_tools/arrays.hpp>
 #include <triqs/test_tools/gfs.hpp>
 
 using namespace keldy;
@@ -56,7 +57,7 @@ TEST(integration_direct_time, consistency) { // NOLINT
   std::cout << result_direct << std::endl;
   std::cout << result.get_values() << std::endl;
 
-  EXPECT_EQ(sum(result.get_values()), result_direct);
+  EXPECT_COMPLEX_NEAR(sum(result.get_values()), result_direct);
 }
 
 MAKE_MAIN; // NOLINT
