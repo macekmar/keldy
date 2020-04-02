@@ -1,12 +1,12 @@
 # Generated automatically using the command :
-# c++2py ../../c++/keldy/impurity_oneband/compute_obs.hpp --members_read_only -N keldy -N keldy::impurity_oneband -a keldy -m impurity_oneband -o impurity_oneband -C pytriqs -C keldy --cxxflags="-std=c++17 " --includes ../../c++
+# c++2py ../../c++/keldy/impurity_oneband/compute_obs.hpp --members_read_only -N keldy::impurity_oneband -a keldy -m impurity_oneband -o impurity_oneband -C pytriqs -C keldy --cxxflags="-std=c++17 " --includes ../../c++
 from cpp2py.wrap_generator import *
 
 # The module
 module = module_(full_name = "impurity_oneband", doc = r"", app_name = "keldy")
 
 # Imports
-module.add_imports(*['keldy.impurity_oneband', 'keldy.warpers', 'pytriqs.gf'])
+module.add_imports(*['keldy.common', 'keldy.impurity_oneband', 'keldy.warpers', 'pytriqs.gf'])
 
 # Add here all includes
 module.add_include("keldy/impurity_oneband/compute_obs.hpp")
@@ -23,37 +23,9 @@ module.add_preamble("""
 #include <triqs/cpp2py_converters/h5.hpp>
 #include <triqs/cpp2py_converters/h5.hpp>
 
-using namespace keldy;
 using namespace keldy::impurity_oneband;
 """)
 
-module.add_enum("spin_t", ['spin_t::up', 'spin_t::down'], "keldy", doc = r"""""")
-module.add_enum("keldysh_idx_t", ['keldysh_idx_t::forward', 'keldysh_idx_t::backward'], "keldy", doc = r"""""")
-
-# The class contour_pt_t
-c = class_(
-        py_type = "ContourPtT",  # name of the python class
-        c_type = "keldy::contour_pt_t",   # name of the C++ class
-        doc = r"""Point of the Keldysh Contour (time, keldysh_idx, timesplit)""",   # doc of the C++ class
-        hdf5 = False,
-)
-
-c.add_member(c_name = "time",
-             c_type = "keldy::time_real_t",
-             read_only= True,
-             doc = r"""""")
-
-c.add_member(c_name = "k_idx",
-             c_type = "keldy::keldysh_idx_t",
-             read_only= True,
-             doc = r"""""")
-
-c.add_member(c_name = "timesplit_n",
-             c_type = "int",
-             read_only= True,
-             doc = r"""""")
-
-module.add_class(c)
 
 # The class gf_index_t
 c = class_(
@@ -378,30 +350,6 @@ c.add_method("""std::pair<keldy::impurity_oneband::integrand_g_kernel::result_t,
 
 module.add_class(c)
 
-# The class sobol
-c = class_(
-        py_type = "Sobol",  # name of the python class
-        c_type = "keldy::sobol",   # name of the C++ class
-        doc = r"""""",   # doc of the C++ class
-        hdf5 = False,
-)
-
-c.add_constructor("""(int dim, int rng_state_seed, int log_max_points_ = 31)""", doc = r"""""")
-
-c.add_constructor("""(int dim, int rng_state_seed, bool do_shift, bool do_scramble, int rng_seed_shift, int log_max_points_ = 31)""", doc = r"""""")
-
-c.add_method("""std::vector<double> operator() ()""",
-             name = "__call__",
-             doc = r"""""")
-
-c.add_method("""void seed (int k)""",
-             doc = r"""""")
-
-c.add_method("""void discard (int nr_discard)""",
-             doc = r"""""")
-
-module.add_class(c)
-
 # The class compute_charge_Q_direct
 c = class_(
         py_type = "ComputeChargeQDirect",  # name of the python class
@@ -577,8 +525,6 @@ c.add_method("""keldy::warpers::warper_train_t get_warper ()""",
 
 module.add_class(c)
 
-module.add_function ("int keldy::compare_3way (keldy::contour_pt_t a, keldy::contour_pt_t b)", doc = r"""""")
-
 module.add_function ("void keldy::impurity_oneband::fake (**keldy::impurity_oneband::model_param_t)", doc = r"""
 
 
@@ -613,10 +559,6 @@ module.add_function ("void keldy::impurity_oneband::h5_write (triqs::h5::group h
 module.add_function ("void keldy::impurity_oneband::h5_read (triqs::h5::group h5group, std::string subgroup_name, keldy::impurity_oneband::model_param_t c)", doc = r"""""")
 
 module.add_function ("bool keldy::impurity_oneband::equivalent_without_timesplit (keldy::impurity_oneband::gf_index_t lhs, keldy::impurity_oneband::gf_index_t rhs)", doc = r"""""")
-
-module.add_function ("void keldy::warpers::bin_values (keldy::warpers::hist_xi xi, int axis, std::vector<std::vector<double> > points, std::vector<double> values)", doc = r"""""")
-
-module.add_function ("void keldy::warpers::convolve (std::vector<double> signal, std::vector<double> window)", doc = r"""""")
 
 module.add_function ("warpers::warper_product_1d_t keldy::impurity_oneband::alternate_product_plasma_warper_factory (std::string label, int order, double time, int nr_sample_points_warper, double warper_scale)", doc = r"""""")
 
