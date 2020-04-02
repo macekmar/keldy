@@ -29,6 +29,8 @@ namespace keldy::warpers {
 
 class warper_identity_t {
  public:
+  warper_identity_t() = default;
+
   [[nodiscard]] std::vector<double> ui_from_li(std::vector<double> const &li_vec) const { return li_vec; }
 
   [[nodiscard]] std::vector<double> li_from_ui(std::vector<double> const &ui_vec) const { return ui_vec; }

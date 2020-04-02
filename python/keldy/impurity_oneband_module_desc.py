@@ -466,6 +466,8 @@ c = class_(
         hdf5 = False,
 )
 
+c.add_constructor("""()""", doc = r"""""")
+
 c.add_method("""std::vector<double> ui_from_li (std::vector<double> li_vec)""",
              doc = r"""""")
 
