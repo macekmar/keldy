@@ -294,6 +294,74 @@ c.add_method("""std::pair<keldy::impurity_oneband::integrand_g_direct::result_t,
 
 module.add_class(c)
 
+# The class singleton_binner
+c = class_(
+        py_type = "SingletonBinner",  # name of the python class
+        c_type = "keldy::impurity_oneband::singleton_binner",   # name of the C++ class
+        doc = r"""""",   # doc of the C++ class
+        hdf5 = False,
+)
+
+c.add_member(c_name = "time",
+             c_type = "double",
+             read_only= True,
+             doc = r"""""")
+
+c.add_member(c_name = "value",
+             c_type = "keldy::dcomplex",
+             read_only= True,
+             doc = r"""""")
+
+module.add_class(c)
+
+# The class binner_1d
+c = class_(
+        py_type = "Binner1d",  # name of the python class
+        c_type = "keldy::impurity_oneband::binner_1d",   # name of the C++ class
+        doc = r"""""",   # doc of the C++ class
+        hdf5 = False,
+)
+
+c.add_constructor("""()""", doc = r"""""")
+
+c.add_constructor("""(double t_min_, double t_max_, int n_bins_)""", doc = r"""""")
+
+c.add_method("""triqs::arrays::array<std::__1::complex<double>, 1> get_values ()""",
+             doc = r"""""")
+
+c.add_method("""triqs::arrays::array<unsigned long long, 1> get_nr_values ()""",
+             doc = r"""""")
+
+c.add_method("""triqs::arrays::array<double, 1> get_bin_times ()""",
+             doc = r"""""")
+
+c.add_method("""double get_bin_size ()""",
+             doc = r"""""")
+
+c.add_method("""int get_nr_point_dropped ()""",
+             doc = r"""""")
+
+c.add_method("""void accumulate (double time, keldy::dcomplex value)""",
+             doc = r"""Includes boundary points, so t_min <= t <= t_max. t_max gets put in last bin""")
+
+module.add_class(c)
+
+# The class integrand_g_direct_time
+c = class_(
+        py_type = "IntegrandGDirectTime",  # name of the python class
+        c_type = "keldy::impurity_oneband::integrand_g_direct_time",   # name of the C++ class
+        doc = r"""""",   # doc of the C++ class
+        hdf5 = False,
+)
+
+c.add_constructor("""(keldy::impurity_oneband::g0_keldysh_contour_t g0_, keldy::impurity_oneband::gf_index_t external_A_, keldy::impurity_oneband::gf_index_t external_B_, double cutoff_ = 0.)""", doc = r"""""")
+
+c.add_method("""std::pair<keldy::impurity_oneband::integrand_g_direct_time::result_t, int> operator() (std::vector<double> times)""",
+             name = "__call__",
+             doc = r"""Returns integrand for the specified times""")
+
+module.add_class(c)
+
 # The class sparse_kernel_binner
 c = class_(
         py_type = "SparseKernelBinner",  # name of the python class
@@ -547,7 +615,7 @@ c.add_method("""uint64_t reduce_nr_points_in_domain ()""",
 c.add_method("""keldy::impurity_oneband::integrand_g_direct get_integrand ()""",
              doc = r"""""")
 
-c.add_method("""warpers::warper_train_t get_warper ()""",
+c.add_method("""keldy::warpers::warper_train_t get_warper ()""",
              doc = r"""""")
 
 module.add_class(c)
@@ -580,7 +648,7 @@ c.add_method("""uint64_t reduce_nr_points_in_domain ()""",
 c.add_method("""keldy::impurity_oneband::integrand_g_direct get_integrand ()""",
              doc = r"""""")
 
-c.add_method("""warpers::warper_train_t get_warper ()""",
+c.add_method("""keldy::warpers::warper_train_t get_warper ()""",
              doc = r"""""")
 
 module.add_class(c)
@@ -615,44 +683,10 @@ c.add_method("""uint64_t reduce_nr_points_in_domain ()""",
 c.add_method("""keldy::impurity_oneband::integrand_g_direct get_integrand ()""",
              doc = r"""""")
 
-c.add_method("""warpers::warper_train_t get_warper ()""",
+c.add_method("""keldy::warpers::warper_train_t get_warper ()""",
              doc = r"""""")
 
 module.add_class(c)
-
-
-# The class binner_1d
-c = class_(
-        py_type = "Binner1D",  # name of the python class
-        c_type = "keldy::impurity_oneband::binner_1d",   # name of the C++ class
-        doc = r"""""",   # doc of the C++ class
-        hdf5 = False,
-)
-
-c.add_constructor("""()""", doc = r"""""")
-
-c.add_constructor("""(double t_min_, double t_max_, int n_bins_)""", doc = r"""""")
-
-c.add_method("""triqs::arrays::array<std::complex<double>, 1> get_values ()""",
-             doc = r"""""")
-
-c.add_method("""triqs::arrays::array<unsigned long, 1> get_nr_values ()""",
-             doc = r"""""")
-
-c.add_method("""triqs::arrays::array<double, 1> get_bin_times ()""",
-             doc = r"""""")
-
-c.add_method("""double get_bin_size ()""",
-             doc = r"""""")
-
-c.add_method("""int get_nr_point_dropped ()""",
-             doc = r"""""")
-
-c.add_method("""void accumulate (double time, keldy::dcomplex value)""",
-             doc = r"""Includes boundary points, so t_min <= t <= t_max. t_max gets put in last bin""")
-
-module.add_class(c)
-
 
 # The class compute_charge_Q_direct_time
 c = class_(
@@ -662,14 +696,14 @@ c = class_(
         hdf5 = False,
 )
 
-c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, int nr_time_slices, double cutoff_integrand, std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)""", doc = r"""""")
-
 c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int order, int nr_time_slices, double cutoff_integrand, std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)""", doc = r"""""")
 
-c.add_method("""void reset_rng (std::string rng_name, int rng_state_seed, bool do_shift = false, bool do_scramble = false, int rng_seed_shift = 0)""",
-             doc = r"""""")
+c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, int nr_time_slices, double cutoff_integrand, std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)""", doc = r"""""")
 
 c.add_method("""void run (int nr_steps)""",
+             doc = r"""""")
+
+c.add_method("""void reset_rng (std::string rng_name, int rng_state_seed, bool do_shift = false, bool do_scramble = false, int rng_seed_shift = 0)""",
              doc = r"""""")
 
 c.add_method("""keldy::impurity_oneband::binner_1d reduce_result ()""",
@@ -681,7 +715,7 @@ c.add_method("""uint64_t reduce_nr_points_run ()""",
 c.add_method("""uint64_t reduce_nr_points_in_domain ()""",
              doc = r"""""")
 
-c.add_method("""keldy::warper_train_t get_warper ()""",
+c.add_method("""keldy::warpers::warper_train_t get_warper ()""",
              doc = r"""""")
 
 c.add_method("""keldy::impurity_oneband::integrand_g_direct_time get_integrand ()""",
@@ -701,14 +735,8 @@ c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time
 
 c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int order, std::string warper_function_name, int nr_sample_points_warper, double warper_scale, int nr_bins = 100)""", doc = r"""""")
 
-<<<<<<< HEAD
-=======
 c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int order, std::string warper_function_name, bool alternate, int nr_sample_points_warper, double warper_scale, int nb_bins = 100)""", doc = r"""""")
 
-c.add_method("""void reset_rng (std::string rng_name, int rng_state_seed, bool do_shift = false, bool do_scramble = false, int rng_seed_shift = 0)""",
-             doc = r"""""")
-
->>>>>>> [warper] odd-even warper
 c.add_method("""void run (int nr_steps)""",
              doc = r"""""")
 
@@ -727,7 +755,7 @@ c.add_method("""uint64_t reduce_nr_points_in_domain ()""",
 c.add_method("""keldy::impurity_oneband::integrand_g_kernel get_integrand ()""",
              doc = r"""""")
 
-c.add_method("""warpers::warper_train_t get_warper ()""",
+c.add_method("""keldy::warpers::warper_train_t get_warper ()""",
              doc = r"""""")
 
 module.add_class(c)
@@ -777,7 +805,11 @@ module.add_function ("void keldy::warpers::bin_values (keldy::warpers::hist_xi x
 
 module.add_function ("void keldy::warpers::convolve (std::vector<double> signal, std::vector<double> window)", doc = r"""""")
 
+module.add_function ("warpers::warper_product_1d_t keldy::impurity_oneband::alternate_product_plasma_warper_factory (std::string label, int order, double time, int nr_sample_points_warper, double warper_scale)", doc = r"""""")
+
 module.add_function ("warpers::warper_product_1d_simple_t keldy::impurity_oneband::simple_plasma_warper_factory (std::string label, keldy::impurity_oneband::integrand_g_direct f, double time, int nr_sample_points_warper, double warper_scale)", doc = r"""""")
+
+module.add_function ("warpers::warper_product_1d_simple_t keldy::impurity_oneband::simple_plasma_warper_factory (std::string label, double time, int nr_sample_points_warper, double warper_scale)", doc = r"""""")
 
 module.add_function ("warpers::warper_product_1d_simple_t keldy::impurity_oneband::simple_plasma_warper_factory_kernel (std::string label, keldy::impurity_oneband::integrand_g_kernel f, double time, int nr_sample_points_warper, double warper_scale)", doc = r"""""")
 

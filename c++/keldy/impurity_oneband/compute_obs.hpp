@@ -41,7 +41,7 @@
 
 namespace keldy::impurity_oneband {
 
-inline warper_product_1d_t alternate_product_plasma_warper_factory(std::string const &label, int order, double time,
+inline warpers::warper_product_1d_t alternate_product_plasma_warper_factory(std::string const &label, int order, double time,
                                                                    int nr_sample_points_warper, double warper_scale) {
   if (label == "inverse_and_cube") {
     auto f1 = [warper_scale](double t) -> double { return warper_scale / (warper_scale + t); };
@@ -175,7 +175,7 @@ class compute_current_J_direct : public integrator<dcomplex, integrand_g_direct>
 // ****************************************************************************
 // Profumo + Time evolution methods
 
-inline warper_product_1d_simple_t simple_plasma_warper_factory(std::string const &label, double time,
+inline warpers::warper_product_1d_simple_t simple_plasma_warper_factory(std::string const &label, double time,
                                                                int nr_sample_points_warper, double warper_scale) {
   if (label == "inverse_square") {
     return {[warper_scale](double t) -> double {
@@ -210,7 +210,7 @@ class compute_charge_Q_direct_time : public integrator<binner_1d, integrand_g_di
                   "sobol_unshifted",
                   0} {
 
-    warper.warpers.emplace_back(warper_plasma_uv_t(time));
+    warper.warpers.emplace_back(warpers::warper_plasma_uv_t(time));
     warper.warpers.emplace_back(
        simple_plasma_warper_factory(warper_function_name, time, nr_sample_points_warper, warper_scale));
   }
@@ -315,7 +315,7 @@ class compute_gf_kernel : public integrator<kernel_binner, integrand_g_kernel> {
                   "sobol_unshifted",
                   0} {
 
-    warper.warpers.emplace_back(warper_plasma_uv_t(time));
+    warper.warpers.emplace_back(warpers::warper_plasma_uv_t(time));
     warper.warpers.emplace_back(alternate_product_plasma_warper_factory(warper_function_name, order, time,
                                                                         nr_sample_points_warper, warper_scale));
   }
