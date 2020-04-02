@@ -36,31 +36,11 @@ class Cpp2pyInfo(Cpp2pyInfoBase):
         'keldy::impurity_oneband' : 'keldy.impurity_oneband',
         }
 
-    # _table_converters = {
-    #     'triqs::arrays::array' : 'arrays',
-    #     'triqs::arrays::matrix' : 'arrays',
-    #     'triqs::arrays::vector' : 'arrays',
-    #     'triqs::gfs::gf*' : 'gf',
-    #     'triqs::gfs::block_gf*' : 'gf',
-    #     'triqs::gfs::block2_gf*' : 'gf',
-    #     'triqs::operators::many_body_operator*' : 'operators_real_complex',
-    #     'triqs::hilbert_space::fundamental_operator_set' : 'fundamental_operator_set',
-    #     'triqs::utility::real_or_complex' : 'real_or_complex',
-    #     'triqs::h5::group' : 'h5'
-    #     }
+    # _table_converters = {}
 
-    table_converters = dict ()# (k, "triqs/cpp2py_converters/%s.hpp"%v) for (k,v) in _table_converters.items())
+    table_converters = dict() # (k, "triqs/cpp2py_converters/%s.hpp"%v) for (k,v) in _table_converters.items())
 
 # def _get_cpp2py_wrapped_class_enums():
 #     return {'module_name' : 'UNUSED', 'includes' : "['<triqs/cpp2py_converters.hpp>']"}
 
-# import visualization
-
 __all__ = ['Cpp2pyInfo', 'common', 'warpers', 'impurity_oneband', 'visualization']
-
-
-
-# import impurity_oneband_module as impurity_oneband
-# import gsl_vegas_wrap
-
-# __all__ = ['Model', 'WarperPlasmaSimpleT']
