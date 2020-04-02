@@ -1,5 +1,5 @@
 # Generated automatically using the command :
-# c++2py ../../c++/keldy/warpers/warpers.hpp -C pytriqs -C keldy --cxxflags="-std=c++17 " --includes ../../c++ --members_read_only -N keldy::warpers
+# c++2py ../../c++/keldy/warpers/warpers.hpp -a keldy -m warpers -o warpers  -C pytriqs -C keldy --cxxflags="-std=c++17 " --includes ../../c++ --members_read_only -N keldy::warpers
 from cpp2py.wrap_generator import *
 
 # The module
@@ -27,6 +27,8 @@ c = class_(
         doc = r"""""",   # doc of the C++ class
         hdf5 = False,
 )
+
+c.add_constructor("""()""", doc = r"""""")
 
 c.add_method("""std::vector<double> ui_from_li (std::vector<double> li_vec)""",
              doc = r"""""")
