@@ -12,12 +12,12 @@ def publish = false
 properties([
   disableConcurrentBuilds(),
   buildDiscarder(logRotator(numToKeepStr: '10', daysToKeepStr: '30')),
-  pipelineTriggers(keepInstall ? [
+  pipelineTriggers([
     upstream(
       threshold: 'SUCCESS',
       upstreamProjects: triqsProject
     )
-  ] : [])
+  ])
 ])
 
 /* map of all builds to run, populated below */
@@ -39,9 +39,7 @@ for (int i = 0; i < dockerPlatforms.size(); i++) {
       """
       /* build and tag */
       def img = docker.build("flatironinstitute/${dockerName}:${env.BRANCH_NAME}-${env.STAGE_NAME}", "--build-arg APPNAME=${projectName} --build-arg BUILD_DOC=${platform==documentationPlatform} .")
-      if (!keepInstall) {
-        sh "docker rmi --no-prune ${img.imageName()}"
-      }
+      sh "docker rmi --no-prune ${img.imageName()}"
     } }
   } }
 }
