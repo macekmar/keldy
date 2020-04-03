@@ -1,5 +1,5 @@
-file(GLOB_RECURSE sources *.cpp *.hpp)
-add_library(keldy_c ${sources})
+file(GLOB_RECURSE sources *.cpp)
+add_library(keldy_c STATIC ${sources})
 
 # Link against dependencies
 target_link_libraries(keldy_c PUBLIC triqs triqs::boost triqs::blas_lapack GSL::gsl PRIVATE project_warnings triqs_lapack_additions)
@@ -47,8 +47,11 @@ if(ANALYZE_SOURCES)
 	  --std=c++17
 	  --template=gcc
 	  --verbose
+	  --force
 	  --quiet
           ${sources}
+	WORKING_DIRECTORY
+	  ${CMAKE_CURRENT_SOURCE_DIR}
     )
   else()
     message(STATUS "cppcheck not found in $PATH. Please consider installing cppcheck for additional checks!")
@@ -63,12 +66,16 @@ option(ASAN OFF "Compile library and executables with LLVM Address Sanitizer")
 option(UBSAN OFF "Compile library and executables with LLVM Undefined Behavior Sanitizer")
 
 if(ASAN)
-  find_package(sanitizer REQUIRED "asan")
+  if(NOT TARGET asan)
+    find_package(sanitizer REQUIRED "asan")
+  endif()
   target_link_libraries(keldy_c PUBLIC asan)
   install(TARGETS asan EXPORT keldy-targets)
 endif()
 if(UBSAN)
-  find_package(sanitizer REQUIRED "ubsan")
+  if(NOT TARGET ubsan)
+    find_package(sanitizer REQUIRED "ubsan")
+  endif()
   target_link_libraries(keldy_c PUBLIC ubsan)
   install(TARGETS ubsan EXPORT keldy-targets)
 endif()

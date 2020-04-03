@@ -1,0 +1,8 @@
+compile_commands.json
+doc/cpp2rst_generated
+.vscode
+.clangd
+.envrc
+bin
+build
+.gitignore

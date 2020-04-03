@@ -1,9 +1,9 @@
 #%Module1.0
 #
-# To be installed as ${MODULEPATH}/keldy/@KELDY_VERSION@
+# To be installed as ${MODULEPATH}/keldy/@PROJECT_VERSION@
 
 set     name        keldy
-set     version     @KELDY_VERSION@
+set     version     @PROJECT_VERSION@
 set     root        @CMAKE_INSTALL_PREFIX@
 set     git_hash    @PROJECT_GIT_HASH@
 

@@ -20,7 +20,7 @@
 #
 ##############################################################################/
 
-version = "@KELDY_VERSION@"
+version = "@PROJECT_VERSION@"
 triqs_hash = "@TRIQS_GIT_HASH@"
 keldy_hash = "@PROJECT_GIT_HASH@"
 
