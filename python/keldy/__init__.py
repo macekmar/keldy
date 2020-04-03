@@ -30,20 +30,17 @@ from cpp2py import Cpp2pyInfoBase
 class Cpp2pyInfo(Cpp2pyInfoBase):
 
     table_imports = {
-        'keldy': 'keldy.common',
+        'keldy::': 'keldy.common',
         'keldy::warpers': 'keldy.warpers',
         'keldy::impurity_oneband': 'keldy.impurity_oneband',
     }
 
-    # _table_converters = {}
-
-    table_converters = dict(
-    )  # (k, "triqs/cpp2py_converters/%s.hpp"%v) for (k,v) in _table_converters.items())
+    table_converters = {}
 
 
-# def _get_cpp2py_wrapped_class_enums():
-#     return {'module_name' : 'UNUSED', 'includes' : "['<triqs/cpp2py_converters.hpp>']"}
+from . import common
+from . import warpers
+from . import impurity_oneband
+from . import visualization
 
-__all__ = [
-    'Cpp2pyInfo', 'common', 'warpers', 'impurity_oneband', 'visualization'
-]
+__all__ = ['common', 'warpers', 'impurity_oneband', 'visualization']
