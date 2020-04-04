@@ -5,6 +5,8 @@ ARG APPNAME=keldy
 COPY requirements.txt /src/$APPNAME/requirements.txt
 RUN pip install -r /src/$APPNAME/requirements.txt
 
+RUN apt-get install -y libgsl-dev || yum install -y gsl-devel
+
 COPY --chown=build . $SRC/$APPNAME
 WORKDIR $BUILD/$APPNAME
 RUN chown build .
