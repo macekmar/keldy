@@ -12,12 +12,12 @@ def publish = false
 properties([
   disableConcurrentBuilds(),
   buildDiscarder(logRotator(numToKeepStr: '10', daysToKeepStr: '30')),
-  pipelineTriggers([
+  pipelineTriggers(publish ? [
     upstream(
       threshold: 'SUCCESS',
       upstreamProjects: triqsProject
     )
-  ])
+  ] : [])
 ])
 
 /* map of all builds to run, populated below */
