@@ -97,7 +97,7 @@ class warper_product_1d_t {
     return result;
   }
 
-  double jacobian(std::vector<double> const &li_vec) const {
+  double jacobian_reverse(std::vector<double> const &li_vec) const {
     double result = 1.0;
     for (auto [i, li] : itertools::enumerate(li_vec)) {
       result *= fn_integrate_norm[i] / fn[i](fn_integrated_inverse[i](li));
@@ -105,7 +105,7 @@ class warper_product_1d_t {
     return result;
   }
 
-  double operator()(std::vector<double> const &ui_vec) const {
+  double jacobian_forward(std::vector<double> const &ui_vec) const {
     double result = 1.0;
     for (auto [i, vi] : itertools::enumerate(ui_vec)) {
       result *= fn[i](vi);

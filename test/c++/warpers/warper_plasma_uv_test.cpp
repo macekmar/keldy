@@ -51,8 +51,8 @@ TEST(PlasmaUVWaroper, Mapping) { // NOLINT
   std::vector<double> ui_sorted = {6.0, 2.0, 1.0, 0.0};
   EXPECT_EQ(w.ui_from_li(vi_out), ui_sorted);
 
-  EXPECT_EQ(w.jacobian(vi_out), 1.0);
-  EXPECT_EQ(w(ui_times), 1.0);
+  EXPECT_EQ(w.jacobian_reverse(vi_out), 1.0);
+  EXPECT_EQ(w.jacobian_forward(ui_times), 1.0);
 }
 
 MAKE_MAIN; // NOLINT

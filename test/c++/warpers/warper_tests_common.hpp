@@ -126,12 +126,12 @@ inline void function_test_warper(W const &warper, double const t_max, warper_fun
   std::vector<double> li = {};
 
   auto do_test = [&](std::vector<double> const ui) -> void {
-    EXPECT_NEAR(warper(ui), f(ui), accuracy_f);
+    EXPECT_NEAR(warper.jacobian_forward(ui), f(ui), accuracy_f);
     EXPECT_TRUE(vectors_are_near(warper.li_from_ui(ui), li_from_ui_ref(ui), accuracy_map));
 
     li = li_from_ui_ref(ui);
-    EXPECT_NEAR(warper.jacobian(li), jacobian_ref(li), accuracy_jac);
-    EXPECT_GT(warper.jacobian(li), 0.); // has to be != 0.
+    EXPECT_NEAR(warper.jacobian_reverse(li), jacobian_ref(li), accuracy_jac);
+    EXPECT_GT(warper.jacobian_reverse(li), 0.); // has to be != 0.
   };
 
   for (double u = 0.1 * t_max; u < t_max; u += 0.1 * t_max) {

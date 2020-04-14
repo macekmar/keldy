@@ -35,9 +35,9 @@ class warper_identity_t {
 
   [[nodiscard]] std::vector<double> li_from_ui(std::vector<double> const &ui_vec) const { return ui_vec; }
 
-  [[nodiscard]] double jacobian([[maybe_unused]] std::vector<double> const &li_vec) const { return 1.0; }
+  [[nodiscard]] double jacobian_reverse([[maybe_unused]] std::vector<double> const &li_vec) const { return 1.0; }
 
-  [[nodiscard]] double operator()([[maybe_unused]] std::vector<double> const &ui_vec) const { return 1.0; }
+  [[nodiscard]] double jacobian_forward([[maybe_unused]] std::vector<double> const &ui_vec) const { return 1.0; }
 };
 
 } // namespace keldy::warpers

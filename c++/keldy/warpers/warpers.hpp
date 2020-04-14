@@ -60,9 +60,15 @@ class warper_train_t {
     return result;
   }
 
-  double jacobian(std::vector<double> const &li_vec) const {
-    double result = 1.0;
-    std::vector<double> li_vec_tmp = li_vec;
+  double jacobian_reverse(std::vector<double> const &li_vec) const {
+    auto [ui_vec, jacobian_r] = map_reverse(li_vec);
+    return jacobian_r;
+  }
+
+  double jacobian_forward(std::vector<double> const &ui_vec) const {
+    auto [li_vec, jacobian_f] = map_forward(ui_vec);
+    return jacobian_f;
+  }
     for (auto it = warpers.crbegin(); it != warpers.crend(); it++) { // REVERSE
       result *= std::visit([&li_vec_tmp](auto &&arg) { return arg.jacobian(li_vec_tmp); }, *it);
       li_vec_tmp = std::visit([&li_vec_tmp](auto &&arg) { return arg.ui_from_li(li_vec_tmp); }, *it);
@@ -70,15 +76,6 @@ class warper_train_t {
     return result;
   }
 
-  double operator()(std::vector<double> const &ui_vec) const {
-    double result = 1.0;
-    std::vector<double> ui_vec_tmp = ui_vec;
-    for (auto &v : warpers) { // FORWARD
-      result *= std::visit([&ui_vec_tmp](auto &&arg) -> double { return arg(ui_vec_tmp); }, v);
-      ui_vec_tmp = std::visit([&ui_vec_tmp](auto &&arg) { return arg.li_from_ui(ui_vec_tmp); }, v);
-    }
-    return result;
-  }
 };
 
 } // namespace keldy::warpers

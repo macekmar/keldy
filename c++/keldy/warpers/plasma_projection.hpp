@@ -127,7 +127,7 @@ class warper_plasma_projection_t {
       w_pts.push_back(w);
       u = w_warper.ui_from_li(w);
       // w_vals.push_back( std::abs(integrand(u)/w_warper.evaluate_warping_function(u)) );
-      w_vals.push_back(std::abs(1.0 / w_warper(u)));
+      w_vals.push_back(std::abs(1.0 / w_warper.jacobian_forward(u)));
     }
 
     // Prepare a Gaussian window for convolution
@@ -210,7 +210,7 @@ class warper_plasma_projection_t {
     return result;
   }
 
-  double jacobian(std::vector<double> const &li_vec) const {
+  double jacobian_reverse(std::vector<double> const &li_vec) const {
     double result = 1.0;
     for (auto [i, li] : itertools::enumerate(li_vec)) {
       result *= fn_integrate_norm[i] / fn[i](fn_integrated_inverse[i](li));
