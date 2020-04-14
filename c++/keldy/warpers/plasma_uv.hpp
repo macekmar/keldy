@@ -59,6 +59,14 @@ class warper_plasma_uv_t {
  public:
   warper_plasma_uv_t(double t_max_) : t_max{t_max_} {}
 
+  [[nodiscard]] std::pair<std::vector<double>, double> map_reverse(std::vector<double> const &li_vec) const {
+    return std::make_pair(ui_from_li(li_vec), jacobian_reverse(li_vec));
+  }
+
+  [[nodiscard]] std::pair<std::vector<double>, double> map_forward(std::vector<double> const &ui_vec) const {
+    return std::make_pair(li_from_ui(ui_vec), jacobian_forward(ui_vec));
+  }
+
   [[nodiscard]] std::vector<double> ui_from_li(std::vector<double> const &li_vec) const {
     return ui_from_vi(t_max, li_vec);
   }

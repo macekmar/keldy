@@ -81,6 +81,14 @@ class warper_product_1d_t {
     }
   }
 
+  [[nodiscard]] std::pair<std::vector<double>, double> map_reverse(std::vector<double> const &li_vec) const {
+    return std::make_pair(ui_from_li(li_vec), jacobian_reverse(li_vec));
+  }
+
+  [[nodiscard]] std::pair<std::vector<double>, double> map_forward(std::vector<double> const &ui_vec) const {
+    return std::make_pair(li_from_ui(ui_vec), jacobian_forward(ui_vec));
+  }
+
   std::vector<double> ui_from_li(std::vector<double> const &li_vec) const {
     std::vector<double> result = li_vec;
     for (auto [i, li] : itertools::enumerate(result)) {

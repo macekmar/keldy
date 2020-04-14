@@ -14,6 +14,7 @@ module.add_include("keldy/warpers/warpers.hpp")
 # Add here anything to add in the C++ code at the start, e.g. namespace using
 module.add_preamble("""
 #include <cpp2py/converters/function.hpp>
+#include <cpp2py/converters/pair.hpp>
 #include <cpp2py/converters/variant.hpp>
 #include <cpp2py/converters/vector.hpp>
 
@@ -30,6 +31,12 @@ c = class_(
 )
 
 c.add_constructor("""()""", doc = r"""""")
+
+c.add_method("""std::pair<std::vector<double>, double> map_reverse (std::vector<double> li_vec)""",
+             doc = r"""""")
+
+c.add_method("""std::pair<std::vector<double>, double> map_forward (std::vector<double> ui_vec)""",
+             doc = r"""""")
 
 c.add_method("""std::vector<double> ui_from_li (std::vector<double> li_vec)""",
              doc = r"""""")
@@ -54,6 +61,12 @@ c = class_(
 )
 
 c.add_constructor("""(double t_max_)""", doc = r"""""")
+
+c.add_method("""std::pair<std::vector<double>, double> map_reverse (std::vector<double> li_vec)""",
+             doc = r"""""")
+
+c.add_method("""std::pair<std::vector<double>, double> map_forward (std::vector<double> ui_vec)""",
+             doc = r"""""")
 
 c.add_method("""std::vector<double> ui_from_li (std::vector<double> li_vec)""",
              doc = r"""""")
@@ -83,6 +96,12 @@ c.add_constructor("""(std::function<double (double)> f1_, double t_max_, int nr_
 
 c.add_constructor("""(std::function<double (double)> f1_, std::function<double (double)> f1_integrated_, std::function<double (double)> f1_integrated_inverse_, double t_max_, int nr_function_sample_points)""", doc = r"""""")
 
+c.add_method("""std::pair<std::vector<double>, double> map_reverse (std::vector<double> li_vec)""",
+             doc = r"""""")
+
+c.add_method("""std::pair<std::vector<double>, double> map_forward (std::vector<double> ui_vec)""",
+             doc = r"""""")
+
 c.add_method("""std::vector<double> ui_from_li (std::vector<double> li_vec)""",
              doc = r"""""")
 
@@ -108,6 +127,12 @@ c = class_(
 c.add_constructor("""(double t_max_)""", doc = r"""""")
 
 c.add_constructor("""(std::vector<std::function<double (double)> > fn_, double t_max_, int nr_function_sample_points)""", doc = r"""""")
+
+c.add_method("""std::pair<std::vector<double>, double> map_reverse (std::vector<double> li_vec)""",
+             doc = r"""""")
+
+c.add_method("""std::pair<std::vector<double>, double> map_forward (std::vector<double> ui_vec)""",
+             doc = r"""""")
 
 c.add_method("""std::vector<double> ui_from_li (std::vector<double> li_vec)""",
              doc = r"""""")
@@ -185,10 +210,16 @@ c.add_member(c_name = "warpers",
              read_only= True,
              doc = r"""""")
 
-c.add_method("""std::vector<double> ui_from_li (std::vector<double> li_vec)""",
+c.add_method("""std::pair<std::vector<double>, double> map_reverse (std::vector<double> li_vec, int start_domain_nr, int end_domain_nr)""",
              doc = r"""""")
 
-c.add_method("""std::vector<double> li_from_ui (std::vector<double> ui_vec)""",
+c.add_method("""std::pair<std::vector<double>, double> map_forward (std::vector<double> ui_vec, int start_domain_nr, int end_domain_nr)""",
+             doc = r"""""")
+
+c.add_method("""std::pair<std::vector<double>, double> map_reverse (std::vector<double> li_vec)""",
+             doc = r"""""")
+
+c.add_method("""std::pair<std::vector<double>, double> map_forward (std::vector<double> ui_vec)""",
              doc = r"""""")
 
 c.add_method("""double jacobian_reverse (std::vector<double> li_vec)""",
@@ -196,6 +227,11 @@ c.add_method("""double jacobian_reverse (std::vector<double> li_vec)""",
 
 c.add_method("""double jacobian_forward (std::vector<double> ui_vec)""",
              doc = r"""""")
+
+c.add_method("""std::vector<double> ui_from_li (std::vector<double> li_vec)""",
+             doc = r"""""")
+
+c.add_method("""std::vector<double> li_from_ui (std::vector<double> ui_vec)""",
              doc = r"""""")
 
 module.add_class(c)

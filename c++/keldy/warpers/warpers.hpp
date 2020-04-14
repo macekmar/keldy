@@ -44,20 +44,45 @@ class warper_train_t {
  public:
   std::vector<warper_variant> warpers{};
 
-  std::vector<double> ui_from_li(std::vector<double> const &li_vec) const {
-    std::vector<double> result = li_vec;
-    for (auto it = warpers.crbegin(); it != warpers.crend(); it++) { // REVERSE
-      result = std::visit([&result](auto &&arg) -> std::vector<double> { return arg.ui_from_li(result); }, *it);
+  // Joint Evolution: Coordinate-Transform and Jacobian including partial evolution
+  std::pair<std::vector<double>, double> map_reverse(std::vector<double> const &li_vec, int start_domain_nr,
+                                                        int end_domain_nr) const {
+    // EXPECTS(0 <= start_domain_nr <= warper.size(), 0 <= end_domain_nr <= warper.size(),
+    //            start_domain_nr <= end_domain_nr  )
+    double jacobian_reverse_result = 1.0;
+    std::vector<double> ui_vec = li_vec;
+
+    for (auto it = warpers.crbegin() + warpers.size() - start_domain_nr; it != warpers.crend() - end_domain_nr; it++) {
+      auto out = std::visit([&ui_vec](auto &&arg) { return arg.map_reverse(ui_vec); }, *it);
+      ui_vec = out.first;
+      jacobian_reverse_result *= out.second;
     }
-    return result;
+    return std::make_pair(ui_vec, jacobian_reverse_result);
   }
 
-  std::vector<double> li_from_ui(std::vector<double> const &ui_vec) const {
-    auto result = ui_vec;
-    for (auto &v : warpers) { // FORWARD
-      result = std::visit([&result](auto &&arg) -> std::vector<double> { return arg.li_from_ui(result); }, v);
+  // better to try itertools / at??
+  std::pair<std::vector<double>, double> map_forward(std::vector<double> const &ui_vec, int start_domain_nr,
+                                                        int end_domain_nr) const {
+    // EXPECTS(0 <= start_domain_nr <= warper.size(), 0 <= end_domain_nr <= warper.size(),
+    //            start_domain_nr <= end_domain_nr  )
+    double jacobian_forward_result = 1.0;
+    std::vector<double> li_vec = ui_vec;
+
+    for (auto it = warpers.cbegin() + start_domain_nr; it != warpers.cbegin() + end_domain_nr; it++) {
+      auto out = std::visit([&li_vec](auto &&arg) { return arg.map_forward(li_vec); }, *it);
+      li_vec = out.first;
+      jacobian_forward_result *= out.second;
     }
-    return result;
+    return std::make_pair(ui_vec, jacobian_forward_result);
+  }
+
+  // Functions which are concept of warper:
+  std::pair<std::vector<double>, double> map_reverse(std::vector<double> const &li_vec) const {
+    return map_reverse(li_vec, warpers.size(), 0);
+  }
+
+  std::pair<std::vector<double>, double> map_forward(std::vector<double> const &ui_vec) const {
+    return map_forward(ui_vec, 0, warpers.size());
   }
 
   double jacobian_reverse(std::vector<double> const &li_vec) const {
@@ -69,13 +94,23 @@ class warper_train_t {
     auto [li_vec, jacobian_f] = map_forward(ui_vec);
     return jacobian_f;
   }
+
+  std::vector<double> ui_from_li(std::vector<double> const &li_vec) const {
+    std::vector<double> result = li_vec;
     for (auto it = warpers.crbegin(); it != warpers.crend(); it++) { // REVERSE
-      result *= std::visit([&li_vec_tmp](auto &&arg) { return arg.jacobian(li_vec_tmp); }, *it);
-      li_vec_tmp = std::visit([&li_vec_tmp](auto &&arg) { return arg.ui_from_li(li_vec_tmp); }, *it);
+      result = std::visit([&result](auto &&arg) -> std::vector<double> { return arg.ui_from_li(result); }, *it);
     }
     return result;
   }
 
+  std::vector<double> li_from_ui(std::vector<double> const &ui_vec) const {
+    auto result = ui_vec;
+    for (auto it = warpers.cbegin(); it != warpers.cend(); it++) { // FORWARD
+      result = std::visit([&result](auto &&arg) -> std::vector<double> { return arg.li_from_ui(result); }, *it);
+    }
+    return result;
+  }
+  
 };
 
 } // namespace keldy::warpers
