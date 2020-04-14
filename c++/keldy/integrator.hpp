@@ -63,6 +63,33 @@ class integrator {
   // TODO: static_assert that R can be mpi::all_reduce
 
  public:
+  // Warper
+  std::pair<std::vector<double>, double> evaluate_warper(std::vector<double> const &xi_vec, int start_domain_nr,
+                                                         int end_domain_nr) const {
+    if (start_domain_nr > end_domain_nr) { // Reverse
+      return warper.map_reverse(xi_vec, start_domain_nr, end_domain_nr);
+    }
+    if (start_domain_nr < end_domain_nr) { // Forward
+      return warper.map_forward(xi_vec, start_domain_nr, end_domain_nr);
+    }
+    return std::make_pair(xi_vec, 1.0);
+  }
+
+  std::pair<std::vector<double>, double> evaluate_warper(std::vector<double> const &xi_vec) const {
+    return evaluate_warper(xi_vec, 0, warper.warpers.size());
+  }
+  // Evaluate
+  std::pair<typename I::result_t, double> evaluate_warped_integrand(std::vector<double> const &li_vec,
+                                                                    int start_domain_nr) const {
+    auto [ui_vec, jacobian] = warper.map_reverse(li_vec, start_domain_nr, 0);
+    auto [eval, in_domain] = integrand(ui_vec);
+    eval *= jacobian;
+    return std::make_pair(eval, in_domain);
+  }
+
+  std::pair<typename I::result_t, double> evaluate_warped_integrand(std::vector<double> const &li_vec) const {
+    return evaluate_warped_integrand(li_vec, warper.warpers.size());
+  }
   void run(int nr_steps) {
     int mpi_rank = comm.rank();
     int mpi_size = comm.size();
@@ -71,10 +98,7 @@ class integrator {
       if (i % mpi_size != mpi_rank) {
         continue;
       }
-      std::vector<double> ui_vec = warper.ui_from_li(li_vec);
-
-      auto [eval, in_domain] = integrand(ui_vec);
-      eval *= warper.jacobian(li_vec);
+      auto [eval, in_domain] = evaluate_warped_integrand(li_vec);
 
       n_integrand_evals_in_domain += in_domain;
       result += eval;

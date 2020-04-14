@@ -362,6 +362,18 @@ c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int 
 
 c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, double cutoff_integrand, std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)""", doc = r"""""")
 
+c.add_method("""std::pair<std::vector<double>, double> evaluate_warper (std::vector<double> xi_vec, int start_domain_nr, int end_domain_nr)""",
+             doc = r"""""")
+
+c.add_method("""std::pair<std::vector<double>, double> evaluate_warper (std::vector<double> xi_vec)""",
+             doc = r"""""")
+
+c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_direct::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec, int start_domain_nr)""",
+             doc = r"""""")
+
+c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_direct::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec)""",
+             doc = r"""""")
+
 c.add_method("""void run (int nr_steps)""",
              doc = r"""""")
 
@@ -394,6 +406,18 @@ c = class_(
 )
 
 c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, std::vector<std::function<double (double)> > fn_, int nr_sample_points_warper)""", doc = r"""""")
+
+c.add_method("""std::pair<std::vector<double>, double> evaluate_warper (std::vector<double> xi_vec, int start_domain_nr, int end_domain_nr)""",
+             doc = r"""""")
+
+c.add_method("""std::pair<std::vector<double>, double> evaluate_warper (std::vector<double> xi_vec)""",
+             doc = r"""""")
+
+c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_direct::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec, int start_domain_nr)""",
+             doc = r"""""")
+
+c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_direct::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec)""",
+             doc = r"""""")
 
 c.add_method("""void run (int nr_steps)""",
              doc = r"""""")
@@ -430,6 +454,18 @@ c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int 
 
 c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, double cutoff_integrand, std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)""", doc = r"""""")
 
+c.add_method("""std::pair<std::vector<double>, double> evaluate_warper (std::vector<double> xi_vec, int start_domain_nr, int end_domain_nr)""",
+             doc = r"""""")
+
+c.add_method("""std::pair<std::vector<double>, double> evaluate_warper (std::vector<double> xi_vec)""",
+             doc = r"""""")
+
+c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_direct::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec, int start_domain_nr)""",
+             doc = r"""""")
+
+c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_direct::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec)""",
+             doc = r"""""")
+
 c.add_method("""void run (int nr_steps)""",
              doc = r"""""")
 
@@ -464,6 +500,18 @@ c = class_(
 c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int order, int nr_time_slices, double cutoff_integrand, std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)""", doc = r"""""")
 
 c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, int nr_time_slices, double cutoff_integrand, std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)""", doc = r"""""")
+
+c.add_method("""std::pair<std::vector<double>, double> evaluate_warper (std::vector<double> xi_vec, int start_domain_nr, int end_domain_nr)""",
+             doc = r"""""")
+
+c.add_method("""std::pair<std::vector<double>, double> evaluate_warper (std::vector<double> xi_vec)""",
+             doc = r"""""")
+
+c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_direct_time::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec, int start_domain_nr)""",
+             doc = r"""""")
+
+c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_direct_time::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec)""",
+             doc = r"""""")
 
 c.add_method("""void run (int nr_steps)""",
              doc = r"""""")
@@ -501,6 +549,18 @@ c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time
 c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int order, std::string warper_function_name, int nr_sample_points_warper, double warper_scale, int nr_bins = 100)""", doc = r"""""")
 
 c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int order, std::string warper_function_name, bool alternate, int nr_sample_points_warper, double warper_scale, int nb_bins = 100)""", doc = r"""""")
+
+c.add_method("""std::pair<std::vector<double>, double> evaluate_warper (std::vector<double> xi_vec, int start_domain_nr, int end_domain_nr)""",
+             doc = r"""""")
+
+c.add_method("""std::pair<std::vector<double>, double> evaluate_warper (std::vector<double> xi_vec)""",
+             doc = r"""""")
+
+c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_kernel::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec, int start_domain_nr)""",
+             doc = r"""""")
+
+c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_kernel::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec)""",
+             doc = r"""""")
 
 c.add_method("""void run (int nr_steps)""",
              doc = r"""""")
