@@ -60,8 +60,6 @@ class integrator {
   // Checks that result of integrand can be added to result
   static_assert(std::is_same_v<decltype(std::declval<R &>() += std::declval<typename I::result_t>()), R &>);
 
-  // TODO: static_assert that R can be mpi::all_reduce
-
  public:
   // Warper
   std::pair<std::vector<double>, double> evaluate_warper(std::vector<double> const &xi_vec, int start_domain_nr,
@@ -78,6 +76,12 @@ class integrator {
   std::pair<std::vector<double>, double> evaluate_warper(std::vector<double> const &xi_vec) const {
     return evaluate_warper(xi_vec, 0, warper.warpers.size());
   }
+
+  void warper_emplace_back(warpers::warper_identity_t w) {warper.warpers.emplace_back(std::move(w));}
+  void warper_emplace_back(warpers::warper_plasma_uv_t w) {warper.warpers.emplace_back(std::move(w));}
+  void warper_emplace_back(warpers::warper_product_1d_simple_t w) {warper.warpers.emplace_back(std::move(w));}
+  void warper_emplace_back(warpers::warper_product_1d_t w) {warper.warpers.emplace_back(std::move(w));}
+
   // Evaluate
   std::pair<typename I::result_t, double> evaluate_warped_integrand(std::vector<double> const &li_vec,
                                                                     int start_domain_nr) const {
@@ -90,6 +94,7 @@ class integrator {
   std::pair<typename I::result_t, double> evaluate_warped_integrand(std::vector<double> const &li_vec) const {
     return evaluate_warped_integrand(li_vec, warper.warpers.size());
   }
+
   void run(int nr_steps) {
     int mpi_rank = comm.rank();
     int mpi_size = comm.size();

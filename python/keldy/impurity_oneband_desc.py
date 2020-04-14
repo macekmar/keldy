@@ -368,6 +368,18 @@ c.add_method("""std::pair<std::vector<double>, double> evaluate_warper (std::vec
 c.add_method("""std::pair<std::vector<double>, double> evaluate_warper (std::vector<double> xi_vec)""",
              doc = r"""""")
 
+c.add_method("""void warper_emplace_back (keldy::warpers::warper_identity_t w)""",
+             doc = r"""""")
+
+c.add_method("""void warper_emplace_back (keldy::warpers::warper_plasma_uv_t w)""",
+             doc = r"""""")
+
+c.add_method("""void warper_emplace_back (keldy::warpers::warper_product_1d_simple_t w)""",
+             doc = r"""""")
+
+c.add_method("""void warper_emplace_back (keldy::warpers::warper_product_1d_t w)""",
+             doc = r"""""")
+
 c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_direct::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec, int start_domain_nr)""",
              doc = r"""""")
 
@@ -411,6 +423,18 @@ c.add_method("""std::pair<std::vector<double>, double> evaluate_warper (std::vec
              doc = r"""""")
 
 c.add_method("""std::pair<std::vector<double>, double> evaluate_warper (std::vector<double> xi_vec)""",
+             doc = r"""""")
+
+c.add_method("""void warper_emplace_back (keldy::warpers::warper_identity_t w)""",
+             doc = r"""""")
+
+c.add_method("""void warper_emplace_back (keldy::warpers::warper_plasma_uv_t w)""",
+             doc = r"""""")
+
+c.add_method("""void warper_emplace_back (keldy::warpers::warper_product_1d_simple_t w)""",
+             doc = r"""""")
+
+c.add_method("""void warper_emplace_back (keldy::warpers::warper_product_1d_t w)""",
              doc = r"""""")
 
 c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_direct::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec, int start_domain_nr)""",
@@ -460,6 +484,18 @@ c.add_method("""std::pair<std::vector<double>, double> evaluate_warper (std::vec
 c.add_method("""std::pair<std::vector<double>, double> evaluate_warper (std::vector<double> xi_vec)""",
              doc = r"""""")
 
+c.add_method("""void warper_emplace_back (keldy::warpers::warper_identity_t w)""",
+             doc = r"""""")
+
+c.add_method("""void warper_emplace_back (keldy::warpers::warper_plasma_uv_t w)""",
+             doc = r"""""")
+
+c.add_method("""void warper_emplace_back (keldy::warpers::warper_product_1d_simple_t w)""",
+             doc = r"""""")
+
+c.add_method("""void warper_emplace_back (keldy::warpers::warper_product_1d_t w)""",
+             doc = r"""""")
+
 c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_direct::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec, int start_domain_nr)""",
              doc = r"""""")
 
@@ -505,6 +541,18 @@ c.add_method("""std::pair<std::vector<double>, double> evaluate_warper (std::vec
              doc = r"""""")
 
 c.add_method("""std::pair<std::vector<double>, double> evaluate_warper (std::vector<double> xi_vec)""",
+             doc = r"""""")
+
+c.add_method("""void warper_emplace_back (keldy::warpers::warper_identity_t w)""",
+             doc = r"""""")
+
+c.add_method("""void warper_emplace_back (keldy::warpers::warper_plasma_uv_t w)""",
+             doc = r"""""")
+
+c.add_method("""void warper_emplace_back (keldy::warpers::warper_product_1d_simple_t w)""",
+             doc = r"""""")
+
+c.add_method("""void warper_emplace_back (keldy::warpers::warper_product_1d_t w)""",
              doc = r"""""")
 
 c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_direct_time::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec, int start_domain_nr)""",
@@ -554,6 +602,18 @@ c.add_method("""std::pair<std::vector<double>, double> evaluate_warper (std::vec
              doc = r"""""")
 
 c.add_method("""std::pair<std::vector<double>, double> evaluate_warper (std::vector<double> xi_vec)""",
+             doc = r"""""")
+
+c.add_method("""void warper_emplace_back (keldy::warpers::warper_identity_t w)""",
+             doc = r"""""")
+
+c.add_method("""void warper_emplace_back (keldy::warpers::warper_plasma_uv_t w)""",
+             doc = r"""""")
+
+c.add_method("""void warper_emplace_back (keldy::warpers::warper_product_1d_simple_t w)""",
+             doc = r"""""")
+
+c.add_method("""void warper_emplace_back (keldy::warpers::warper_product_1d_t w)""",
              doc = r"""""")
 
 c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_kernel::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec, int start_domain_nr)""",

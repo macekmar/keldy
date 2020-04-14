@@ -209,10 +209,8 @@ class compute_charge_Q_direct_time : public integrator<binner_1d, integrand_g_di
                   order,
                   "sobol_unshifted",
                   0} {
-
-    warper.warpers.emplace_back(warpers::warper_plasma_uv_t(time));
-    warper.warpers.emplace_back(
-       simple_plasma_warper_factory(warper_function_name, time, nr_sample_points_warper, warper_scale));
+    warper_emplace_back(warpers::warper_plasma_uv_t(time));
+    warper_emplace_back(simple_plasma_warper_factory(warper_function_name, time, nr_sample_points_warper, warper_scale));
   }
 
   compute_charge_Q_direct_time(model_param_t params, double time, int order, int nr_time_slices,
