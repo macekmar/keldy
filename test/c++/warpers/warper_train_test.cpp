@@ -14,6 +14,23 @@ using namespace keldy::warpers;
 
 using namespace triqs::arrays;
 
+TEST(WarperTrain, EmptyTest) { // NOLINT
+  warper_train_t w;
+  
+  EXPECT_EQ(w.warpers.size(), 0);
+
+  std::vector<double> xi_times = {0.0, 1.0, 4.0, 7.0};
+
+  EXPECT_EQ(w.ui_from_li(xi_times), xi_times);
+  EXPECT_EQ(w.li_from_ui(xi_times), xi_times);
+
+  EXPECT_EQ(w.jacobian_forward(xi_times), 1.0);
+  EXPECT_EQ(w.jacobian_reverse(xi_times), 1.0);
+
+  EXPECT_EQ(w.map_forward(xi_times), std::make_pair(xi_times, 1.0));
+  EXPECT_EQ(w.map_reverse(xi_times), std::make_pair(xi_times, 1.0));
+}
+
 TEST(WarperTrain, ConstructionAddingWarpers) { // NOLINT
   warper_train_t w;
 
