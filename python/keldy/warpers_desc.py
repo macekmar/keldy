@@ -3,9 +3,10 @@
 from cpp2py.wrap_generator import *
 
 # The module
-module = module_(full_name = "warpers", doc = r"", app_name = "warpers")
+module = module_(full_name = "warpers", doc = r"", app_name = "keldy")
 
 # Imports
+module.add_imports(*['keldy.common'])
 
 # Add here all includes
 module.add_include("keldy/warpers/warpers.hpp")
