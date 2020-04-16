@@ -41,8 +41,9 @@
 
 namespace keldy::impurity_oneband {
 
-inline warpers::warper_product_1d_t alternate_product_plasma_warper_factory(std::string const &label, int order, double time,
-                                                                   int nr_sample_points_warper, double warper_scale) {
+inline warpers::warper_product_1d_t alternate_product_plasma_warper_factory(std::string const &label, int order,
+                                                                            double time, int nr_sample_points_warper,
+                                                                            double warper_scale) {
   if (label == "inverse_and_cube") {
     auto f1 = [warper_scale](double t) -> double { return warper_scale / (warper_scale + t); };
     auto f2 = [warper_scale](double t) -> double {
@@ -112,8 +113,8 @@ class compute_charge_Q_direct : public integrator<dcomplex, impurity_oneband::in
                   "sobol_unshifted",
                   0} {
 
-    warper.warpers.emplace_back(warpers::warper_plasma_uv_t(time));
-    warper.warpers.emplace_back(
+    warper.emplace_back(warpers::warper_plasma_uv_t(time));
+    warper.emplace_back(
        simple_plasma_warper_factory(warper_function_name, integrand, time, nr_sample_points_warper, warper_scale));
   }
 
@@ -140,8 +141,8 @@ class compute_charge_Q_direct_plasma_1D : public integrator<dcomplex, integrand_
                   "sobol_unshifted",
                   0} {
 
-    warper.warpers.emplace_back(warpers::warper_plasma_uv_t(time));
-    warper.warpers.emplace_back(warpers::warper_product_1d_t{fn_, time, nr_sample_points_warper});
+    warper.emplace_back(warpers::warper_plasma_uv_t(time));
+    warper.emplace_back(warpers::warper_product_1d_t{fn_, time, nr_sample_points_warper});
   }
 };
 
@@ -157,8 +158,8 @@ class compute_current_J_direct : public integrator<dcomplex, integrand_g_direct>
                   order,
                   "sobol_unshifted",
                   0} {
-    warper.warpers.emplace_back(warpers::warper_plasma_uv_t(time));
-    warper.warpers.emplace_back(
+    warper.emplace_back(warpers::warper_plasma_uv_t(time));
+    warper.emplace_back(
        simple_plasma_warper_factory(warper_function_name, integrand, time, nr_sample_points_warper, warper_scale));
   }
 
@@ -175,8 +176,8 @@ class compute_current_J_direct : public integrator<dcomplex, integrand_g_direct>
 // ****************************************************************************
 // Profumo + Time evolution methods
 
-inline warpers::warper_product_1d_simple_t simple_plasma_warper_factory(std::string const &label, double time,
-                                                               int nr_sample_points_warper, double warper_scale) {
+inline warpers::warper_product_1d_simple_t
+simple_plasma_warper_factory(std::string const &label, double time, int nr_sample_points_warper, double warper_scale) {
   if (label == "inverse_square") {
     return {[warper_scale](double t) -> double {
               return warper_scale * warper_scale / ((warper_scale + t) * (warper_scale + t));
@@ -209,8 +210,9 @@ class compute_charge_Q_direct_time : public integrator<binner_1d, integrand_g_di
                   order,
                   "sobol_unshifted",
                   0} {
-    warper_emplace_back(warpers::warper_plasma_uv_t(time));
-    warper_emplace_back(simple_plasma_warper_factory(warper_function_name, time, nr_sample_points_warper, warper_scale));
+    warper.emplace_back(warpers::warper_plasma_uv_t(time));
+    warper.emplace_back(
+       simple_plasma_warper_factory(warper_function_name, time, nr_sample_points_warper, warper_scale));
   }
 
   compute_charge_Q_direct_time(model_param_t params, double time, int order, int nr_time_slices,
@@ -230,9 +232,9 @@ class compute_charge_Q_direct_time : public integrator<binner_1d, integrand_g_di
 // Kernal Method
 
 inline warpers::warper_product_1d_simple_t simple_plasma_warper_factory_kernel(std::string const &label,
-                                                                      integrand_g_kernel const &f, double time,
-                                                                      int nr_sample_points_warper,
-                                                                      double warper_scale) {
+                                                                               integrand_g_kernel const &f, double time,
+                                                                               int nr_sample_points_warper,
+                                                                               double warper_scale) {
   if (label == "inverse") {
     return {[warper_scale](double t) -> double { return warper_scale / (warper_scale + t); },
             [warper_scale](double t) -> double { return warper_scale * std::log(1. + t / warper_scale); },
@@ -285,8 +287,8 @@ class compute_gf_kernel : public integrator<kernel_binner, integrand_g_kernel> {
                   "sobol_unshifted",
                   0} {
 
-    warper.warpers.emplace_back(warpers::warper_plasma_uv_t(time));
-    warper.warpers.emplace_back(warpers::warper_product_1d_simple_t{
+    warper.emplace_back(warpers::warper_plasma_uv_t(time));
+    warper.emplace_back(warpers::warper_product_1d_simple_t{
        scalar_warper_function_factory_kernel(warper_function_name, integrand, time), time, nr_sample_points_warper});
   }
 
@@ -299,9 +301,9 @@ class compute_gf_kernel : public integrator<kernel_binner, integrand_g_kernel> {
                   "sobol_unshifted",
                   0} {
 
-    warper.warpers.emplace_back(warpers::warper_plasma_uv_t(time));
-    warper.warpers.emplace_back(simple_plasma_warper_factory_kernel(warper_function_name, integrand, time,
-                                                                    nr_sample_points_warper, warper_scale));
+    warper.emplace_back(warpers::warper_plasma_uv_t(time));
+    warper.emplace_back(simple_plasma_warper_factory_kernel(warper_function_name, integrand, time,
+                                                            nr_sample_points_warper, warper_scale));
   }
 
   compute_gf_kernel(g0_model model, double time, int order, std::string warper_function_name, bool alternate,
@@ -313,9 +315,9 @@ class compute_gf_kernel : public integrator<kernel_binner, integrand_g_kernel> {
                   "sobol_unshifted",
                   0} {
 
-    warper.warpers.emplace_back(warpers::warper_plasma_uv_t(time));
-    warper.warpers.emplace_back(alternate_product_plasma_warper_factory(warper_function_name, order, time,
-                                                                        nr_sample_points_warper, warper_scale));
+    warper.emplace_back(warpers::warper_plasma_uv_t(time));
+    warper.emplace_back(alternate_product_plasma_warper_factory(warper_function_name, order, time,
+                                                                nr_sample_points_warper, warper_scale));
   }
 };
 

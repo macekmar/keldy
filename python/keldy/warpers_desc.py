@@ -15,7 +15,6 @@ module.add_include("keldy/warpers/warpers.hpp")
 module.add_preamble("""
 #include <cpp2py/converters/function.hpp>
 #include <cpp2py/converters/pair.hpp>
-#include <cpp2py/converters/variant.hpp>
 #include <cpp2py/converters/vector.hpp>
 
 using namespace keldy::warpers;
@@ -205,9 +204,22 @@ c = class_(
         hdf5 = False,
 )
 
-c.add_member(c_name = "warpers",
-             c_type = "std::vector<warper_variant>",
-             read_only= True,
+c.add_method("""void emplace_back (keldy::warpers::warper_identity_t w)""",
+             doc = r"""""")
+
+c.add_method("""void emplace_back (keldy::warpers::warper_plasma_uv_t w)""",
+             doc = r"""""")
+
+c.add_method("""void emplace_back (keldy::warpers::warper_product_1d_simple_t w)""",
+             doc = r"""""")
+
+c.add_method("""void emplace_back (keldy::warpers::warper_product_1d_t w)""",
+             doc = r"""""")
+
+c.add_method("""void clear ()""",
+             doc = r"""""")
+
+c.add_method("""size_t size ()""",
              doc = r"""""")
 
 c.add_method("""std::pair<std::vector<double>, double> map_reverse (std::vector<double> li_vec, int start_domain_nr, int end_domain_nr)""",

@@ -51,9 +51,6 @@ class integrator {
   // Function that when called with a vector of times returns the integrand
   I integrand;
 
-  // Warpers which define the transform of sample points [li -> ui] & Jacobian
-  warpers::warper_train_t warper{};
-
   // Random number generator
   std::function<std::vector<double>()> rng;
 
@@ -61,26 +58,8 @@ class integrator {
   static_assert(std::is_same_v<decltype(std::declval<R &>() += std::declval<typename I::result_t>()), R &>);
 
  public:
-  // Warper
-  std::pair<std::vector<double>, double> evaluate_warper(std::vector<double> const &xi_vec, int start_domain_nr,
-                                                         int end_domain_nr) const {
-    if (start_domain_nr > end_domain_nr) { // Reverse
-      return warper.map_reverse(xi_vec, start_domain_nr, end_domain_nr);
-    }
-    if (start_domain_nr < end_domain_nr) { // Forward
-      return warper.map_forward(xi_vec, start_domain_nr, end_domain_nr);
-    }
-    return std::make_pair(xi_vec, 1.0);
-  }
-
-  std::pair<std::vector<double>, double> evaluate_warper(std::vector<double> const &xi_vec) const {
-    return evaluate_warper(xi_vec, 0, warper.warpers.size());
-  }
-
-  void warper_emplace_back(warpers::warper_identity_t w) {warper.warpers.emplace_back(std::move(w));}
-  void warper_emplace_back(warpers::warper_plasma_uv_t w) {warper.warpers.emplace_back(std::move(w));}
-  void warper_emplace_back(warpers::warper_product_1d_simple_t w) {warper.warpers.emplace_back(std::move(w));}
-  void warper_emplace_back(warpers::warper_product_1d_t w) {warper.warpers.emplace_back(std::move(w));}
+  // Warpers which define the transform of sample points [li -> ui] & Jacobian
+  warpers::warper_train_t warper{};
 
   // Evaluate
   std::pair<typename I::result_t, double> evaluate_warped_integrand(std::vector<double> const &li_vec,
@@ -92,7 +71,7 @@ class integrator {
   }
 
   std::pair<typename I::result_t, double> evaluate_warped_integrand(std::vector<double> const &li_vec) const {
-    return evaluate_warped_integrand(li_vec, warper.warpers.size());
+    return evaluate_warped_integrand(li_vec, warper.size());
   }
 
   void run(int nr_steps) {

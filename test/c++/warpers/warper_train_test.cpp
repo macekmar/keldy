@@ -16,8 +16,8 @@ using namespace triqs::arrays;
 
 TEST(WarperTrain, EmptyTest) { // NOLINT
   warper_train_t w;
-  
-  EXPECT_EQ(w.warpers.size(), 0);
+
+  EXPECT_EQ(w.size(), 0);
 
   std::vector<double> xi_times = {0.0, 1.0, 4.0, 7.0};
 
@@ -35,7 +35,7 @@ TEST(WarperTrain, ConstructionAddingWarpers) { // NOLINT
   warper_train_t w;
 
   double t_max = 10.0;
-  w.warpers.emplace_back(warper_plasma_uv_t{t_max});
+  w.emplace_back(warper_plasma_uv_t{t_max});
 
   // Copied from warper_plasma_uv_test
   std::vector<double> ui_times = {0.0, 2.0, 6.0, 1.0};
@@ -53,7 +53,7 @@ TEST(WarperTrain, ConstructionAddingWarpers) { // NOLINT
 
   // construct exponential warper
   double warper_scale = 1.0;
-  w.warpers.emplace_back(warper_product_1d_simple_t{
+  w.emplace_back(warper_product_1d_simple_t{
      [warper_scale](double t) -> double { return std::exp(-(t / warper_scale)); },
      [warper_scale](double t) -> double { return warper_scale * (1 - std::exp(-t / warper_scale)); },
      [warper_scale](double l) -> double { return -warper_scale * std::log(1 - l / warper_scale); }, t_max, 100});

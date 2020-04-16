@@ -41,12 +41,23 @@ using warper_variant =
    std::variant<warper_identity_t, warper_plasma_uv_t, warper_product_1d_simple_t, warper_product_1d_t>;
 
 class warper_train_t {
- public:
+ private:
   std::vector<warper_variant> warpers{};
+
+ public:
+  // Add warpers
+  void emplace_back(warper_identity_t w) { warpers.emplace_back(std::move(w)); }
+  void emplace_back(warper_plasma_uv_t w) { warpers.emplace_back(std::move(w)); }
+  void emplace_back(warper_product_1d_simple_t w) { warpers.emplace_back(std::move(w)); }
+  void emplace_back(warper_product_1d_t w) { warpers.emplace_back(std::move(w)); }
+
+  // Warper Vector
+  void clear() { warpers.clear(); }
+  size_t size() const { return warpers.size(); }
 
   // Joint Evolution: Coordinate-Transform and Jacobian including partial evolution
   std::pair<std::vector<double>, double> map_reverse(std::vector<double> const &li_vec, int start_domain_nr,
-                                                        int end_domain_nr) const {
+                                                     int end_domain_nr) const {
     // EXPECTS(0 <= start_domain_nr <= warper.size(), 0 <= end_domain_nr <= warper.size(),
     //            start_domain_nr <= end_domain_nr  )
     double jacobian_reverse_result = 1.0;
@@ -62,7 +73,7 @@ class warper_train_t {
 
   // better to try itertools / at??
   std::pair<std::vector<double>, double> map_forward(std::vector<double> const &ui_vec, int start_domain_nr,
-                                                        int end_domain_nr) const {
+                                                     int end_domain_nr) const {
     // EXPECTS(0 <= start_domain_nr <= warper.size(), 0 <= end_domain_nr <= warper.size(),
     //            start_domain_nr <= end_domain_nr  )
     double jacobian_forward_result = 1.0;
@@ -110,7 +121,6 @@ class warper_train_t {
     }
     return result;
   }
-  
 };
 
 } // namespace keldy::warpers
