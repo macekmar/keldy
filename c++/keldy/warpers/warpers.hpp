@@ -45,6 +45,9 @@ class warper_train_t {
   std::vector<warper_variant> warpers{};
 
  public:
+
+  warper_train_t() = default;
+
   // Add warpers
   void emplace_back(warper_identity_t w) { warpers.emplace_back(std::move(w)); }
   void emplace_back(warper_plasma_uv_t w) { warpers.emplace_back(std::move(w)); }

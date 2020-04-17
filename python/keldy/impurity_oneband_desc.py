@@ -1,5 +1,5 @@
 # Generated automatically using the command :
-# c++2py ../../c++/keldy/impurity_oneband/compute_obs.hpp --members_read_only -N keldy::impurity_oneband -a keldy -m impurity_oneband -o impurity_oneband -C pytriqs -C keldy --cxxflags="-std=c++17 " --includes ../../c++
+# c++2py ../../c++/keldy/impurity_oneband/compute_obs.hpp -N keldy::impurity_oneband -a keldy -m impurity_oneband -o impurity_oneband -C pytriqs -C keldy --cxxflags="-std=c++17 " --includes ../../c++
 from cpp2py.wrap_generator import *
 
 # The module
@@ -359,7 +359,7 @@ c = class_(
 
 c.add_member(c_name = "warper",
              c_type = "keldy::warpers::warper_train_t",
-             read_only= True,
+             read_only= False,
              doc = r"""""")
 
 c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int order, double cutoff_integrand)""", doc = r"""""")
@@ -405,7 +405,7 @@ c = class_(
 
 c.add_member(c_name = "warper",
              c_type = "keldy::warpers::warper_train_t",
-             read_only= True,
+             read_only= False,
              doc = r"""""")
 
 c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int order, double cutoff_integrand)""", doc = r"""""")
@@ -451,7 +451,7 @@ c = class_(
 
 c.add_member(c_name = "warper",
              c_type = "keldy::warpers::warper_train_t",
-             read_only= True,
+             read_only= False,
              doc = r"""""")
 
 c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int order, int nr_time_slices, double cutoff_integrand)""", doc = r"""""")
@@ -497,7 +497,7 @@ c = class_(
 
 c.add_member(c_name = "warper",
              c_type = "keldy::warpers::warper_train_t",
-             read_only= True,
+             read_only= False,
              doc = r"""""")
 
 c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int order, int nr_bins = 100)""", doc = r"""""")

@@ -204,6 +204,8 @@ c = class_(
         hdf5 = False,
 )
 
+c.add_constructor("""()""", doc = r"""""")
+
 c.add_method("""void emplace_back (keldy::warpers::warper_identity_t w)""",
              doc = r"""""")
 
