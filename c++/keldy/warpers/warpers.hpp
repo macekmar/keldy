@@ -84,7 +84,7 @@ class warper_train_t {
       li_vec = out.first;
       jacobian_forward_result *= out.second;
     }
-    return std::make_pair(ui_vec, jacobian_forward_result);
+    return std::make_pair(li_vec, jacobian_forward_result);
   }
 
   // Functions which are concept of warper:
