@@ -14,7 +14,6 @@ module.add_include("keldy/impurity_oneband/compute_obs.hpp")
 # Add here anything to add in the C++ code at the start, e.g. namespace using
 module.add_preamble("""
 #include <cpp2py/converters/complex.hpp>
-#include <cpp2py/converters/function.hpp>
 #include <cpp2py/converters/pair.hpp>
 #include <cpp2py/converters/string.hpp>
 #include <cpp2py/converters/vector.hpp>
@@ -359,57 +358,13 @@ c = class_(
 )
 
 c.add_member(c_name = "warper",
-             c_type = "warpers::warper_train_t",
+             c_type = "keldy::warpers::warper_train_t",
              read_only= True,
              doc = r"""""")
 
-c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int order, double cutoff_integrand, std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)""", doc = r"""""")
+c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int order, double cutoff_integrand)""", doc = r"""""")
 
-c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, double cutoff_integrand, std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)""", doc = r"""""")
-
-c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_direct::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec, int start_domain_nr)""",
-             doc = r"""""")
-
-c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_direct::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec)""",
-             doc = r"""""")
-
-c.add_method("""void run (int nr_steps)""",
-             doc = r"""""")
-
-c.add_method("""void reset_rng (std::string rng_name, int rng_state_seed, bool do_shift = false, bool do_scramble = false, int rng_seed_shift = 0)""",
-             doc = r"""""")
-
-c.add_method("""dcomplex reduce_result ()""",
-             doc = r"""""")
-
-c.add_method("""uint64_t reduce_nr_points_run ()""",
-             doc = r"""""")
-
-c.add_method("""uint64_t reduce_nr_points_in_domain ()""",
-             doc = r"""""")
-
-c.add_method("""keldy::impurity_oneband::integrand_g_direct get_integrand ()""",
-             doc = r"""""")
-
-c.add_method("""keldy::warpers::warper_train_t get_warper ()""",
-             doc = r"""""")
-
-module.add_class(c)
-
-# The class compute_charge_Q_direct_plasma_1D
-c = class_(
-        py_type = "ComputeChargeQDirectPlasma1d",  # name of the python class
-        c_type = "keldy::impurity_oneband::compute_charge_Q_direct_plasma_1D",   # name of the C++ class
-        doc = r"""""",   # doc of the C++ class
-        hdf5 = False,
-)
-
-c.add_member(c_name = "warper",
-             c_type = "warpers::warper_train_t",
-             read_only= True,
-             doc = r"""""")
-
-c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, std::vector<std::function<double (double)> > fn_, int nr_sample_points_warper)""", doc = r"""""")
+c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, double cutoff_integrand)""", doc = r"""""")
 
 c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_direct::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec, int start_domain_nr)""",
              doc = r"""""")
@@ -449,13 +404,13 @@ c = class_(
 )
 
 c.add_member(c_name = "warper",
-             c_type = "warpers::warper_train_t",
+             c_type = "keldy::warpers::warper_train_t",
              read_only= True,
              doc = r"""""")
 
-c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int order, double cutoff_integrand, std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)""", doc = r"""""")
+c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int order, double cutoff_integrand)""", doc = r"""""")
 
-c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, double cutoff_integrand, std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)""", doc = r"""""")
+c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, double cutoff_integrand)""", doc = r"""""")
 
 c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_direct::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec, int start_domain_nr)""",
              doc = r"""""")
@@ -495,13 +450,13 @@ c = class_(
 )
 
 c.add_member(c_name = "warper",
-             c_type = "warpers::warper_train_t",
+             c_type = "keldy::warpers::warper_train_t",
              read_only= True,
              doc = r"""""")
 
-c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int order, int nr_time_slices, double cutoff_integrand, std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)""", doc = r"""""")
+c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int order, int nr_time_slices, double cutoff_integrand)""", doc = r"""""")
 
-c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, int nr_time_slices, double cutoff_integrand, std::string warper_function_name, int nr_sample_points_warper, double warper_scale = 1)""", doc = r"""""")
+c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, int nr_time_slices, double cutoff_integrand)""", doc = r"""""")
 
 c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_direct_time::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec, int start_domain_nr)""",
              doc = r"""""")
@@ -541,15 +496,13 @@ c = class_(
 )
 
 c.add_member(c_name = "warper",
-             c_type = "warpers::warper_train_t",
+             c_type = "keldy::warpers::warper_train_t",
              read_only= True,
              doc = r"""""")
 
-c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, std::string warper_function_name, int nr_sample_points_warper, int nr_bins = 100)""", doc = r"""""")
+c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int order, int nr_bins = 100)""", doc = r"""""")
 
-c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int order, std::string warper_function_name, int nr_sample_points_warper, double warper_scale, int nr_bins = 100)""", doc = r"""""")
-
-c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int order, std::string warper_function_name, bool alternate, int nr_sample_points_warper, double warper_scale, int nb_bins = 100)""", doc = r"""""")
+c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, int nr_bins = 100)""", doc = r"""""")
 
 c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_kernel::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec, int start_domain_nr)""",
              doc = r"""""")
@@ -614,14 +567,6 @@ module.add_function ("void keldy::impurity_oneband::h5_write (triqs::h5::group h
 module.add_function ("void keldy::impurity_oneband::h5_read (triqs::h5::group h5group, std::string subgroup_name, keldy::impurity_oneband::model_param_t c)", doc = r"""""")
 
 module.add_function ("bool keldy::impurity_oneband::equivalent_without_timesplit (keldy::impurity_oneband::gf_index_t lhs, keldy::impurity_oneband::gf_index_t rhs)", doc = r"""""")
-
-module.add_function ("keldy::warpers::warper_product_1d_t keldy::impurity_oneband::alternate_product_plasma_warper_factory (std::string label, int order, double time, int nr_sample_points_warper, double warper_scale)", doc = r"""""")
-
-module.add_function ("keldy::warpers::warper_product_1d_simple_t keldy::impurity_oneband::simple_plasma_warper_factory (std::string label, keldy::impurity_oneband::integrand_g_direct f, double time, int nr_sample_points_warper, double warper_scale)", doc = r"""""")
-
-module.add_function ("keldy::warpers::warper_product_1d_simple_t keldy::impurity_oneband::simple_plasma_warper_factory (std::string label, double time, int nr_sample_points_warper, double warper_scale)", doc = r"""""")
-
-module.add_function ("keldy::warpers::warper_product_1d_simple_t keldy::impurity_oneband::simple_plasma_warper_factory_kernel (std::string label, keldy::impurity_oneband::integrand_g_kernel f, double time, int nr_sample_points_warper, double warper_scale)", doc = r"""""")
 
 
 # Converter for model_param_t

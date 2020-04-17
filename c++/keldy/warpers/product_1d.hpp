@@ -122,4 +122,21 @@ class warper_product_1d_t {
   }
 };
 
+inline warper_product_1d_t make_product_1d_inverse_cube_alternate(int order, double time, double warper_scale,
+                                                                  int nr_sample_points_warper) {
+  auto f1 = [warper_scale](double t) -> double { return warper_scale / (warper_scale + t); };
+  auto f2 = [warper_scale](double t) -> double {
+    return warper_scale * warper_scale * warper_scale / ((warper_scale + t) * (warper_scale + t) * (warper_scale + t));
+  };
+  std::vector<std::function<double(double)>> f_list = {};
+  for (int n = 1; n <= order; ++n) {
+    if (n % 2 == 0) {
+      f_list.push_back(f2);
+    } else {
+      f_list.push_back(f1);
+    }
+  }
+  return {f_list, time, nr_sample_points_warper};
+}
+
 } // namespace keldy::warpers

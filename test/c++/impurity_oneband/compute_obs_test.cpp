@@ -1,3 +1,5 @@
+#include "keldy/warpers/product_1d.hpp"
+#include "keldy/warpers/product_1d_simple.hpp"
 #include <keldy/impurity_oneband/compute_obs.hpp>
 #include <triqs/test_tools/gfs.hpp>
 #include <boost/math/constants/constants.hpp>
@@ -6,72 +8,84 @@ using namespace keldy;
 using namespace keldy::impurity_oneband;
 
 TEST(ComputeObs, Initialize1) { // NOLINT
-  model_param_t params;
-  // TRIQS_PRINT(params.bath_type);
-  compute_charge_Q_direct computer(params, 10.0, 1, 0.0, "first_order", 1000);
-  // tests
+  // model_param_t params;
+  // // TRIQS_PRINT(params.bath_type);
+  // compute_charge_Q_direct computer(params, 10.0, 1, 0.0, "first_order", 1000);
+  // // tests
 
-  // run
-  computer.run(10);
-  computer.run(10);
+  // // run
+  // computer.run(10);
+  // computer.run(10);
 
-  //
-  std::cout << computer.reduce_result() << std::endl;
-  std::cout << computer.reduce_nr_points_run() << std::endl;
-  // get_warper
+  // //
+  // std::cout << computer.reduce_result() << std::endl;
+  // std::cout << computer.reduce_nr_points_run() << std::endl;
+  // // get_warper
 
-  // get_integrand
+  // // get_integrand
 }
 
 TEST(ComputeObs, Initialize2) { // NOLINT
-  model_param_t params;
-  // TRIQS_PRINT(params.bath_type);
-  compute_charge_Q_direct computer(params, 10.0, 4, 0.0, "first_order", 1000);
+  // model_param_t params;
+  // // TRIQS_PRINT(params.bath_type);
+  // compute_charge_Q_direct computer(params, 10.0, 4, 0.0, "first_order", 1000);
 
-  // tests
-  // model_param_t params, double time, int order, std::string const &warper_function_name, int nr_sample_points_ansatz
-  // run
-  computer.run(10);
-  //
+  // // tests
+  // // model_param_t params, double time, int order, std::string const &warper_function_name, int nr_sample_points_ansatz
+  // // run
+  // computer.run(10);
+  // //
 
-  std::cout << computer.reduce_result() << std::endl;
-  std::cout << computer.reduce_nr_points_run() << std::endl;
+  // std::cout << computer.reduce_result() << std::endl;
+  // std::cout << computer.reduce_nr_points_run() << std::endl;
 }
 
 TEST(ComputeObs, InitializeInverseSquare) { // NOLINT
   model_param_t params;
-  compute_charge_Q_direct computer(params, 10.0, 4, 0.0, "inverse_square", 1000, 1.5);
+  double time = 10.0;
+  compute_charge_Q_direct computer(params, time, 4, 0.0);
+
+  computer.warper.emplace_back(warpers::warper_plasma_uv_t{time});
+  computer.warper.emplace_back(warpers::make_product_1d_simple_inverse_square(time, 1.5, 1000));
 
   computer.run(10);
 }
 
 TEST(ComputeObs, InitializeExponential) { // NOLINT
   model_param_t params;
-  compute_charge_Q_direct computer(params, 10.0, 4, 0.0, "exponential", 1000, 1.5);
+  double time = 10.0;
+
+  compute_charge_Q_direct computer(params, 10.0, 4, 0.0);
+
+  computer.warper.emplace_back(warpers::warper_plasma_uv_t{time});
+  computer.warper.emplace_back(warpers::make_product_1d_simple_exponential(time, 1.5, 1000));
 
   computer.run(10);
 }
 
 TEST(ComputeObs, InitializeIdentity) { // NOLINT
   model_param_t params;
-  compute_charge_Q_direct computer(params, 10.0, 4, 0.0, "identity", 1000, 1.5);
+  double time = 10.0;
+
+  compute_charge_Q_direct computer(params, time, 4, 0.0);
+  computer.warper.emplace_back(warpers::warper_plasma_uv_t{time});
 
   computer.run(10);
 }
 
 TEST(ComputeObs, Initialize_current) { // NOLINT
-  model_param_t params;
-  // TRIQS_PRINT(params.bath_type);
-  compute_current_J_direct computer(params, 10.0, 4, 0.0, "first_order", 1000);
+  // model_param_t params;
+  // // TRIQS_PRINT(params.bath_type);
+  // compute_current_J_direct computer(params, 10.0, 4, 0.0, "first_order", 1000);
 
-  // tests
-  // model_param_t params, double time, int order, std::string const &warper_function_name, int nr_sample_points_ansatz
-  // run
-  computer.run(10);
+  // // tests
+  // // model_param_t params, double time, int order, std::string const &warper_function_name, int nr_sample_points_ansatz
+  // // run
+  // computer.run(10);
   //
 
-  std::cout << computer.reduce_result() << std::endl;
-  std::cout << computer.reduce_nr_points_run() << std::endl;
+  // std::cout << computer.reduce_result() << std::endl;
+  // std::cout << computer.reduce_nr_points_run() << std::endl;
 }
 
 TEST(ComputeChargeQDirect, FlatbandAnalyticCompare1) { // NOLINT
@@ -103,7 +117,11 @@ TEST(ComputeChargeQDirect, FlatbandAnalyticCompare1) { // NOLINT
 
   for (int order = 1; order <= 6; ++order) {
     std::cout << "Order " << order << std::endl;
-    compute_charge_Q_direct computer(params, t_max, order, 0.0, "inverse_square", 1e5);
+    compute_charge_Q_direct computer(params, t_max, order, 0.0);
+
+    computer.warper.emplace_back(warpers::warper_plasma_uv_t{t_max});
+    computer.warper.emplace_back(warpers::make_product_1d_simple_inverse_square(t_max, 1.0, 1e5));
+
     computer.run(1e4);
 
     if (order >= 5) {
@@ -144,7 +162,11 @@ TEST(ComputeChargeQDirect, FlatbandAnalyticCompare2) { // NOLINT
 
   for (int order = 1; order <= 6; ++order) {
     std::cout << "Order " << order << std::endl;
-    compute_charge_Q_direct computer(params, t_max, order, 0.0, "exponential", 1e5, 2.0);
+    compute_charge_Q_direct computer(params, t_max, order, 0.0);
+
+    computer.warper.emplace_back(warpers::warper_plasma_uv_t{t_max});
+    computer.warper.emplace_back(warpers::make_product_1d_simple_exponential(t_max, 2.0, 1e5));
+
     computer.run(5e4);
 
     //if (order >= 5) {
@@ -169,7 +191,12 @@ TEST(ComputeObs, ValueCurrent1) { // NOLINT
   params.bath_type = "semicircle";
   params.ft_method = "contour";
 
-  compute_current_J_direct computer(params, 100., 1, 0.0, "inverse_square", 1e5, 0.5);
+  double t_max = 100.;
+  compute_current_J_direct computer(params, t_max, 1, 0.0);
+
+  computer.warper.emplace_back(warpers::warper_plasma_uv_t{t_max});
+  computer.warper.emplace_back(warpers::make_product_1d_simple_inverse_square(t_max, 0.5, 1e5));
+
   computer.run(1e5);
 
   // exact result from analytical calculation
@@ -194,7 +221,10 @@ TEST(ComputeObs, ValueKernel) { // NOLINT
   auto const g0 = g0_model(g0_model_omega(params), false);
 
   int const nr_bins = 10;
-  compute_gf_kernel computer(g0, tmax, 2, "inverse_and_cube", true, 1e5, 1., nr_bins);
+  compute_gf_kernel computer(g0, tmax, 2, nr_bins);
+
+  computer.warper.emplace_back(warpers::warper_plasma_uv_t{tmax});
+  computer.warper.emplace_back(warpers::make_product_1d_inverse_cube_alternate(2, tmax, 1.0, 1e5));
 
   computer.run(1e6);
   auto const binner = computer.reduce_result();

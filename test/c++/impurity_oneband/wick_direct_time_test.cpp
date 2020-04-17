@@ -1,3 +1,5 @@
+#include "keldy/warpers/plasma_uv.hpp"
+#include "keldy/warpers/product_1d_simple.hpp"
 #include <keldy/common.hpp>
 #include <keldy/impurity_oneband/compute_obs.hpp>
 #include <keldy/impurity_oneband/wick_direct_time.hpp>
@@ -45,8 +47,15 @@ TEST(integrand_direct_time, consistency) { // NOLINT
 
 TEST(integration_direct_time, consistency) { // NOLINT
   model_param_t params;
-  compute_charge_Q_direct computer_direct(params, 10.0, 4, 0.0, "exponential", 1000);
-  compute_charge_Q_direct_time computer(params, 10.0, 4, 10, 0.0, "exponential", 1000);
+  double time = 10.0;
+  compute_charge_Q_direct computer_direct(params, time, 4, 0.0);
+  compute_charge_Q_direct_time computer(params, time, 4, 10, 0.0);
+
+  computer_direct.warper.emplace_back(warpers::warper_plasma_uv_t{time});
+  computer_direct.warper.emplace_back(warpers::make_product_1d_simple_exponential(time, 1.0, 1000));
+
+  computer.warper.emplace_back(warpers::warper_plasma_uv_t{time});
+  computer.warper.emplace_back(warpers::make_product_1d_simple_exponential(time, 1.0, 1000));
 
   computer_direct.run(10);
   computer.run(10);

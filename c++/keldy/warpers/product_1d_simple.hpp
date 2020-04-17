@@ -150,4 +150,36 @@ class warper_product_1d_simple_t {
   }
 };
 
+// Maker Functions:
+
+inline warper_product_1d_simple_t make_product_1d_simple_exponential(double time, double w_scale,
+                                                                     int nr_sample_points_warper) {
+  return {[w_scale](double t) -> double { return std::exp(-(t / w_scale)); },
+          [w_scale](double t) -> double { return w_scale * (1 - std::exp(-t / w_scale)); },
+          [w_scale](double l) -> double { return -w_scale * std::log(1 - l / w_scale); }, time,
+          nr_sample_points_warper};
+}
+
+inline warper_product_1d_simple_t make_product_1d_simple_inverse(double time, double w_scale,
+                                                                 int nr_sample_points_warper) {
+  return {[w_scale](double t) -> double { return w_scale / (w_scale + t); },
+          [w_scale](double t) -> double { return w_scale * std::log(1. + t / w_scale); },
+          [w_scale](double l) -> double { return w_scale * (std::exp(l / w_scale) - 1.); }, time,
+          nr_sample_points_warper};
+}
+
+inline warper_product_1d_simple_t make_product_1d_simple_inverse_square(double time, double w_scale,
+                                                                        int nr_sample_points_warper) {
+  return {[w_scale](double t) -> double { return w_scale * w_scale / ((w_scale + t) * (w_scale + t)); },
+          [w_scale](double t) -> double { return w_scale * t / (w_scale + t); },
+          [w_scale](double l) -> double { return w_scale * l / (w_scale - l); }, time, nr_sample_points_warper};
+}
+
+// (std::string const &label, integrand_g_direct const &f, double time, int nr_sample_points_warper, double w_scale) {
+//   if (label == "first_order") {
+//     return {[time, &f](double t) -> double { return std::abs(f(std::vector<double>{time - t}).first) + 1e-12; }, time,
+//             nr_sample_points_warper};
+//   }
+// }
+
 } // namespace keldy::warpers

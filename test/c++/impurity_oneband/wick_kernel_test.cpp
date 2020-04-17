@@ -92,7 +92,9 @@ TEST(integrand_kernel, Order_2) { // NOLINT
 
 TEST(ComputeObs, Initialize2) { // NOLINT
   model_param_t params;
-  compute_gf_kernel computer(params, 10.0, 4, "identity", 1000);
+  double time = 10.0;
+  compute_gf_kernel computer(params, time, 4);
+  computer.warper.emplace_back(warpers::warper_plasma_uv_t{time});
 
   computer.run(10);
   //
@@ -102,23 +104,27 @@ TEST(ComputeObs, Initialize2) { // NOLINT
 }
 
 TEST(ComputeObs, Initialize3) { // NOLINT
-  model_param_t params;
-  compute_gf_kernel computer(params, 10.0, 4, "first_order", 1000);
 
-  computer.run(10);
+// todo: test something
 
-  auto result = computer.reduce_result();
+  // model_param_t params;
+  // compute_gf_kernel computer(params, 10.0, 4);
+  // computer.warper.emplace_back(warpers::warper_plasma_uv_t{time});
 
-  std::cout << result.get_bin_times() << std::endl;
-  std::cout << result.get_bin_size() << std::endl;
-  std::cout << result.get_nr_point_dropped() << std::endl;
-  std::cout << result.get_nr_values()() << std::endl;
-  std::cout << result.get_bin_times() << std::endl;
+  // computer.run(10);
 
-  //
+  // auto result = computer.reduce_result();
 
-  // std::cout << computer.reduce_result() << std::endl;
-  std::cout << computer.reduce_nr_points_run() << std::endl;
+  // std::cout << result.get_bin_times() << std::endl;
+  // std::cout << result.get_bin_size() << std::endl;
+  // std::cout << result.get_nr_point_dropped() << std::endl;
+  // std::cout << result.get_nr_values()() << std::endl;
+  // std::cout << result.get_bin_times() << std::endl;
+
+  // //
+
+  // // std::cout << computer.reduce_result() << std::endl;
+  // std::cout << computer.reduce_nr_points_run() << std::endl;
 }
 
 MAKE_MAIN; // NOLINT

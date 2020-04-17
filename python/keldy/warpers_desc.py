@@ -252,6 +252,14 @@ module.add_function ("std::vector<double> keldy::warpers::vi_from_ui (double t_m
 
 module.add_function ("std::vector<double> keldy::warpers::ui_from_vi (double t_max, std::vector<double> v_times)", doc = r"""""")
 
+module.add_function ("keldy::warpers::warper_product_1d_simple_t keldy::warpers::make_product_1d_simple_exponential (double time, double w_scale, int nr_sample_points_warper)", doc = r"""""")
+
+module.add_function ("keldy::warpers::warper_product_1d_simple_t keldy::warpers::make_product_1d_simple_inverse (double time, double w_scale, int nr_sample_points_warper)", doc = r"""""")
+
+module.add_function ("keldy::warpers::warper_product_1d_simple_t keldy::warpers::make_product_1d_simple_inverse_square (double time, double w_scale, int nr_sample_points_warper)", doc = r"""""")
+
+module.add_function ("keldy::warpers::warper_product_1d_t keldy::warpers::make_product_1d_inverse_cube_alternate (int order, double time, double warper_scale, int nr_sample_points_warper)", doc = r"""""")
+
 module.add_function ("void keldy::warpers::bin_values (keldy::warpers::hist_xi xi, int axis, std::vector<std::vector<double> > points, std::vector<double> values)", doc = r"""""")
 
 module.add_function ("void keldy::warpers::convolve (std::vector<double> signal, std::vector<double> window)", doc = r"""""")
