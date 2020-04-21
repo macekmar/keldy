@@ -109,6 +109,13 @@ g0_model_omega::g0_model_omega(model_param_t const &parameters) : param_(paramet
     };
     bath_hybrid_R_right_ = bath_hybrid_R_left_;
 
+    /// half_bandwidth is here interpreted as half width at half maximum.
+  } else if (param_.bath_type == "lorentzian") {
+    bath_hybrid_R_left_ = [Gamma = param_.Gamma, half_bandwidth = param_.half_bandwidth](dcomplex omega) -> dcomplex {
+      return Gamma * half_bandwidth / 2. / (omega + 1_j * half_bandwidth);
+    };
+    bath_hybrid_R_right_ = bath_hybrid_R_left_;
+
   } else {
     TRIQS_RUNTIME_ERROR << "bath_type not defined";
   }
