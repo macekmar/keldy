@@ -84,7 +84,7 @@ def integrand_warper_plot(computer, order, d, t_max, nr_times=100, plot_all=Fals
 
         _plt.plot(x_arr, values_v, '-', c=c, label='V=({})'.format(list2str(v_dir_int)))
 
-        values_v = [warper(u) if is_u_valid(u) else _np.nan for u in u_arr]
+        values_v = [warper.jacobian_forward(u) if is_u_valid(u) else _np.nan for u in u_arr]
         _plt.plot(x_arr, warper_prefactor * _np.abs(values_v), '--', c=c)
 
     _plt.legend(loc=0)

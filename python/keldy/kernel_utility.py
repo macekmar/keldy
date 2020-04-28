@@ -1,8 +1,8 @@
 """
 Utility functions to extract retarded kernel and Green function.
 """
-import numpy as np
-from numpy import fft
+import numpy as _np
+from numpy import _fft
 
 
 # stolen from scipy.signal.fftconvolve
@@ -55,7 +55,7 @@ def _next_regular(target):
     return match
 
 
-def _fft(t, ft, n='auto', axis=-1, conv=-1):
+def _fourier_transform_fft(t, ft, n='auto', axis=-1, conv=-1):
     r"""
     $f(\omega) = \int{dt} f(t) e^{-conv i\omega t}$
     times is assumed sorted and regularly spaced
@@ -73,15 +73,15 @@ def _fft(t, ft, n='auto', axis=-1, conv=-1):
 
     dt = t[1] - t[0]
 
-    w = fft.fftshift(fft.fftfreq(n, dt))
-    fw = fft.fftshift(fft.fft(ft, n=n, axis=axis), axes=axis)
-    fw = np.swapaxes(fw, -1, axis)
+    w = _fft.fftshift(_fft.fftfreq(n, dt))
+    fw = _fft.fftshift(_fft.fft(ft, n=n, axis=axis), axes=axis)
+    fw = _np.swapaxes(fw, -1, axis)
 
-    w = 2 * np.pi * conv * w[::conv]
+    w = 2 * _np.pi * conv * w[::conv]
     fw = fw[..., ::conv]
-    fw[..., :] *= dt * np.exp(-conv * 1j * w * t[0])
+    fw[..., :] *= dt * _np.exp(-conv * 1j * w * t[0])
 
-    return w, np.swapaxes(fw, -1, axis)
+    return w, _np.swapaxes(fw, -1, axis)
 
 
 def get_K_R_time(bin_times, kernel_binner):
@@ -98,7 +98,7 @@ def get_K_R_time(bin_times, kernel_binner):
 
     ### now we have the advanced kernel, transform it into the retarded one
     times = -times[::-1]
-    kernel = np.conj(kernel[::-1])
+    kernel = _np.conj(kernel[::-1])
 
     return times, kernel
 
@@ -115,7 +115,7 @@ def get_G_R_omega(g0_R_omega, bin_times, kernel_binner, g0_is_vectorized=False):
       This is e.g. G0ModelOmega(params).g0_dot_R.
     - bin_times: times of center of bins, obtained from the binner,
     - kernel_binner: the binner returned by keldy.
-    - g0_is_vectorized (bool): tells if g0_R_omega is in vectorized form, e.g. using np.vectorize.
+    - g0_is_vectorized (bool): tells if g0_R_omega is in vectorized form, e.g. using _np.vectorize.
 
     This does *not* multiply by i^n.
     This assumes the binner starts at t=0.
@@ -126,9 +126,9 @@ def get_G_R_omega(g0_R_omega, bin_times, kernel_binner, g0_is_vectorized=False):
 
     ### into frequency domain
     if not g0_is_vectorized:
-        g0_R_omega = np.vectorize(g0_R_omega)
+        g0_R_omega = _np.vectorize(g0_R_omega)
 
-    omegas, kernel = _fft(times, kernel)
+    omegas, kernel = _fourier_transform_fft(times, kernel)
     gf = kernel * g0_R_omega(omegas)
 
     return omegas, gf
@@ -146,7 +146,7 @@ def get_G_R_omega_series(g0_R_omega, bin_times, kernel_binner_series, g0_is_vect
     gf_series = []
 
     if not g0_is_vectorized:
-        g0_R_omega = np.vectorize(g0_R_omega)
+        g0_R_omega = _np.vectorize(g0_R_omega)
 
     for k, kernel_binner in enumerate(kernel_binner_series):
         omegas, gf = get_G_R_omega(g0_R_omega, bin_times, kernel_binner_series[k],
@@ -154,7 +154,7 @@ def get_G_R_omega_series(g0_R_omega, bin_times, kernel_binner_series, g0_is_vect
         gf_series.append(gf)
 
     gf_series.insert(0, g0_R_omega(omegas))
-    return omegas, np.array(gf_series, dtype=complex)
+    return omegas, _np.array(gf_series, dtype=complex)
 
 
 def get_G_R_omega_series_vect(g0_R_omega, bin_times, kernel_binner_series_list, g0_is_vectorized=False):
@@ -171,11 +171,11 @@ def get_G_R_omega_series_vect(g0_R_omega, bin_times, kernel_binner_series_list, 
     gf_series_list = []
 
     if not g0_is_vectorized:
-        g0_R_omega = np.vectorize(g0_R_omega)
+        g0_R_omega = _np.vectorize(g0_R_omega)
 
     for k, kernel_binner_series in enumerate(kernel_binner_series_list):
         omegas, gf_series = get_G_R_omega_series(g0_R_omega, bin_times, kernel_binner_series,
                                                  g0_is_vectorized=True)
         gf_series_list.append(gf_series)
 
-    return omegas, np.array(gf_series_list, dtype=complex)
+    return omegas, _np.array(gf_series_list, dtype=complex)
