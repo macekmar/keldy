@@ -21,7 +21,9 @@ using namespace triqs::arrays;
 
 TEST(SimpleProduct1DWarper, Default) { // NOLINT
   double const t_max = 1.5;
-  auto warper = warper_product_1d_simple_t(t_max);
+  std::function<double(double)> const_function = [](double t){return 1.0;};
+
+  auto warper = warper_product_1d_simple_t({const_function}, t_max, 8);
 
   basic_test_warper_at_order_1(warper, t_max);
   basic_test_warper_multidim(warper, t_max);

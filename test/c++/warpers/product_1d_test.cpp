@@ -21,7 +21,10 @@ using namespace triqs::arrays;
 
 TEST(Product1DWarper, Default) { // NOLINT
   double const t_max = 1.5;
-  auto warper = warper_product_1d_t(t_max);
+
+  std::function<double(double)> const_function = [](double t){return 1.0;};
+  auto warper = warper_product_1d_t({const_function}, t_max, 8);
+
 
   /// only order 1 exists
   basic_test_warper_at_order_1(warper, t_max);

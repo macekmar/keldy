@@ -44,10 +44,6 @@ class warper_product_1d_simple_t {
   std::function<double(double)> f1;
 
  public:
-  // Identity Constructor: should use this if nothing else is specified
-  warper_product_1d_simple_t(double t_max_)
-     : warper_product_1d_simple_t{identity_function{}, linear_function{}, linear_function{}, t_max_, 4} {}
-
   // Pass Warping Function: numerically perform integration
   // TODO: points vs resampling points
   warper_product_1d_simple_t(std::function<double(double)> f1_, double t_max_, int nr_function_sample_points)

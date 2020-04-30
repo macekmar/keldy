@@ -28,16 +28,4 @@
 #include <numeric>
 #include <triqs/gfs.hpp>
 
-namespace keldy::warpers {
-
-// Some Simple Functions:
-
-struct CPP2PY_IGNORE identity_function {
-  double operator()([[maybe_unused]] double t) { return 1.0; }
-};
-
-struct CPP2PY_IGNORE linear_function {
-  double operator()(double t) { return t; }
-};
-
-} // namespace keldy::warpers
+namespace keldy::warpers {} // namespace keldy::warpers

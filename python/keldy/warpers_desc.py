@@ -89,8 +89,6 @@ c = class_(
         hdf5 = False,
 )
 
-c.add_constructor("""(double t_max_)""", doc = r"""""")
-
 c.add_constructor("""(std::function<double (double)> f1_, double t_max_, int nr_function_sample_points)""", doc = r"""""")
 
 c.add_constructor("""(std::function<double (double)> f1_, std::function<double (double)> f1_integrated_, std::function<double (double)> f1_integrated_inverse_, double t_max_, int nr_function_sample_points)""", doc = r"""""")
@@ -122,8 +120,6 @@ c = class_(
         doc = r"""""",   # doc of the C++ class
         hdf5 = False,
 )
-
-c.add_constructor("""(double t_max_)""", doc = r"""""")
 
 c.add_constructor("""(std::vector<std::function<double (double)> > fn_, double t_max_, int nr_function_sample_points)""", doc = r"""""")
 
