@@ -36,17 +36,17 @@ c = class_(
 
 c.add_member(c_name = "contour",
              c_type = "keldy::contour_pt_t",
-             read_only= True,
+             read_only= False,
              doc = r"""""")
 
 c.add_member(c_name = "spin",
              c_type = "keldy::spin_t",
-             read_only= True,
+             read_only= False,
              doc = r"""""")
 
 c.add_member(c_name = "orbital",
              c_type = "keldy::orbital_t",
-             read_only= True,
+             read_only= False,
              doc = r"""""")
 
 c.add_constructor("""()""", doc = r"""Constructor: (time, spin, keldysh_idx)""")
@@ -131,32 +131,32 @@ c = class_(
 
 c.add_member(c_name = "model_omega",
              c_type = "keldy::impurity_oneband::g0_model_omega",
-             read_only= True,
+             read_only= False,
              doc = r"""""")
 
 c.add_member(c_name = "make_dot_lead",
              c_type = "bool",
-             read_only= True,
+             read_only= False,
              doc = r"""""")
 
 c.add_member(c_name = "g0_lesser",
              c_type = "block_gf<triqs::gfs::retime, triqs::gfs::matrix_valued>",
-             read_only= True,
+             read_only= False,
              doc = r"""Lesser Green function $G^{<}_{\sigma}(t)$; block spin $\sigma$ {up, down}""")
 
 c.add_member(c_name = "lesser_ft_error",
              c_type = "gf<triqs::gfs::retime, triqs::gfs::matrix_valued>",
-             read_only= True,
+             read_only= False,
              doc = r"""""")
 
 c.add_member(c_name = "g0_greater",
              c_type = "block_gf<triqs::gfs::retime, triqs::gfs::matrix_valued>",
-             read_only= True,
+             read_only= False,
              doc = r"""Greater Green function $G^{>}_{\sigma}(t)$; block spin $\sigma$ {up, down}""")
 
 c.add_member(c_name = "greater_ft_error",
              c_type = "gf<triqs::gfs::retime, triqs::gfs::matrix_valued>",
-             read_only= True,
+             read_only= False,
              doc = r"""""")
 
 c.add_constructor("""()""", doc = r"""""")
@@ -179,7 +179,7 @@ c = class_(
 
 c.add_member(c_name = "model",
              c_type = "keldy::impurity_oneband::g0_model",
-             read_only= True,
+             read_only= False,
              doc = r"""""")
 
 c.add_constructor("""(keldy::impurity_oneband::g0_model model_)""", doc = r"""""")
@@ -219,12 +219,12 @@ c = class_(
 
 c.add_member(c_name = "time",
              c_type = "double",
-             read_only= True,
+             read_only= False,
              doc = r"""""")
 
 c.add_member(c_name = "value",
              c_type = "keldy::dcomplex",
-             read_only= True,
+             read_only= False,
              doc = r"""""")
 
 module.add_class(c)
@@ -287,7 +287,7 @@ c = class_(
 
 c.add_member(c_name = "data",
              c_type = "std::vector<std::pair<gf_index_t, dcomplex> >",
-             read_only= True,
+             read_only= False,
              doc = r"""""")
 
 c.add_method("""void bin_data (std::pair<gf_index_t, dcomplex> in)""",

@@ -1,5 +1,5 @@
 # Generated automatically using the command :
-# c++2py ../../c++/keldy/interfaces/gsl_vegas_wrap.hpp -C pytriqs --cxxflags="-std=c++17 " --includes ../../c++ --members_read_only -N keldy
+# c++2py ../../c++/keldy/interfaces/gsl_vegas_wrap.hpp -C pytriqs --cxxflags="-std=c++17 " --includes ../../c++ -N keldy
 from cpp2py.wrap_generator import *
 
 # The module

@@ -1,5 +1,5 @@
 # Generated automatically using the command :
-# c++2py ../../c++/keldy/qrng.hpp -a keldy -m common -o common -C pytriqs --cxxflags="-std=c++17 " --includes ../../c++ --members_read_only -N keldy
+# c++2py ../../c++/keldy/qrng.hpp -a keldy -m common -o common -C pytriqs --cxxflags="-std=c++17 " --includes ../../c++ -N keldy
 from cpp2py.wrap_generator import *
 
 # The module
@@ -30,17 +30,17 @@ c = class_(
 
 c.add_member(c_name = "time",
              c_type = "keldy::time_real_t",
-             read_only= True,
+             read_only= False,
              doc = r"""""")
 
 c.add_member(c_name = "k_idx",
              c_type = "keldy::keldysh_idx_t",
-             read_only= True,
+             read_only= False,
              doc = r"""""")
 
 c.add_member(c_name = "timesplit_n",
              c_type = "int",
-             read_only= True,
+             read_only= False,
              doc = r"""""")
 
 module.add_class(c)

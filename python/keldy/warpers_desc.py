@@ -1,5 +1,5 @@
 # Generated automatically using the command :
-# c++2py ../../c++/keldy/warpers/warpers.hpp -a keldy -m warpers -o warpers  -C pytriqs -C keldy --cxxflags="-std=c++17 " --includes ../../c++ --members_read_only -N keldy::warpers
+# c++2py ../../c++/keldy/warpers/warpers.hpp -a keldy -m warpers -o warpers  -C pytriqs -C keldy --cxxflags="-std=c++17 " --includes ../../c++ -N keldy::warpers
 from cpp2py.wrap_generator import *
 
 # The module
@@ -157,17 +157,17 @@ c = class_(
 
 c.add_member(c_name = "bins",
              c_type = "std::vector<double>",
-             read_only= True,
+             read_only= False,
              doc = r"""""")
 
 c.add_member(c_name = "values",
              c_type = "std::vector<double>",
-             read_only= True,
+             read_only= False,
              doc = r"""""")
 
 c.add_member(c_name = "counts",
              c_type = "std::vector<int>",
-             read_only= True,
+             read_only= False,
              doc = r"""""")
 
 module.add_class(c)
