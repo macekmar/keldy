@@ -26,6 +26,7 @@
 
 #include "../common.hpp"
 #include "product_1d.hpp"
+#include "product_1d_simple.hpp"
 #include "../interfaces/gsl_interp_wrap.hpp"
 #include <algorithm>
 #include <any>
@@ -202,7 +203,7 @@ class warper_plasma_projection_t {
       }  
 
       auto u = ui_from_vi(t_max, w_warper.ui_from_li(w));  // TODO: Should have pass warper train
-      value = std::abs(integrand(u).first * w_warper.jacobian(w));
+      value = std::abs(integrand(u).first * w_warper.jacobian_reverse(w));
       values(i) = std::real(std::pow(std::complex<double>(0,1), order+1)*integrand(u).first);
 
       for (int axis = 0; axis < order; axis++) {

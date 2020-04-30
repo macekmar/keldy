@@ -112,7 +112,7 @@ class integrator {
       values(i,1) = *max;
       values(i,2) = ((-im_unit)*std::pow(im_unit, ui_vec.size())*eval).real();
       values(i,3) = in_domain;
-      values(i,4) = warper.jacobian(li_vec);
+      values(i,4) = warper.jacobian_reverse(li_vec);
     }
 
     values = mpi::mpi_all_reduce(values, comm);

@@ -13,9 +13,11 @@ module.add_include("keldy/warpers/warpers.hpp")
 
 # Add here anything to add in the C++ code at the start, e.g. namespace using
 module.add_preamble("""
+#include <cpp2py/converters/complex.hpp>
 #include <cpp2py/converters/function.hpp>
 #include <cpp2py/converters/pair.hpp>
 #include <cpp2py/converters/vector.hpp>
+#include <triqs/cpp2py_converters/arrays.hpp>
 
 using namespace keldy::warpers;
 """)
@@ -151,20 +153,57 @@ c = class_(
         hdf5 = False,
 )
 
-c.add_member(c_name = "bins",
-             c_type = "std::vector<double>",
+c.add_member(c_name = "bin_times",
+             c_type = "triqs::arrays::array<double, 1>",
              read_only= False,
              doc = r"""""")
 
 c.add_member(c_name = "values",
-             c_type = "std::vector<double>",
+             c_type = "triqs::arrays::array<double, 1>",
              read_only= False,
              doc = r"""""")
 
 c.add_member(c_name = "counts",
-             c_type = "std::vector<int>",
+             c_type = "triqs::arrays::array<double, 1>",
              read_only= False,
              doc = r"""""")
+
+c.add_member(c_name = "y",
+             c_type = "triqs::arrays::array<double, 1>",
+             read_only= False,
+             doc = r"""""")
+
+c.add_member(c_name = "y_interpolated",
+             c_type = "triqs::arrays::array<double, 1>",
+             read_only= False,
+             doc = r"""""")
+
+c.add_member(c_name = "t_min",
+             c_type = "double",
+             read_only= False,
+             doc = r"""""")
+
+c.add_member(c_name = "t_max",
+             c_type = "double",
+             read_only= False,
+             doc = r"""""")
+
+c.add_member(c_name = "delta",
+             c_type = "double",
+             read_only= False,
+             doc = r"""""")
+
+c.add_member(c_name = "num_bins",
+             c_type = "int",
+             read_only= False,
+             doc = r"""""")
+
+c.add_member(c_name = "nr_sample_points_warper",
+             c_type = "int",
+             read_only= False,
+             doc = r"""""")
+
+c.add_constructor("""(double t_min_, double t_max_, int num_bins_, int nr_sample_points_warper_)""", doc = r"""""")
 
 module.add_class(c)
 
@@ -176,7 +215,19 @@ c = class_(
         hdf5 = False,
 )
 
-c.add_constructor("""(std::function<double (std::vector<double>)> integrand_, keldy::warpers::warper_product_1d_t w_warper_, int order, int nr_function_sample_points)""", doc = r"""""")
+c.add_constructor("""(std::function<std::pair<dcomplex, int> (std::vector<double>)> integrand_, keldy::warpers::warper_product_1d_simple_t w_warper_, double t_max, int order, int nr_sample_points_warper_, int num_bins, int npts_mean, double sigma, bool optimize_sigma = true)""", doc = r"""""")
+
+c.add_method("""void gather_data (int npts_mean)""",
+             doc = r"""""")
+
+c.add_method("""void update_sigma (double sigma, bool optimize_sigma = true)""",
+             doc = r"""""")
+
+c.add_method("""std::vector<triqs::arrays::array<double, 1> > get_xi (int axis)""",
+             doc = r"""""")
+
+c.add_method("""std::vector<double> get_sigmas ()""",
+             doc = r"""""")
 
 c.add_method("""std::vector<double> ui_from_li (std::vector<double> li_vec)""",
              doc = r"""""")
@@ -187,7 +238,8 @@ c.add_method("""std::vector<double> li_from_ui (std::vector<double> ui_vec)""",
 c.add_method("""double jacobian_reverse (std::vector<double> li_vec)""",
              doc = r"""""")
 
-c.add_method("""double evaluate_warping_function (std::vector<double> ui_vec)""",
+c.add_method("""double operator() (std::vector<double> ui_vec)""",
+             name = "__call__",
              doc = r"""""")
 
 module.add_class(c)
@@ -258,9 +310,13 @@ module.add_function ("keldy::warpers::warper_product_1d_simple_t keldy::warpers:
 
 module.add_function ("keldy::warpers::warper_product_1d_t keldy::warpers::make_product_1d_inverse_cube_alternate (int order, double time, double warper_scale, int nr_sample_points_warper)", doc = r"""""")
 
-module.add_function ("void keldy::warpers::bin_values (keldy::warpers::hist_xi xi, int axis, std::vector<std::vector<double> > points, std::vector<double> values)", doc = r"""""")
+module.add_function ("void keldy::warpers::convolve (triqs::arrays::array<double, 1> signal, triqs::arrays::array<double, 1> result, triqs::arrays::array<double, 1> window)", doc = r"""""")
 
-module.add_function ("void keldy::warpers::convolve (std::vector<double> signal, std::vector<double> window)", doc = r"""""")
+module.add_function ("void keldy::warpers::kernel_smoothing (triqs::arrays::array<double, 1> x_in, triqs::arrays::array<double, 1> x_out, triqs::arrays::array<double, 1> y_in, triqs::arrays::array<double, 1> y_out, double sigma)", doc = r"""""")
+
+module.add_function ("double keldy::warpers::LOOCV (triqs::arrays::array<double, 1> x_in, triqs::arrays::array<double, 1> y_in, double sigma)", doc = r"""""")
+
+module.add_function ("double keldy::warpers::golden_section (std::function<double (double)> f, double a, double b, int max_iter = 20)", doc = r"""""")
 
 
 
