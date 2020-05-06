@@ -32,6 +32,7 @@ class Cpp2pyInfo(Cpp2pyInfoBase):
     table_imports = {
         'keldy::': 'keldy.common',
         'keldy::warpers': 'keldy.warpers',
+        'keldy::binner': 'keldy.binner',
         'keldy::impurity_oneband': 'keldy.impurity_oneband',
     }
 
@@ -40,7 +41,8 @@ class Cpp2pyInfo(Cpp2pyInfoBase):
 
 from . import common
 from . import warpers
+from . import binner
 from . import impurity_oneband
 from . import visualization
 
-__all__ = ['common', 'warpers', 'impurity_oneband', 'visualization']
+__all__ = ['common', 'warpers', 'binner', 'impurity_oneband', 'visualization']

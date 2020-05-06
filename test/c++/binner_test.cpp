@@ -9,10 +9,10 @@ TEST(Binner, Construction_1) { // NOLINT
 
   auto bin = binner_t<1, 2>({std::make_tuple(-2.5, 5.0, 10)}, {4, 2});
 
-  bin(0.5, 3, 0) << 1_j;
-  bin(0.7, 2, 1) << 1_j;
-  bin(-6.0, 2, 1) << 1_j; // out of binner
-  bin(3.0, 8, 1) << 1_j;  // out of binner
+  bin.accumulate(1_j, 0.5, 3, 0);
+  bin.accumulate(1_j, 0.7, 2, 1);
+  bin.accumulate(1_j, -6.0, 2, 1); // out of binner
+  bin.accumulate(1_j, 3.0, 8, 1);  // out of binner
 
   EXPECT_EQ(bin.get_nr_values_dropped(), 2);
 
@@ -37,17 +37,19 @@ TEST(Binner, Construction_1) { // NOLINT
 TEST(Binner, Construction_2) { // NOLINT
   auto bin = binner_t<2>({std::make_tuple(-2.5, 5.0, 10), std::make_tuple(0., 10., 5)});
 
-  bin(0.5, 3.) << 1_j;
-  bin(0.5, 13.) << 1_j;
+  bin.accumulate(1_j, 0.5, 3.);
+  bin.accumulate(1_j, 0.5, 13.);
 }
 
 TEST(Binner, sparse_binner) { // NOLINT
   sparse_binner_t<1, 2> sp_bin;
 
-  sp_bin(0.5, 3, 0) << 1_j;
-  sp_bin(0.7, 2, 1) << 1_j;
-  sp_bin(-6.0, 2, 1) << 1_j; // out of binner
-  sp_bin(3.0, 8, 1) << 1_j;  // out of binner
+  sp_bin.accumulate(1_j, 0.5, 3, 0);
+  sp_bin.accumulate(1_j, 0.7, 2, 1);
+  sp_bin.accumulate(1_j, -6.0, 2, 1); // out of binner
+  sp_bin.accumulate(1_j, 3.0, 8, 1);  // out of binner
+
+  auto res = sp_bin.operator*=(5.);
 
   auto bin = binner_t<1, 2>({std::make_tuple(-2.5, 5.0, 10)}, {4, 2});
 
