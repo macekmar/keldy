@@ -228,7 +228,7 @@ TEST(ComputeObs, ValueKernel) { // NOLINT
 
   computer.run(1e6);
   auto const binner = computer.reduce_result();
-  auto const result = make_array(binner.get_values() / binner.get_bin_size());
+  auto const result = make_array(binner.get_data() / binner.get_bin_size());
 
   /// lesser is the conjugate of greater (particle-hole symmetry)
   EXPECT_LT(max_element(abs(result(range(), 0) - conj(result(range(), 1)))), 1e-12);

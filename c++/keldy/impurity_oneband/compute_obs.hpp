@@ -79,10 +79,10 @@ class compute_current_J_direct : public integrator<dcomplex, integrand_g_direct>
 // Profumo + Time evolution methods
 
 // Class to compute charge = G^{lesser}_{up,up}(t).
-class compute_charge_Q_direct_time : public integrator<binner_1d, integrand_g_direct_time> {
+class compute_charge_Q_direct_time : public integrator<binner::binner_t<1>, integrand_g_direct_time> {
  public:
   compute_charge_Q_direct_time(g0_model model, double time, int order, int nr_time_slices, double cutoff_integrand)
-     : integrator{binner_1d(0., time, nr_time_slices),
+     : integrator{binner::binner_t<1>({std::make_tuple(0., time, nr_time_slices)}),
                   integrand_g_direct_time{g0_keldysh_contour_t{model}, gf_index_t{time, up, forward},
                                           gf_index_t{time, up, backward}, cutoff_integrand},
                   {},
@@ -99,10 +99,10 @@ class compute_charge_Q_direct_time : public integrator<binner_1d, integrand_g_di
 // ******************************************************************************************************************************************************
 // Kernal Method
 
-class compute_gf_kernel : public integrator<kernel_binner, integrand_g_kernel> {
+class compute_gf_kernel : public integrator<binner::binner_t<1, 1>, integrand_g_kernel> {
  public:
   compute_gf_kernel(g0_model model, double time, int order, int nr_bins = 100)
-     : integrator{kernel_binner{0.0, time, nr_bins},
+     : integrator{binner::binner_t<1, 1>({std::make_tuple(0.0, time, nr_bins)}, {2}),
                   integrand_g_kernel{g0_keldysh_contour_t{model}, gf_index_t{time, up, forward}},
                   {},
                   order,

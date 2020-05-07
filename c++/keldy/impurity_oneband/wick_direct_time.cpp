@@ -39,7 +39,7 @@ inline int GetBitParity(unsigned int in) { return 1 - 2 * __builtin_parity(in); 
 namespace keldy::impurity_oneband {
 
 // should we sort times?
-std::pair<singleton_binner, int> integrand_g_direct_time::operator()(std::vector<double> const &times) const {
+std::pair<binner::sparse_binner_t<1>, int> integrand_g_direct_time::operator()(std::vector<double> const &times) const {
   using namespace triqs::arrays;
 
   int order_n = times.size();
@@ -48,15 +48,18 @@ std::pair<singleton_binner, int> integrand_g_direct_time::operator()(std::vector
   }
 
   double time_binner = *std::min_element(times.cbegin(), times.cend());
+  binner::sparse_binner_t<1> result;
 
   // Model is diagonal in spin
   if (external_A.spin != external_B.spin) {
-    return std::make_pair(singleton_binner{time_binner, 0.}, 0);
+    result.accumulate(0, time_binner);
+    return std::make_pair(result, 0);
   }
 
   // Integration starts a t = 0
   if (std::any_of(times.cbegin(), times.cend(), [](double t) { return t < 0.0; })) {
-    return std::make_pair(singleton_binner{time_binner, 0.}, 0);
+    result.accumulate(0, time_binner);
+    return std::make_pair(result, 0);
   }
 
   // copy for now since we change time-splitting
@@ -149,7 +152,8 @@ std::pair<singleton_binner, int> integrand_g_direct_time::operator()(std::vector
   }
 
   // Multiply by overall factors (-1j) * (j)^n * (-1j)^n ?? FIXME
-  return std::make_pair(singleton_binner{time_binner, integrand_result}, 1);
+  result.accumulate(integrand_result, time_binner);
+  return std::make_pair(result, 1);
 }
 
 } // namespace keldy::impurity_oneband

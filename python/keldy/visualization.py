@@ -78,7 +78,7 @@ def integrand_warper_plot(computer, order, d, t_max, nr_times=100, plot_all=Fals
         u_arr = _np.array([_warpers.ui_from_vi(t_max, v) for v in v_arr])
 
         try: # for kernel
-            values_v = [integrand(u)[0].sum_weights() if is_u_valid(u) else _np.nan for u in u_arr]
+            values_v = [integrand(u)[0].sum_moduli() if is_u_valid(u) else _np.nan for u in u_arr]
         except AttributeError: # sum_weights not an attribute for non-kernel
             values_v = [_np.abs(integrand(u)[0]) if is_u_valid(u) else _np.nan for u in u_arr]
 

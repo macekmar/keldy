@@ -209,58 +209,6 @@ c.add_method("""std::pair<keldy::impurity_oneband::integrand_g_direct::result_t,
 
 module.add_class(c)
 
-# The class singleton_binner
-c = class_(
-        py_type = "SingletonBinner",  # name of the python class
-        c_type = "keldy::impurity_oneband::singleton_binner",   # name of the C++ class
-        doc = r"""""",   # doc of the C++ class
-        hdf5 = False,
-)
-
-c.add_member(c_name = "time",
-             c_type = "double",
-             read_only= False,
-             doc = r"""""")
-
-c.add_member(c_name = "value",
-             c_type = "keldy::dcomplex",
-             read_only= False,
-             doc = r"""""")
-
-module.add_class(c)
-
-# The class binner_1d
-c = class_(
-        py_type = "Binner1d",  # name of the python class
-        c_type = "keldy::impurity_oneband::binner_1d",   # name of the C++ class
-        doc = r"""""",   # doc of the C++ class
-        hdf5 = False,
-)
-
-c.add_constructor("""()""", doc = r"""""")
-
-c.add_constructor("""(double t_min_, double t_max_, int n_bins_)""", doc = r"""""")
-
-c.add_method("""triqs::arrays::array<std::complex<double>, 1> get_values ()""",
-             doc = r"""""")
-
-c.add_method("""triqs::arrays::array<unsigned long long, 1> get_nr_values ()""",
-             doc = r"""""")
-
-c.add_method("""triqs::arrays::array<double, 1> get_bin_times ()""",
-             doc = r"""""")
-
-c.add_method("""double get_bin_size ()""",
-             doc = r"""""")
-
-c.add_method("""int get_nr_point_dropped ()""",
-             doc = r"""""")
-
-c.add_method("""void accumulate (double time, keldy::dcomplex value)""",
-             doc = r"""Includes boundary points, so t_min <= t <= t_max. t_max gets put in last bin""")
-
-module.add_class(c)
-
 # The class integrand_g_direct_time
 c = class_(
         py_type = "IntegrandGDirectTime",  # name of the python class
@@ -274,62 +222,6 @@ c.add_constructor("""(keldy::impurity_oneband::g0_keldysh_contour_t g0_, keldy::
 c.add_method("""std::pair<keldy::impurity_oneband::integrand_g_direct_time::result_t, int> operator() (std::vector<double> times)""",
              name = "__call__",
              doc = r"""Returns integrand for the specified times""")
-
-module.add_class(c)
-
-# The class sparse_kernel_binner
-c = class_(
-        py_type = "SparseKernelBinner",  # name of the python class
-        c_type = "keldy::impurity_oneband::sparse_kernel_binner",   # name of the C++ class
-        doc = r"""""",   # doc of the C++ class
-        hdf5 = False,
-)
-
-c.add_member(c_name = "data",
-             c_type = "std::vector<std::pair<gf_index_t, dcomplex> >",
-             read_only= False,
-             doc = r"""""")
-
-c.add_method("""void bin_data (std::pair<gf_index_t, dcomplex> in)""",
-             doc = r"""""")
-
-c.add_method("""double sum_weights ()""",
-             doc = r"""""")
-
-module.add_class(c)
-
-# The class kernel_binner
-c = class_(
-        py_type = "KernelBinner",  # name of the python class
-        c_type = "keldy::impurity_oneband::kernel_binner",   # name of the C++ class
-        doc = r"""Kernel binner for Green Function :math:`K(Y, X')` with binning happening over :math:`Y`
- and :math:`X'` fixed by boundary conditions.
-
- TODO: How to include spin up / down separatley.""",   # doc of the C++ class
-        hdf5 = False,
-)
-
-c.add_constructor("""()""", doc = r"""""")
-
-c.add_constructor("""(double t_min_, double t_max_, int n_bins_)""", doc = r"""""")
-
-c.add_method("""triqs::arrays::array<std::complex<double>, 2> get_values ()""",
-             doc = r"""""")
-
-c.add_method("""triqs::arrays::array<unsigned long long, 2> get_nr_values ()""",
-             doc = r"""""")
-
-c.add_method("""triqs::arrays::array<double, 1> get_bin_times ()""",
-             doc = r"""""")
-
-c.add_method("""double get_bin_size ()""",
-             doc = r"""""")
-
-c.add_method("""int get_nr_point_dropped ()""",
-             doc = r"""""")
-
-c.add_method("""void accumulate (keldy::impurity_oneband::gf_index_t a, keldy::dcomplex value)""",
-             doc = r"""Includes boundary points, so t_min <= t <= t_max. t_max gets put in last bin""")
 
 module.add_class(c)
 
@@ -470,7 +362,7 @@ c.add_method("""void run (int nr_steps)""",
 c.add_method("""void reset_rng (std::string rng_name, int rng_state_seed, bool do_shift = false, bool do_scramble = false, int rng_seed_shift = 0)""",
              doc = r"""""")
 
-c.add_method("""keldy::impurity_oneband::binner_1d reduce_result ()""",
+c.add_method("""keldy::binner::binner_t<1,0> reduce_result ()""",
              doc = r"""""")
 
 c.add_method("""uint64_t reduce_nr_points_run ()""",
@@ -516,7 +408,7 @@ c.add_method("""void run (int nr_steps)""",
 c.add_method("""void reset_rng (std::string rng_name, int rng_state_seed, bool do_shift = false, bool do_scramble = false, int rng_seed_shift = 0)""",
              doc = r"""""")
 
-c.add_method("""kernel_binner reduce_result ()""",
+c.add_method("""keldy::binner::binner_t<1, 1> reduce_result ()""",
              doc = r"""""")
 
 c.add_method("""uint64_t reduce_nr_points_run ()""",

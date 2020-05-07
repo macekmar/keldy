@@ -16,23 +16,19 @@ TEST(integrand_kernel, Order_1) { // NOLINT
 
   double const u = 2.0;
 
-  auto expected_val =
-     sparse_kernel_binner{
-        {{{u, up, forward}, -g0_k({u, up, forward}, external_B) * g0_k({u, down, forward}, {u, down, backward})},
-         {{u, up, backward}, g0_k({u, up, backward}, external_B) * g0_k({u, down, forward}, {u, down, backward})}}}
-        .data;
+  auto expected_res = binner::sparse_binner_t<1, 1>();
+  expected_res.accumulate(-g0_k({u, up, forward}, external_B) * g0_k({u, down, forward}, {u, down, backward}), u,
+                          forward);
+  expected_res.accumulate(g0_k({u, up, backward}, external_B) * g0_k({u, down, forward}, {u, down, backward}), u,
+                          backward);
+  expected_res.sort();
 
-  auto computed_val = integrand(std::vector<double>{u}).first.data;
-  ASSERT_EQ(computed_val.size(), 2);
-
-  auto const compare = [](std::pair<gf_index_t, dcomplex> const &a, std::pair<gf_index_t, dcomplex> const &b) -> bool {
-    return a.first < b.first;
-  };
-  std::sort(expected_val.begin(), expected_val.end(), compare);
-  std::sort(computed_val.begin(), computed_val.end(), compare);
+  binner::sparse_binner_t<1, 1> computed_res = integrand(std::vector<double>{u}).first;
+  computed_res.sort();
+  ASSERT_EQ(computed_res.data.size(), 2);
 
   for (int i = 0; i < 2; ++i) {
-    EXPECT_COMPLEX_NEAR(computed_val[i].second, expected_val[i].second, 1e-16);
+    EXPECT_COMPLEX_NEAR(computed_res.data[i].second, expected_res.data[i].second, 1e-16);
   }
 }
 
@@ -67,26 +63,22 @@ TEST(integrand_kernel, Order_2) { // NOLINT
              * g0_k({u, down, a}, {v, down, b}));
   };
 
-  auto expected_val =
-     sparse_kernel_binner{{{{u, up, forward}, det_prod_u(forward, forward) + det_prod_u(forward, backward)},
-                           {{u, up, backward}, det_prod_u(backward, forward) + det_prod_u(backward, backward)},
-                           {{v, up, forward}, det_prod_v(forward, forward) + det_prod_v(backward, forward)},
-                           {{v, up, backward}, det_prod_v(forward, backward) + det_prod_v(backward, backward)}}}
-        .data;
+  auto expected_res = binner::sparse_binner_t<1, 1>();
+  expected_res.accumulate(det_prod_u(forward, forward) + det_prod_u(forward, backward), u, forward);
+  expected_res.accumulate(det_prod_u(backward, forward) + det_prod_u(backward, backward), u, backward);
+  expected_res.accumulate(det_prod_v(forward, forward) + det_prod_v(backward, forward), v, forward);
+  expected_res.accumulate(det_prod_v(forward, backward) + det_prod_v(backward, backward), v, backward);
+  expected_res.sort();
 
-  auto computed_val = integrand(std::vector<double>{u, v}).first.data;
-  ASSERT_EQ(computed_val.size(), 4);
+  binner::sparse_binner_t<1, 1> computed_res = integrand(std::vector<double>{u, v}).first;
+  computed_res.sort();
 
-  auto const compare = [](std::pair<gf_index_t, dcomplex> const &a, std::pair<gf_index_t, dcomplex> const &b) -> bool {
-    return a.first < b.first;
-  };
-  std::sort(expected_val.begin(), expected_val.end(), compare);
-  std::sort(computed_val.begin(), computed_val.end(), compare);
+  ASSERT_EQ(computed_res.data.size(), 4);
 
   for (int i = 0; i < 4; ++i) {
-    std::cout << computed_val[i].first << " ; " << expected_val[i].first << std::endl;
-    std::cout << computed_val[i].second << " ; " << expected_val[i].second << std::endl;
-    EXPECT_COMPLEX_NEAR(computed_val[i].second, expected_val[i].second, 1e-16);
+    std::cout << computed_res.data[i].first << " ; " << expected_res.data[i].first << std::endl;
+    std::cout << computed_res.data[i].second << " ; " << expected_res.data[i].second << std::endl;
+    EXPECT_COMPLEX_NEAR(computed_res.data[i].second, expected_res.data[i].second, 1e-16);
   }
 }
 

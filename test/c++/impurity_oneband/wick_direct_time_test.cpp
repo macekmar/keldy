@@ -24,7 +24,9 @@ TEST(integrand_direct_time, time) { // NOLINT
   integrand_g_direct_time integrand(g0_k, external_A, external_B, 0.); // no cutoff
 
   std::vector<double> time_vec = {2.5, 1.2};
-  EXPECT_EQ(integrand(time_vec).first.time, 1.2);
+  binner::sparse_binner_t<1> res = integrand(time_vec).first;
+  EXPECT_EQ(res.data.size(), 1);
+  EXPECT_EQ(std::get<double>(res.data[0].first[0]), 1.2);
 }
 
 TEST(integrand_direct_time, consistency) { // NOLINT
@@ -42,7 +44,9 @@ TEST(integrand_direct_time, consistency) { // NOLINT
   integrand_g_direct integrand_direct(g0_k, external_A, external_B, 0.); // no cutoff
 
   std::vector<double> time_vec = {2.5, 1.2};
-  EXPECT_EQ(integrand(time_vec).first.value, integrand_direct(time_vec).first);
+  binner::sparse_binner_t<1> res = integrand(time_vec).first;
+  EXPECT_EQ(res.data.size(), 1);
+  EXPECT_EQ(res.data[0].second, integrand_direct(time_vec).first);
 }
 
 TEST(integration_direct_time, consistency) { // NOLINT
@@ -61,12 +65,12 @@ TEST(integration_direct_time, consistency) { // NOLINT
   computer.run(10);
 
   dcomplex result_direct = computer_direct.reduce_result();
-  auto result = computer.reduce_result();
+  binner::binner_t<1> result = computer.reduce_result();
 
   std::cout << result_direct << std::endl;
-  std::cout << result.get_values() << std::endl;
+  std::cout << result.get_data() << std::endl;
 
-  EXPECT_COMPLEX_NEAR(sum(result.get_values()), result_direct);
+  EXPECT_COMPLEX_NEAR(sum(result.get_data()), result_direct);
 }
 
 MAKE_MAIN; // NOLINT
