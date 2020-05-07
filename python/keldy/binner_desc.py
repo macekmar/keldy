@@ -44,7 +44,12 @@ for N, M in [(1, 0), (1, 1), (2, 0), (2, 1)]:
         args += "long b{}, ".format(m)
     c.add_method("void accumulate(dcomplex value, " + args[:-2] + ")")
 
+    c.add_method("double sum_moduli()")
+
     module.add_class(c)
+
+    # module.add_function("friend double sum_moduli(keldy::binner::sparse_binner_t const& in)")
+    # module.add_function("friend double sum_moduli(keldy::binner::sparse_binner_t<{}, {}> const& in)".format(N, M))
 
     ###########################
     # The class binner_t<N, M>

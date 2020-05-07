@@ -40,6 +40,7 @@ using cont_coord_t = double;
 using disc_coord_t = long;
 using double_or_int = std::variant<cont_coord_t, disc_coord_t>;
 
+/// cast var into correct type depending on axis relative to N
 template <size_t axis, size_t N, typename Coord>
 inline auto cast_coord(Coord var) {
   if constexpr (axis < N) {
@@ -50,6 +51,10 @@ inline auto cast_coord(Coord var) {
   }
 };
 
+/*
+ * Multidimentional sparse binner with N continuous coordinates and M discreet ones.
+ * Continuous coordinates are before discreet ones.
+ */
 template <unsigned int N, unsigned int M = 0>
 class sparse_binner_t {
   static_assert(N > 0);
@@ -58,21 +63,23 @@ class sparse_binner_t {
   using coord_arr_t = std::array<double_or_int, N + M>;
 
   template <size_t... axes, typename... Coord>
-  void accumulate_impl(dcomplex value, std::index_sequence<axes...>, Coord... coords) {
+  inline void accumulate_impl(bool append, dcomplex value, std::index_sequence<axes...>, Coord... coords) {
     coord_arr_t coord_array = {cast_coord<axes, N>(coords)...};
-    auto loc =
-       std::find_if(std::begin(data), std::end(data), [coord = coord_array](auto &el) { return (el.first == coord); });
-    if (loc != std::end(data)) {
-      (*loc).second += value;
-    } else {
-      data.push_back(make_pair(coord_array, value));
+    if (!append) {
+      auto loc = std::find_if(std::begin(data), std::end(data),
+                              [coord = coord_array](auto &el) { return (el.first == coord); });
+      if (loc != std::end(data)) {
+        (*loc).second += value;
+        return;
+      }
     }
+    data.push_back(make_pair(coord_array, value));
   };
 
  public:
+  /// list of stored values
   std::vector<std::pair<coord_arr_t, dcomplex>> data;
 
-  //template <typename T>
   auto &operator*=(dcomplex scalar) {
     for (auto &rh : data) {
       rh.second *= scalar;
@@ -80,15 +87,40 @@ class sparse_binner_t {
     return *this;
   };
 
+  /// Append a value to the list `data`
+  template <typename... Coord>
+  void append(dcomplex value, Coord... coords) {
+    static_assert(sizeof...(coords) == N + M);
+    accumulate_impl(true, value, std::make_index_sequence<N + M>(), coords...);
+  };
+
+  /// Accumulate a value into the list `data`.
+  /// If `coords` already exist, the value is added to the pre-existing entry instead of appending a new one.
   template <typename... Coord>
   void accumulate(dcomplex value, Coord... coords) {
     static_assert(sizeof...(coords) == N + M);
-    accumulate_impl(value, std::make_index_sequence<N + M>(), coords...);
+    accumulate_impl(false, value, std::make_index_sequence<N + M>(), coords...);
   };
 
-  [[nodiscard]] friend double sum_moduli(sparse_binner_t const &in) {
+  /// Sort `data` in lexicographic order of the coordinates
+  void sort() {
+    auto comp = [](std::pair<coord_arr_t, dcomplex> const &a, std::pair<coord_arr_t, dcomplex> const &b) -> bool {
+      return std::lexicographical_compare(a.first.cbegin(), a.first.cend(), b.first.cbegin(), b.first.cend());
+    };
+    std::stable_sort(data.begin(), data.end(), comp);
+  };
+
+  /// Sparse binners are sorted before testing equality
+  friend bool operator==(sparse_binner_t<N, M> &lhs, sparse_binner_t<N, M> &rhs) {
+    lhs.sort();
+    rhs.sort();
+    return lhs.data == rhs.data;
+  };
+
+  /// sum moduli of values stored in `data`.
+  double sum_moduli() const {
     double res = 0;
-    for (const auto &p : in.data) {
+    for (const auto &p : data) {
       res += std::abs(p.second);
     }
     return res;
@@ -96,6 +128,11 @@ class sparse_binner_t {
 };
 
 ///%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+/*
+ * Multidimentional binner with N continuous coordinates and M discreet ones.
+ * Continuous coordinates are before discreet ones.
+ */
 template <unsigned N, unsigned M = 0>
 class binner_t {
   static_assert(N > 0);
@@ -109,6 +146,7 @@ class binner_t {
   array<unsigned long, N + M> nr_values_added;
   unsigned long nr_values_dropped = 0;
 
+  /// Find bin index from a coordinate on a given axis.
   template <size_t axis, typename T>
   [[nodiscard]] inline size_t coord2index(T x) const {
     if constexpr (axis < N) {
@@ -129,6 +167,7 @@ class binner_t {
     }
   };
 
+  /// Find bin index from a coordinate on a given axis.
   template <size_t axis>
   [[nodiscard]] inline size_t coord2index(double_or_int x) const {
     if constexpr (axis < N) {
@@ -160,12 +199,19 @@ class binner_t {
   };
 
  public:
-  binner_t(std::array<std::tuple<double, double, size_t>, N> _continuous_axes,
-           std::array<size_t, M> _discreet_axes = {})
-     : discreet_axes(std::move(_discreet_axes)) {
+  /*
+   * Constructs a mulyidientional binner.
+   *
+   * Arguments:
+   *    continous_axes_: list of tuples (xmin, xmax, nr_bins) for each continuous axis
+   *    discreet_axes_: list of number of bins for each discreet axis
+   */
+  binner_t(std::array<std::tuple<double, double, size_t>, N> continuous_axes_,
+           std::array<size_t, M> discreet_axes_ = {})
+     : discreet_axes(std::move(discreet_axes_)) {
 
     triqs::utility::mini_vector<size_t, N + M> shape;
-    for (auto [k, tuple] : itertools::enumerate(_continuous_axes)) {
+    for (auto [k, tuple] : itertools::enumerate(continuous_axes_)) {
       auto [xmin, xmax, n] = tuple;
       if (xmin >= xmax) {
         TRIQS_RUNTIME_ERROR << "Boundaries of binning range are in wrong order (" << xmin << " >= " << xmax << ")";
@@ -182,6 +228,7 @@ class binner_t {
     nr_values_added() = 0;
   };
 
+  /// Accumulate a value in the binner at given coordinates
   template <typename... Coord>
   void accumulate(dcomplex value, Coord... coords) {
     static_assert(sizeof...(coords) == N + M);
@@ -194,6 +241,8 @@ class binner_t {
   [[nodiscard]] auto get_continuous_axes() const { return continuous_axes; };
   [[nodiscard]] auto get_discreet_axes() const { return discreet_axes; };
 
+  /// Get the coordinates of bins along a given (continuous) axis.
+  // Returns a 1D triqs array
   [[nodiscard]] auto get_bin_coord(size_t axis = 0) const {
     if (axis >= N) {
       TRIQS_RUNTIME_ERROR << "Axis " << axis << " is discreet.";
@@ -209,6 +258,7 @@ class binner_t {
     return bin_coord;
   };
 
+  /// Get the width of a bin on a given (continuous) axis.
   [[nodiscard]] auto get_bin_size(size_t axis = 0) const {
     if (axis >= N) {
       TRIQS_RUNTIME_ERROR << "Axis " << axis << " is discreet.";
@@ -220,6 +270,7 @@ class binner_t {
     return std::get<3>(continuous_axes[axis]);
   };
 
+  /// Accumulate a sparse binner into this binner
   auto &operator+=(sparse_binner_t<N, M> const &rhs) {
     for (const auto &rh : rhs.data) {
       accumulate_impl_array(rh.second, std::make_index_sequence<N + M>(), rh.first);
