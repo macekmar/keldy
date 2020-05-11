@@ -69,24 +69,36 @@ gsl_minimize_result gsl_minimize(T const &f, double x_lower, double x_guess, dou
   gsl_minimize_result res;
   res.nr_iter = 0;
 
-  auto gsl_default_handler = gsl_set_error_handler_off(); // temporarily remove default error handler
+  auto gsl_previous_handler = gsl_set_error_handler_off(); // temporarily remove error handler
 
   res.status = gsl_min_fminimizer_set(workspace, &f_gsl, x_guess, x_lower, x_upper);
 
-  if (res.status == GSL_EINVAL) {
-    TRIQS_RUNTIME_ERROR << "Endpoints do not enclose a minimum. Make sure f(x_lower) > f(x_guess) < f(x_upper).";
-  }
-  if (res.status) { // unexpected error
+  if (res.status) {
+    if (res.status == GSL_EINVAL) {
+      TRIQS_RUNTIME_ERROR << "Endpoints do not enclose a minimum. Make sure f(x_lower) > f(x_guess) < f(x_upper): f("
+                          << x_lower << ")=" << f(x_lower) << ", f(" << x_guess << ")=" << f(x_guess) << ", f("
+                          << x_upper << ")=" << f(x_upper);
+    }
+    if (res.status == GSL_EBADFUNC) {
+      TRIQS_RUNTIME_ERROR << "Function returned Nan or Inf: f(" << x_lower << ")=" << f(x_lower) << ", f(" << x_guess
+                          << ")=" << f(x_guess) << ", f(" << x_upper << ")=" << f(x_upper);
+    }
+    // unexpected error
     TRIQS_RUNTIME_ERROR << "GSL error " << res.status << " : " << gsl_strerror(res.status);
   };
-
-  gsl_set_error_handler(gsl_default_handler); // put back default error handler
 
   do {
     res.nr_iter++;
     res.status = gsl_min_fminimizer_iterate(workspace);
 
     if (res.status) {
+      if (res.status == GSL_EBADFUNC) {
+        TRIQS_RUNTIME_ERROR << "Function returned Nan or Inf."; // Don't know where though.
+      }
+      if (res.status == GSL_FAILURE) {
+        TRIQS_RUNTIME_ERROR << "Could not improve the current best approximation or bounding interval.";
+      }
+      // unexpected error
       TRIQS_RUNTIME_ERROR << "GSL error " << res.status << " : " << gsl_strerror(res.status);
     }
 
@@ -96,6 +108,8 @@ gsl_minimize_result gsl_minimize(T const &f, double x_lower, double x_guess, dou
     res.status = gsl_min_test_interval(res.x_lower, res.x_upper, abstol, reltol);
 
   } while (res.status == GSL_CONTINUE && res.nr_iter < max_iter);
+
+  gsl_set_error_handler(gsl_previous_handler); // put back previous error handler
 
   if (res.status != GSL_SUCCESS && res.nr_iter != max_iter) {
     TRIQS_RUNTIME_ERROR << "GSL error " << res.status << " : " << gsl_strerror(res.status);
