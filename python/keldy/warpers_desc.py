@@ -145,68 +145,6 @@ c.add_method("""double jacobian_forward (std::vector<double> ui_vec)""",
 
 module.add_class(c)
 
-# The class hist_xi
-c = class_(
-        py_type = "HistXi",  # name of the python class
-        c_type = "keldy::warpers::hist_xi",   # name of the C++ class
-        doc = r"""""",   # doc of the C++ class
-        hdf5 = False,
-)
-
-c.add_member(c_name = "bin_times",
-             c_type = "triqs::arrays::array<double, 1>",
-             read_only= False,
-             doc = r"""""")
-
-c.add_member(c_name = "values",
-             c_type = "triqs::arrays::array<double, 1>",
-             read_only= False,
-             doc = r"""""")
-
-c.add_member(c_name = "counts",
-             c_type = "triqs::arrays::array<double, 1>",
-             read_only= False,
-             doc = r"""""")
-
-c.add_member(c_name = "y",
-             c_type = "triqs::arrays::array<double, 1>",
-             read_only= False,
-             doc = r"""""")
-
-c.add_member(c_name = "y_interpolated",
-             c_type = "triqs::arrays::array<double, 1>",
-             read_only= False,
-             doc = r"""""")
-
-c.add_member(c_name = "t_min",
-             c_type = "double",
-             read_only= False,
-             doc = r"""""")
-
-c.add_member(c_name = "t_max",
-             c_type = "double",
-             read_only= False,
-             doc = r"""""")
-
-c.add_member(c_name = "delta",
-             c_type = "double",
-             read_only= False,
-             doc = r"""""")
-
-c.add_member(c_name = "num_bins",
-             c_type = "int",
-             read_only= False,
-             doc = r"""""")
-
-c.add_member(c_name = "nr_sample_points_warper",
-             c_type = "int",
-             read_only= False,
-             doc = r"""""")
-
-c.add_constructor("""(double t_min_, double t_max_, int num_bins_, int nr_sample_points_warper_)""", doc = r"""""")
-
-module.add_class(c)
-
 # The class warper_plasma_projection_t
 c = class_(
         py_type = "WarperPlasmaProjectionT",  # name of the python class
@@ -309,14 +247,6 @@ module.add_function ("keldy::warpers::warper_product_1d_simple_t keldy::warpers:
 module.add_function ("keldy::warpers::warper_product_1d_simple_t keldy::warpers::make_product_1d_simple_inverse_square (double time, double w_scale, int nr_sample_points_warper)", doc = r"""""")
 
 module.add_function ("keldy::warpers::warper_product_1d_t keldy::warpers::make_product_1d_inverse_cube_alternate (int order, double time, double warper_scale, int nr_sample_points_warper)", doc = r"""""")
-
-module.add_function ("void keldy::warpers::convolve (triqs::arrays::array<double, 1> signal, triqs::arrays::array<double, 1> result, triqs::arrays::array<double, 1> window)", doc = r"""""")
-
-module.add_function ("void keldy::warpers::kernel_smoothing (triqs::arrays::array<double, 1> x_in, triqs::arrays::array<double, 1> x_out, triqs::arrays::array<double, 1> y_in, triqs::arrays::array<double, 1> y_out, double sigma)", doc = r"""""")
-
-module.add_function ("double keldy::warpers::LOOCV (triqs::arrays::array<double, 1> x_in, triqs::arrays::array<double, 1> y_in, double sigma)", doc = r"""""")
-
-module.add_function ("double keldy::warpers::golden_section (std::function<double (double)> f, double a, double b, int max_iter = 20)", doc = r"""""")
 
 
 

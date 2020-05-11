@@ -24,147 +24,117 @@
 
 #pragma once
 
-#include "../common.hpp"
+#include "plasma_uv.hpp"
 #include "product_1d.hpp"
 #include "product_1d_simple.hpp"
+#include "../common.hpp"
 #include "../interfaces/gsl_interp_wrap.hpp"
+#include "../interfaces/gsl_minimize.hpp"
+#include "../qrng.hpp"
+
+#include <triqs/gfs.hpp>
+#include <triqs/arrays.hpp>
+#include <triqs/arrays/mpi.hpp>
+#include <mpi/mpi.hpp>
+#include <gsl/gsl_min.h>
+
 #include <algorithm>
 #include <any>
 #include <functional>
 #include <numeric>
-#include <triqs/gfs.hpp>
-#include "../qrng.hpp"
-#include "plasma_uv.hpp"
 #include <iomanip>
-#include <triqs/arrays.hpp>
-#include <gsl/gsl_min.h>
 #include <complex>
 #include <cmath>
 
-#include <mpi/mpi.hpp>
-#include <triqs/arrays/mpi.hpp>
 
 namespace keldy::warpers {
 
 using namespace triqs::gfs;
+using namespace triqs::arrays;
 
-using gf_t = triqs::gfs::gf<triqs::gfs::retime, triqs::gfs::scalar_real_valued>;
+using gf_t = gf<retime, scalar_real_valued>;
 
-class hist_xi {
-  public:
-  triqs::arrays::array<double, 1> bin_times;
-  triqs::arrays::array<double, 1> values;
-  triqs::arrays::array<double, 1> counts; // TODO: should be int, complicates get_xi and others...
-  triqs::arrays::array<double, 1> y;
-  triqs::arrays::array<double, 1> y_interpolated;
-  double t_min;
-  double t_max;
+class CPP2PY_IGNORE hist_xi {
+ public:
+  array<double, 1> bin_times;
+  array<double, 1> bin_centers;
+  array<double, 1> values;
+  array<double, 1> counts; // TODO: should be int, complicates get_xi and others...
+  array<double, 1> y;
+  array<double, 1> y_interpolated;
   double delta;
   int num_bins; 
   int nr_sample_points_warper;
-  hist_xi(double t_min_, double t_max_, int num_bins_, int nr_sample_points_warper_) : 
-  t_min(t_min_), t_max(t_max_), num_bins(num_bins_), nr_sample_points_warper(nr_sample_points_warper_) {
-    bin_times = triqs::arrays::array<double, 1>(num_bins + 1);
-    delta = (t_max - t_min)/(num_bins - 1);
+
+  hist_xi(int num_bins_, int nr_sample_points_warper_)
+     : num_bins(num_bins_), nr_sample_points_warper(nr_sample_points_warper_) {
+    bin_times = array<double, 1>(num_bins + 1);
+    delta = 1.0 / (num_bins - 1);
     for (int i = 0; i < num_bins + 1; i++) {
       bin_times(i) = -delta/2.0 + i*delta;
     }
-    values = triqs::arrays::array<double, 1>(num_bins);
+
+    bin_centers = array<double, 1>(num_bins);
+    for (int i = 0; i < bin_centers.size(); i++) {
+      bin_centers(i) = (bin_times(i) + bin_times(i + 1)) / 2.0;
+    }
+
+    values = array<double, 1>(num_bins);
     values() = 0;
-    counts = triqs::arrays::array<double, 1>(num_bins); // TODO: should be int
+    counts = array<double, 1>(num_bins); // TODO: should be int
     counts() = 0;
-    y = triqs::arrays::array<double, 1>(num_bins);
+    y = array<double, 1>(num_bins);
     y() = 0;
-    y_interpolated = triqs::arrays::array<double, 1>(nr_sample_points_warper);
+    y_interpolated = array<double, 1>(nr_sample_points_warper);
     y_interpolated() = 0;
   }
 };
 
+auto gaussian = [](double x, double x0, double sigma) { return std::exp(-std::pow((x - x0) / sigma, 2)); };
 
-inline void convolve(triqs::arrays::array<double, 1> &signal, triqs::arrays::array<double, 1> &result, triqs::arrays::array<double, 1> &window) {
-// TODO: check norm at the right end
-  std::vector<double> conv;
-  double c;
-  double norm;
-  int Ns = signal.size();
-  int Nwl = (window.size()+1) / 2;
-  int Nwr = window.size() - Nwl;
-  for (int i = 0; i < Ns; i++) {
-    c = 0.0;
-    norm = 0.0;
-    for (int j = std::max(-Nwl, -Ns + i); j <= std::min(Nwr, i); j++) {
-      c += window(j + Nwl) * signal(i - j - 1);
-      norm += window(j + Nwl);
-    }
-    conv.push_back(c / norm);
-  }
-  std::copy(conv.begin(), conv.end(), result.begin());
-};
+inline std::pair<array<double, 1>, array<double, 1>> CPP2PY_IGNORE gaussian_filter(array<double, 1> &x_in,
+                                                                                   array<double, 1> &x_out,
+                                                                                   array<double, 1> &y_in,
+                                                                                   double sigma) {
 
-inline void kernel_smoothing(triqs::arrays::array<double, 1> &x_in, triqs::arrays::array<double, 1> &x_out, triqs::arrays::array<double, 1> &y_in, triqs::arrays::array<double, 1> &y_out, double sigma) {
+  array<double, 1> y_out(x_out.size());
+  y_out() = 0;
+  array<double, 1> norm(x_out.size());
+  norm() = 0;
+
   mpi::communicator comm {};
   int mpi_rank = comm.rank();
   int mpi_size = comm.size();
 
-  auto gaussian = [sigma](double x, double x0) { return std::exp( -std::pow( (x - x0) / sigma, 2 ) ); };
-  auto sum = [](double r, double x) {return r + x;};
-  triqs::arrays::array<double, 1> kernel(x_in.size());
-
+  array<double, 1> kernel(x_in.size());
   for (int i = 0; i < y_out.size(); i++) {
-    if (i % mpi_size != mpi_rank) {
-      continue;
-    }  
-
-    kernel() = 0.0; 
-    for (auto const &[j, x_] : itertools::enumerate(x_in)) {
-      kernel(j) = gaussian(x_, x_out(i));
+    if (i % mpi_size == mpi_rank) {
+      for (auto const &[j, x_] : itertools::enumerate(x_in)) {
+        kernel(j) = gaussian(x_, x_out(i), sigma);
+      }
+      norm(i) = sum(kernel);
+      y_out(i) = sum(kernel * y_in);
     }
-    // \sum_i K(x_0, x_i)*y_i / \sum_i K(x_0, x_i)
-    y_out(i) = triqs::arrays::fold(sum)(kernel*y_in, 0) / triqs::arrays::fold(sum)(kernel, 0);
   }
   y_out = mpi::mpi_all_reduce(y_out, comm);
+  norm = mpi::mpi_all_reduce(norm, comm);
+
+  return std::make_pair(y_out, norm);
 }
 
-inline double LOOCV(triqs::arrays::array<double, 1> x_in, triqs::arrays::array<double, 1> y_in, double sigma) {
-
-  auto gaussian = [sigma](double x, double x0) { return std::exp( -std::pow( (x - x0) / sigma, 2 ) ); };
-  auto sum = [](double r, double x) {return r + x;};
-
-  triqs::arrays::array<double, 1> kernel(x_in.size());
-  double err = 0;
-  for (auto const &[i, y] : itertools::enumerate(y_in)) {
-    kernel() = 0.0; 
-    for (auto const &[j, x] : itertools::enumerate(x_in)) {
-      kernel(j) = gaussian(x, x_in(i));
-    }
-    kernel(i) = 0; // This excludes i-th point
-    auto y_estim = triqs::arrays::fold(sum)(kernel*y_in, 0) / triqs::arrays::fold(sum)(kernel, 0);
-    err += std::pow( y - y_estim, 2);
-  }
-  return err;
+inline array<double, 1> CPP2PY_IGNORE kernel_smoothing(array<double, 1> &x_in, array<double, 1> &x_out,
+                                                       array<double, 1> &y_in, double sigma) {
+  auto [y_out, norm] = gaussian_filter(x_in, x_out, y_in, sigma);
+  return y_out / norm;
 }
 
-inline double golden_section(std::function<double(double)> f, double a, double b, int max_iter = 20) {
-  //https://en.wikipedia.org/wiki/Golden-section_search
-  double gr = 1.618033988749895;
-  double c, d;
-  double tol = 1e-8;
-  int iter = 0;
-  c = b - (b - a) / gr;
-  d = a + (b - a) / gr;
-  while (std::abs(c - d) > tol or iter < max_iter) {
-    if (f(c) < f(d)) {
-      b = d;
-    } else {
-      a = c;
-    }
-    // We recompute both c and d here to avoid loss of precision which may lead to incorrect results or infinite loop
-    c = b - (b - a) / gr;
-    d = a + (b - a) / gr;
-    iter++;
-  }
+inline double CPP2PY_IGNORE LOOCV(array<double, 1> x_in, array<double, 1> y_in, double sigma) {
+  auto [y_out, norm] = gaussian_filter(x_in, x_in, y_in, sigma);
 
-  return (a+b)/2;
+  // We exclude the i-th point
+  array<double, 1> y_estim = (y_out - y_in) / (norm - 1.);
+
+  return sum(pow(y_estim - y_in, 2));
 }
 
 class warper_plasma_projection_t {
@@ -180,7 +150,7 @@ class warper_plasma_projection_t {
   warper_product_1d_simple_t w_warper;
   // warper_train_t warper_train;
   std::vector<hist_xi> xi;
-  triqs::arrays::array<double, 1> values;
+  array<double, 1> values;
 
   std::vector<gf_t> fn;
   std::vector<double> sigmas;
@@ -207,7 +177,7 @@ class warper_plasma_projection_t {
       values(i) = std::real(std::pow(std::complex<double>(0,1), order+1)*integrand(u).first);
 
       for (int axis = 0; axis < order; axis++) {
-        bin = int(floor((w[axis] - xi[axis].t_min - (-xi[axis].delta/2.0)) / xi[axis].delta));
+        bin = int(floor((w[axis] - (-xi[axis].delta / 2.0)) / xi[axis].delta));
         if (bin < 0 or bin > xi[axis].num_bins - 1) {
           TRIQS_RUNTIME_ERROR << "out of bin range";
         }
@@ -239,9 +209,9 @@ class warper_plasma_projection_t {
         num_bins(num_bins) {
     // Initialize xi;
     for (int axis = 0; axis < order; axis++) {
-      xi.push_back(hist_xi(0, 1, num_bins, nr_sample_points_warper));
+      xi.push_back(hist_xi(num_bins, nr_sample_points_warper));
     }
-    values = triqs::arrays::array<double, 1>(npts_mean);
+    values = array<double, 1>(npts_mean);
     gather_data(npts_mean);
 
     // Fill function vectors
@@ -254,42 +224,40 @@ class warper_plasma_projection_t {
       sigmas.push_back(0);
     }
     update_sigma(sigma, optimize_sigma);
+
+    populate_functions();
   };
 
   void update_sigma(double sigma, bool optimize_sigma = true) {   
     //Smooth and update functions
     for (int axis = 0; axis < order; axis++) {
-      triqs::arrays::array<double, 1> bin_centers(xi[axis].y.size());
-      bin_centers() = 0;
-      for (int i = 0; i < bin_centers.size(); i++) {
-        bin_centers(i) = (xi[axis].bin_times(i) + xi[axis].bin_times(i+1))/2.0;
-      }
-
-      triqs::arrays::array<double, 1> y(xi[axis].y.size()); // TODO: how to pass xi[axis].values to lambda?
-      y() = 0;
-      for (int i = 0; i <y.size(); i++) {
-       y(i) = xi[axis].values(i);
-      }
-      auto f = [bin_centers, y](double s){ return LOOCV(bin_centers, y, s);};
       if (optimize_sigma) {
-        sigma = golden_section(f, 0.0003, 1.0);
+        auto f = [hist = xi[axis]](double s) { return LOOCV(hist.bin_centers, hist.values, s); };
+
+        // TODO: should this be done by all ranks ??
+        sigma = details::gsl_minimize(f, 0.5 * xi[axis].delta, 0.1, 1.0, 1e-8, 0., 20).x;
+        // sigma should not be too small compared to xi[axis].delta, or gaussian is narrower than bin
         if (comm.rank() == 0) {
-          std::cout << "Optimal sigma = " << sigma << "axis" << axis << std::endl;
+          std::cout << "Optimal sigma = " << sigma << " (axis " << axis << ")" << std::endl;
         }
       }
       sigmas[axis] = sigma;
-      
+    }
+  }
 
-      
-      triqs::arrays::array<double, 1> mesh_time(nr_sample_points_warper);
+  void populate_functions() {
+    for (int axis = 0; axis < order; axis++) {
+      auto &hist = xi[axis];
+
+      array<double, 1> mesh_time(nr_sample_points_warper);
       for (auto const &[i, t] : itertools::enumerate(fn[axis].mesh())) {
         mesh_time(i) = t;
       }
-      kernel_smoothing(bin_centers, bin_centers, xi[axis].values, xi[axis].y, sigma);
-      kernel_smoothing(bin_centers, mesh_time, xi[axis].values, fn[axis].data(), sigma);
+      hist.y = kernel_smoothing(hist.bin_centers, hist.bin_centers, hist.values, sigmas[axis]);
+      fn[axis].data() = kernel_smoothing(hist.bin_centers, mesh_time, hist.values, sigmas[axis]);
 
       // Interpolate convolution
-      // details::gsl_interp_wrapper_t interpolate1(gsl_interp_akima, bin_centers, xi[axis].y);
+      // details::gsl_interp_wrapper_t interpolate1(gsl_interp_akima, bin_centers, hist.y);
 
       // for (auto const &[i, t] : itertools::enumerate(fn[axis].mesh())) {
       //   fn[axis][t] = interpolate1(t);
@@ -305,7 +273,7 @@ class warper_plasma_projection_t {
         }
       }
       auto &data = fn_integrated[axis].data();
-      xi[axis].y_interpolated() = data;
+      hist.y_interpolated() = data;
 
       std::partial_sum(data.begin(), data.end(), data.begin());
       fn_integrate_norm[axis] = data(data.size() - 1);
@@ -319,7 +287,7 @@ class warper_plasma_projection_t {
     }
   };
 
-  std::vector<triqs::arrays::array<double, 1>> get_xi(int axis) {
+  std::vector<array<double, 1>> get_xi(int axis) {
     return {xi[axis].bin_times, xi[axis].values, xi[axis].counts, xi[axis].y, xi[axis].y_interpolated, values};
   };
   std::vector<double> get_sigmas() {
