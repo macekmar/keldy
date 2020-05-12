@@ -60,10 +60,8 @@ class CPP2PY_IGNORE hist_xi {
   array<double, 1> bin_centers;
   array<double, 1> values;
   array<double, 1> counts; // TODO: should be int, complicates get_xi and others...
-  array<double, 1> y;
-  array<double, 1> y_interpolated;
   double delta;
-  int num_bins; 
+  int num_bins;
   int nr_sample_points_warper;
 
   hist_xi(int num_bins_, int nr_sample_points_warper_)
@@ -83,34 +81,39 @@ class CPP2PY_IGNORE hist_xi {
     values() = 0;
     counts = array<double, 1>(num_bins); // TODO: should be int
     counts() = 0;
-    y = array<double, 1>(num_bins);
-    y() = 0;
-    y_interpolated = array<double, 1>(nr_sample_points_warper);
-    y_interpolated() = 0;
   }
 };
 
+// sigma is in unit of time step
 auto gaussian = [](double x, double x0, double sigma) { return std::exp(-std::pow((x - x0) / sigma, 2)); };
 
-inline std::pair<array<double, 1>, array<double, 1>> CPP2PY_IGNORE gaussian_filter(array<double, 1> &x_in,
-                                                                                   array<double, 1> &x_out,
-                                                                                   array<double, 1> &y_in,
-                                                                                   double sigma) {
+inline auto CPP2PY_IGNORE gaussian_filter(array<double, 1> &y_in, double sigma) {
+  int const N = y_in.size();
 
-  array<double, 1> y_out(x_out.size());
+  array<double, 1> y_out(N);
   y_out() = 0;
-  array<double, 1> norm(x_out.size());
+  array<double, 1> norm(N);
   norm() = 0;
+
+  array<double, 1> kernel2(2 * N - 1);
+  for (int i = 0; i < 2 * N - 1; ++i) {
+    kernel2(i) = gaussian(i, N - 1, sigma);
+  }
+
+  norm(0) = sum(kernel2(range(N - 1, 2 * N - 2)));
+  for (int i = 1; i < N; ++i) {
+    norm(i) = norm(i - 1) + kernel2(N - i - 1) - kernel2(2 * N - i - 1);
+  }
 
   mpi::communicator comm {};
   int mpi_rank = comm.rank();
   int mpi_size = comm.size();
 
-  array<double, 1> kernel(x_in.size());
-  for (int i = 0; i < y_out.size(); i++) {
+  array<double, 1> kernel(N);
+  for (int i = 0; i < N; ++i) {
     if (i % mpi_size == mpi_rank) {
-      for (auto const &[j, x_] : itertools::enumerate(x_in)) {
-        kernel(j) = gaussian(x_, x_out(i), sigma);
+      for (int j = 0; j < N; ++j) {
+        kernel(j) = gaussian(j, i, sigma);
       }
       norm(i) = sum(kernel);
       y_out(i) = sum(kernel * y_in);
@@ -122,14 +125,13 @@ inline std::pair<array<double, 1>, array<double, 1>> CPP2PY_IGNORE gaussian_filt
   return std::make_pair(y_out, norm);
 }
 
-inline array<double, 1> CPP2PY_IGNORE kernel_smoothing(array<double, 1> &x_in, array<double, 1> &x_out,
-                                                       array<double, 1> &y_in, double sigma) {
-  auto [y_out, norm] = gaussian_filter(x_in, x_out, y_in, sigma);
+inline array<double, 1> CPP2PY_IGNORE kernel_smoothing(array<double, 1> &y_in, double sigma) {
+  auto [y_out, norm] = gaussian_filter(y_in, sigma);
   return y_out / norm;
 }
 
-inline double CPP2PY_IGNORE LOOCV(array<double, 1> x_in, array<double, 1> y_in, double sigma) {
-  auto [y_out, norm] = gaussian_filter(x_in, x_in, y_in, sigma);
+inline double CPP2PY_IGNORE LOOCV(array<double, 1> &y_in, double sigma) {
+  auto [y_out, norm] = gaussian_filter(y_in, sigma);
 
   // We exclude the i-th point
   array<double, 1> y_estim = (y_out - y_in) / (norm - 1.);
@@ -170,7 +172,7 @@ class warper_plasma_projection_t {
 
       if (i % mpi_size != mpi_rank) {
         continue;
-      }  
+      }
 
       auto u = ui_from_vi(t_max, w_warper.ui_from_li(w));  // TODO: Should have pass warper train
       value = std::abs(integrand(u).first * w_warper.jacobian_reverse(w));
@@ -201,12 +203,16 @@ class warper_plasma_projection_t {
     }
   };
 
-  warper_plasma_projection_t(std::function<std::pair<dcomplex, int>(std::vector<double>)> integrand_, warper_product_1d_simple_t w_warper_,
-                             double t_max, int order, int nr_sample_points_warper_, int num_bins, int npts_mean, 
-                             double sigma, bool optimize_sigma = true)
-     :  integrand(std::move(integrand_)), w_warper(w_warper_), 
-        t_max(t_max), order(order), nr_sample_points_warper(nr_sample_points_warper_), 
-        num_bins(num_bins) {
+  warper_plasma_projection_t(std::function<std::pair<dcomplex, int>(std::vector<double>)> integrand_,
+                             warper_product_1d_simple_t w_warper_, double t_max, int order,
+                             int nr_sample_points_warper_, int num_bins, int npts_mean, double sigma,
+                             bool optimize_sigma = true)
+     : integrand(std::move(integrand_)),
+       w_warper(w_warper_),
+       t_max(t_max),
+       order(order),
+       nr_sample_points_warper(nr_sample_points_warper_),
+       num_bins(num_bins) {
     // Initialize xi;
     for (int axis = 0; axis < order; axis++) {
       xi.push_back(hist_xi(num_bins, nr_sample_points_warper));
@@ -228,17 +234,18 @@ class warper_plasma_projection_t {
     populate_functions();
   };
 
-  void update_sigma(double sigma, bool optimize_sigma = true) {   
+  void update_sigma(double sigma, bool optimize_sigma = true) {
     //Smooth and update functions
     for (int axis = 0; axis < order; axis++) {
+      sigma /= xi[axis].delta; // change of unit
       if (optimize_sigma) {
-        auto f = [hist = xi[axis]](double s) { return LOOCV(hist.bin_centers, hist.values, s); };
+        auto f = [&val = xi[axis].values](double s) { return LOOCV(val, s); };
 
         // TODO: should this be done by all ranks ??
-        sigma = details::gsl_minimize(f, 0.5 * xi[axis].delta, 0.1, 1.0, 1e-8, 0., 20).x;
+        sigma = details::gsl_minimize(f, 0.5, sigma, 1.0 / xi[axis].delta, 1e-8, 0., 20).x;
         // sigma should not be too small compared to xi[axis].delta, or gaussian is narrower than bin
         if (comm.rank() == 0) {
-          std::cout << "Optimal sigma = " << sigma << " (axis " << axis << ")" << std::endl;
+          std::cout << "Optimal sigma = " << sigma * xi[axis].delta << " (axis " << axis << ")" << std::endl;
         }
       }
       sigmas[axis] = sigma;
@@ -246,40 +253,41 @@ class warper_plasma_projection_t {
   }
 
   void populate_functions() {
+
     for (int axis = 0; axis < order; axis++) {
       auto &hist = xi[axis];
 
-      array<double, 1> mesh_time(nr_sample_points_warper);
-      for (auto const &[i, t] : itertools::enumerate(fn[axis].mesh())) {
-        mesh_time(i) = t;
-      }
-      hist.y = kernel_smoothing(hist.bin_centers, hist.bin_centers, hist.values, sigmas[axis]);
-      fn[axis].data() = kernel_smoothing(hist.bin_centers, mesh_time, hist.values, sigmas[axis]);
+      array<double, 1> smoothed_proj;
+      smoothed_proj = kernel_smoothing(hist.values, sigmas[axis]);
 
       // Interpolate convolution
-      // details::gsl_interp_wrapper_t interpolate1(gsl_interp_akima, bin_centers, hist.y);
+      // linear interp of positive data is always a positive function
+      details::gsl_interp_wrapper_t smoothed_proj_interp(gsl_interp_linear, hist.bin_centers, smoothed_proj);
 
-      // for (auto const &[i, t] : itertools::enumerate(fn[axis].mesh())) {
-      //   fn[axis][t] = interpolate1(t);
-      // }
+      for (auto const &t : fn[axis].mesh()) {
+        fn[axis][t] = smoothed_proj_interp(t);
+      }
       // -- From here on the code is similar to warper_product_1d_t --
       // Integrate Ansatz using Trapezoid Rule
       double delta = fn_integrated[axis].mesh().delta();
       for (auto const &[i, t] : itertools::enumerate(fn_integrated[axis].mesh())) {
-        if (i==0) { 
+        if (i == 0) {
           fn_integrated[axis][t] = 0;
         } else {
           fn_integrated[axis][t] = fn[axis](t - delta / 2) * delta;
         }
       }
       auto &data = fn_integrated[axis].data();
-      hist.y_interpolated() = data;
 
       std::partial_sum(data.begin(), data.end(), data.begin());
       fn_integrate_norm[axis] = data(data.size() - 1);
       data /= fn_integrate_norm[axis]; // normalize each axis separtely
 
       // Inverse Function via interpolation
+      array<double, 1> mesh_time(nr_sample_points_warper);
+      for (auto const &[i, t] : itertools::enumerate(fn[axis].mesh())) {
+        mesh_time(i) = t;
+      }
       details::gsl_interp_wrapper_t interpolate(gsl_interp_akima, data, mesh_time); //gsl_interp_steffen
       for (auto l : fn_integrated_inverse[axis].mesh()) {
         fn_integrated_inverse[axis][l] = interpolate(l);
@@ -287,12 +295,19 @@ class warper_plasma_projection_t {
     }
   };
 
-  std::vector<array<double, 1>> get_xi(int axis) {
-    return {xi[axis].bin_times, xi[axis].values, xi[axis].counts, xi[axis].y, xi[axis].y_interpolated, values};
+  std::vector<array<double, 1>> get_xi(int axis) const {
+    return {xi[axis].bin_times, xi[axis].values, xi[axis].counts, values};
   };
-  std::vector<double> get_sigmas() {
-    return sigmas;
+
+  std::vector<double> get_sigmas() const {
+    std::vector<double> output{};
+    for (int i = 0; i < order; ++i) {
+      output.emplace_back(sigmas[i] * xi[i].delta);
+    };
+    return output;
   }
+
+  auto get_fi(int axis) const { return fn[axis]; };
 
   std::vector<double> ui_from_li(std::vector<double> const &li_vec) const {
     std::vector<double> result = li_vec;
