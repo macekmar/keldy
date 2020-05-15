@@ -1,36 +1,9 @@
 #pragma once
 
-#include <triqs/test_tools/arrays.hpp>
+#include "../tests_std_containers.hpp"
 
-#include <vector>
+#include <gtest/gtest.h>
 #include <functional>
-
-///------------ std::vector checks -------------
-
-void expect_vectors_are_equal(std::vector<double> const &x, std::vector<double> const &y) {
-  if (x.size() == y.size()) {
-    for (auto const &[xi, yi] : itertools::zip(x, y)) {
-      EXPECT_DOUBLE_EQ(xi, yi);
-    }
-  } else {
-    std::cout << "Vector sizes do not match: " << x.size() << " != " << y.size() << std::endl;
-    ADD_FAILURE();
-  }
-};
-
-template <typename T>
-bool vectors_are_near(std::vector<T> const &x, std::vector<T> const &y, T const abs_err) {
-  if (x.size() == y.size()) {
-    bool output = true;
-    for (auto const &[xi, yi] : itertools::zip(x, y)) {
-      output = output && (std::abs(xi - yi) <= abs_err);
-    }
-    return output;
-  } else {
-    std::cout << "Vector sizes do not match: " << x.size() << " != " << y.size() << std::endl;
-    return false;
-  }
-};
 
 template <typename T>
 bool vector_is_bounded(std::vector<T> const &x, T const x_min, T const x_max) {
@@ -90,10 +63,10 @@ inline void basic_test_warper_multidim(W const &warper, double const t_max, doub
   std::vector<double> li, li_plus = {};
 
   /// boundaries are almost equal
-  expect_vectors_are_equal(warper.li_from_ui({0., 0., 0., 0.}), {0., 0., 0., 0.});
-  expect_vectors_are_equal(warper.ui_from_li({0., 0., 0., 0.}), {0., 0., 0., 0.});
-  expect_vectors_are_equal(warper.li_from_ui({t_max, t_max, t_max, t_max}), {1., 1., 1., 1.});
-  expect_vectors_are_equal(warper.ui_from_li({1., 1., 1., 1.}), {t_max, t_max, t_max, t_max});
+  expect_iterable_double_eq(warper.li_from_ui({0., 0., 0., 0.}), {0., 0., 0., 0.});
+  expect_iterable_double_eq(warper.ui_from_li({0., 0., 0., 0.}), {0., 0., 0., 0.});
+  expect_iterable_double_eq(warper.li_from_ui({t_max, t_max, t_max, t_max}), {1., 1., 1., 1.});
+  expect_iterable_double_eq(warper.ui_from_li({1., 1., 1., 1.}), {t_max, t_max, t_max, t_max});
 
   /// boundaries are respected
   ui = {0.7 * t_max, t_max, 0.3 * t_max, 0.};
@@ -109,11 +82,11 @@ inline void basic_test_warper_multidim(W const &warper, double const t_max, doub
   /// reverse mapping
   for (double u = 0.1 * t_max; u < t_max; u += 0.1 * t_max) {
     ui = {0.7 * t_max, t_max, u, 0.};
-    EXPECT_TRUE(vectors_are_near(warper.ui_from_li(warper.li_from_ui(ui)), ui, accuracy));
+    EXPECT_TRUE(are_iterable_near(warper.ui_from_li(warper.li_from_ui(ui)), ui, accuracy));
   }
   for (double l = 0.1; l < 1.; l += 0.1) {
     li = {0.7, 1., l, 0.};
-    EXPECT_TRUE(vectors_are_near(warper.li_from_ui(warper.ui_from_li(li)), li, accuracy));
+    EXPECT_TRUE(are_iterable_near(warper.li_from_ui(warper.ui_from_li(li)), li, accuracy));
   }
 };
 
@@ -127,7 +100,7 @@ inline void function_test_warper(W const &warper, double const t_max, warper_fun
 
   auto do_test = [&](std::vector<double> const ui) -> void {
     EXPECT_NEAR(warper.jacobian_forward(ui), f(ui), accuracy_f);
-    EXPECT_TRUE(vectors_are_near(warper.li_from_ui(ui), li_from_ui_ref(ui), accuracy_map));
+    EXPECT_TRUE(are_iterable_near(warper.li_from_ui(ui), li_from_ui_ref(ui), accuracy_map));
 
     li = li_from_ui_ref(ui);
     EXPECT_NEAR(warper.jacobian_reverse(li), jacobian_ref(li), accuracy_jac);

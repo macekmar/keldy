@@ -1,30 +1,10 @@
 #include "keldy/binner.hpp"
+#include "tests_std_containers.hpp"
 #include <triqs/test_tools/gfs.hpp>
 #include <gtest/gtest.h>
 
 using namespace keldy::binner;
 using namespace triqs::arrays;
-
-// TODO: merge these with std::vector test routines in warpper commons.
-template <size_t N>
-void expect_std_array_double_equal(std::array<double, N> const &a, std::array<double, N> const &b) {
-  EXPECT_EQ(a.size(), b.size());
-  if (a.size() == b.size()) {
-    for (int i = 0; i < a.size(); ++i) {
-      EXPECT_DOUBLE_EQ(a[i], b[i]);
-    }
-  }
-};
-
-template <typename T, size_t N>
-void expect_std_array_equal(std::array<T, N> const &a, std::array<T, N> const &b) {
-  EXPECT_EQ(a.size(), b.size());
-  if (a.size() == b.size()) {
-    for (int i = 0; i < a.size(); ++i) {
-      EXPECT_EQ(a[i], b[i]);
-    }
-  }
-};
 
 TEST(Binner, Construction) { // NOLINT
   auto bin10 = binner_t<1>({std::make_tuple(-2.5, 5.0, 10)});
@@ -126,12 +106,12 @@ TEST(SparseBinner, accumulate) { //NOLINT
   EXPECT_EQ(data[1].second, 110_j);
   EXPECT_EQ(data[2].second, 1000_j);
 
-  expect_std_array_equal(data[0].first.first, {1.5});
-  expect_std_array_equal(data[0].first.second, {0, 3});
-  expect_std_array_equal(data[1].first.first, {1.5});
-  expect_std_array_equal(data[1].first.second, {2, 3});
-  expect_std_array_equal(data[2].first.first, {1.50001});
-  expect_std_array_equal(data[2].first.second, {2, 3});
+  EXPECT_TRUE(are_iterable_eq(data[0].first.first, {1.5}));
+  EXPECT_TRUE(are_iterable_eq(data[0].first.second, {0, 3}));
+  EXPECT_TRUE(are_iterable_eq(data[1].first.first, {1.5}));
+  EXPECT_TRUE(are_iterable_eq(data[1].first.second, {2, 3}));
+  EXPECT_TRUE(are_iterable_eq(data[2].first.first, {1.50001}));
+  EXPECT_TRUE(are_iterable_eq(data[2].first.second, {2, 3}));
 }
 
 TEST(SparseBinner, weight) { // NOLINT
