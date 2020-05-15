@@ -63,20 +63,18 @@ class sparse_binner_t {
 
  private:
   template <size_t... cont_axes, size_t... disc_axes, typename... Coord>
-  inline void accumulate_impl(bool append, dcomplex value, std::index_sequence<cont_axes...>,
-                              std::index_sequence<disc_axes...>, Coord... coords_) {
+  inline void accumulate_impl(dcomplex value, std::index_sequence<cont_axes...>, std::index_sequence<disc_axes...>,
+                              Coord... coords_) {
     auto coords = std::tie(coords_...);
     coord_arr_t coord_array = {{}, {}};
     coord_array.first = {static_cast<cont_coord_t>(std::get<cont_axes>(coords))...};
     coord_array.second = {static_cast<disc_coord_t>(std::get<N + disc_axes>(coords))...};
 
-    if (!append) {
-      auto loc = std::find_if(std::begin(data), std::end(data),
-                              [coord = coord_array](auto &el) { return (el.first == coord); });
-      if (loc != std::end(data)) {
-        (*loc).second += value;
-        return;
-      }
+    auto loc =
+       std::find_if(std::begin(data), std::end(data), [coord = coord_array](auto &el) { return (el.first == coord); });
+    if (loc != std::end(data)) {
+      (*loc).second += value;
+      return;
     }
     data.push_back(make_pair(coord_array, value));
   };
@@ -87,6 +85,7 @@ class sparse_binner_t {
   /// list of stored values
   std::vector<std::pair<coord_arr_t, dcomplex>> data;
 
+  // to multiply with jacibian e.g.
   auto &operator*=(dcomplex scalar) {
     for (auto &rh : data) {
       rh.second *= scalar;
@@ -94,39 +93,12 @@ class sparse_binner_t {
     return *this;
   };
 
-  /// Append a value to the list `data`
-  template <typename... Coord>
-  void append(dcomplex value, Coord... coords) {
-    static_assert(sizeof...(coords) == N + M);
-    accumulate_impl(true, value, std::make_index_sequence<N>(), std::make_index_sequence<M>(), coords...);
-  };
-
   /// Accumulate a value into the list `data`.
   /// If `coords` already exist, the value is added to the pre-existing entry instead of appending a new one.
   template <typename... Coord>
   void accumulate(dcomplex value, Coord... coords) {
     static_assert(sizeof...(coords) == N + M);
-    accumulate_impl(false, value, std::make_index_sequence<N>(), std::make_index_sequence<M>(), coords...);
-  };
-
-  /// Sort `data` in lexicographic order of the coordinates
-  void sort() {
-    auto comp = [](std::pair<coord_arr_t, dcomplex> const &a, std::pair<coord_arr_t, dcomplex> const &b) -> bool {
-      if (a.first.first == b.first.first) {
-        return std::lexicographical_compare(a.first.second.cbegin(), a.first.second.cend(), b.first.second.cbegin(),
-                                            b.first.second.cend());
-      }
-      return std::lexicographical_compare(a.first.first.cbegin(), a.first.first.cend(), b.first.first.cbegin(),
-                                          b.first.first.cend());
-    };
-    std::stable_sort(data.begin(), data.end(), comp);
-  };
-
-  /// Sparse binners are sorted before testing equality
-  friend bool operator==(sparse_binner_t<N, M> &lhs, sparse_binner_t<N, M> &rhs) {
-    lhs.sort();
-    rhs.sort();
-    return lhs.data == rhs.data;
+    accumulate_impl(value, std::make_index_sequence<N>(), std::make_index_sequence<M>(), coords...);
   };
 
   /// sum moduli of values stored in `data`.
@@ -190,7 +162,7 @@ class binner_t {
   };
 
   template <typename... Indices>
-  inline void accumulate_impl_core(dcomplex value, Indices... indices) {
+  void accumulate_impl_core(dcomplex value, Indices... indices) {
     static_assert(sizeof...(Indices) == N + M);
     data(indices...) += value;
     nr_values_added(indices...)++;
@@ -206,7 +178,7 @@ class binner_t {
   };
 
   template <size_t... axes, typename... Coord>
-  inline void accumulate_impl(dcomplex value, std::index_sequence<axes...>, Coord... coords) {
+  void accumulate_impl(dcomplex value, std::index_sequence<axes...>, Coord... coords) {
     if (all(in_bounds<axes>(coords)...)) {
       accumulate_impl_core(value, coord2index<axes>(coords)...);
     } else {
@@ -215,8 +187,8 @@ class binner_t {
   };
 
   template <size_t... cont_axes, size_t... disc_axes>
-  inline void accumulate_impl_array(dcomplex value, std::index_sequence<cont_axes...>,
-                                    std::index_sequence<disc_axes...>, coord_arr_t coords) {
+  void accumulate_impl_array(dcomplex value, std::index_sequence<cont_axes...>, std::index_sequence<disc_axes...>,
+                             coord_arr_t coords) {
     accumulate_impl(value, std::make_index_sequence<N + M>(), coords.first[cont_axes]..., coords.second[disc_axes]...);
   };
 

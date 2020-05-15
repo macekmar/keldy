@@ -7,6 +7,22 @@
 using namespace keldy;
 using namespace keldy::impurity_oneband;
 
+/// Sort the binner data in lexicographic order of the coordinates, so as to
+//allow checking equality
+template <int N, int M>
+void sort(binner::sparse_binner_t<N, M> &sp_bin) {
+  using data_t = std::pair<typename binner::sparse_binner_t<N, M>::coord_arr_t, dcomplex>;
+  auto comp = [](data_t const &a, data_t const &b) -> bool {
+    if (a.first.first == b.first.first) {
+      return std::lexicographical_compare(a.first.second.cbegin(), a.first.second.cend(), b.first.second.cbegin(),
+                                          b.first.second.cend());
+    }
+    return std::lexicographical_compare(a.first.first.cbegin(), a.first.first.cend(), b.first.first.cbegin(),
+                                        b.first.first.cend());
+  };
+  std::stable_sort(sp_bin.data.begin(), sp_bin.data.end(), comp);
+};
+
 TEST(integrand_kernel, Order_1) { // NOLINT
   model_param_t const params;
   g0_model const g0{g0_model_omega{params}, true};
@@ -21,10 +37,10 @@ TEST(integrand_kernel, Order_1) { // NOLINT
                           forward);
   expected_res.accumulate(g0_k({u, up, backward}, external_B) * g0_k({u, down, forward}, {u, down, backward}), u,
                           backward);
-  expected_res.sort();
+  sort(expected_res);
 
   binner::sparse_binner_t<1, 1> computed_res = integrand(std::vector<double>{u}).first;
-  computed_res.sort();
+  sort(computed_res);
   ASSERT_EQ(computed_res.data.size(), 2);
 
   for (int i = 0; i < 2; ++i) {
@@ -68,10 +84,10 @@ TEST(integrand_kernel, Order_2) { // NOLINT
   expected_res.accumulate(det_prod_u(backward, forward) + det_prod_u(backward, backward), u, backward);
   expected_res.accumulate(det_prod_v(forward, forward) + det_prod_v(backward, forward), v, forward);
   expected_res.accumulate(det_prod_v(forward, backward) + det_prod_v(backward, backward), v, backward);
-  expected_res.sort();
+  sort(expected_res);
 
   binner::sparse_binner_t<1, 1> computed_res = integrand(std::vector<double>{u, v}).first;
-  computed_res.sort();
+  sort(computed_res);
 
   ASSERT_EQ(computed_res.data.size(), 4);
 
