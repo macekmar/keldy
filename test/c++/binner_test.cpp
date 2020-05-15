@@ -9,23 +9,23 @@ using namespace triqs::arrays;
 TEST(Binner, Construction) { // NOLINT
   auto bin10 = binner_t<1>({std::make_tuple(-2.5, 5.0, 10)});
   bin10.accumulate(1_j, 0.5);
-  bin10.accumulate(1_j, 0.5);
+  bin10(0.5) << 1_j;
 
   auto bin11 = binner_t<1, 1>({std::make_tuple(-2.5, 5.0, 10)}, {3});
   bin11.accumulate(1_j, 0.5, 3);
-  bin11.accumulate(1_j, 0.5, 1);
+  bin11(0.5, 1) << 1_j;
 
   auto bin12 = binner_t<1, 2>({std::make_tuple(-2.5, 5.0, 10)}, {3, 6});
   bin12.accumulate(1_j, 0.5, 3, 11);
-  bin12.accumulate(1_j, 0.5, 1, 2);
+  bin12(0.5, 1, 2) << 1_j;
 
   auto bin20 = binner_t<2>({std::make_tuple(-2.5, 5.0, 10), std::make_tuple(0., 10., 5)});
   bin20.accumulate(1_j, 0.5, 3.);
-  bin20.accumulate(1_j, 0.5, 13.);
+  bin20(0.5, 13.) << 1_j;
 
   auto bin21 = binner_t<2, 1>({std::make_tuple(-2.5, 5.0, 10), std::make_tuple(0., 10., 5)}, {3});
   bin21.accumulate(1_j, 0.5, 3., 0);
-  bin21.accumulate(1_j, 0.5, 13., 5);
+  bin21(0.5, 13., 5) << 1_j;
 }
 
 TEST(Binner, accumulate) { // NOLINT
@@ -52,6 +52,53 @@ TEST(Binner, accumulate) { // NOLINT
   // dropped values
   binner.accumulate(1000.0_j, -1.0, 0);
   binner.accumulate(10'000.0_j, 11.0, 0);
+
+  // start testing
+  EXPECT_EQ(2, binner.get_nr_values_dropped());
+
+  array<dcomplex, 2> values_expected(4, 2);
+  values_expected() = 0.0;
+  values_expected(range(), 0) = array<dcomplex, 1>{1.0 + 101.0_j, 0.0_j, 0.0_j, 0.0_j}; // forward
+  values_expected(range(), 1) =
+     array<dcomplex, 1>{10.0 + 0.0_j, 1000.0 + 0.0_j, 10'000.0 + 10.0_j, 100'100.0 + 0.0_j}; // backward
+  EXPECT_ARRAY_EQ(values_expected, binner.get_data());
+
+  array<long, 2> nr_values_expected(4, 2);
+  nr_values_expected() = 0;
+  nr_values_expected(range(), 0) = array<int, 1>{3, 0, 0, 0};
+  nr_values_expected(range(), 1) = array<int, 1>{1, 1, 2, 2};
+  array<long, 2> nr_values = binner.get_nr_values_added(); // cast to signed long so that difference can be taken
+  EXPECT_ARRAY_EQ(nr_values_expected, nr_values);
+
+  // product by scalar
+  binner *= 2.0;
+  EXPECT_ARRAY_EQ(2.0 * values_expected, binner.get_data());
+}
+
+TEST(Binner, accumulate_nice_synthax) { // NOLINT
+  binner_t<1, 1> binner({std::make_tuple(0.0, 10.0, 4)}, {2});
+
+  // check bins are OK
+  array<double, 1> times_expected(4);
+  times_expected = {1.25, 3.75, 6.25, 8.75};
+  EXPECT_ARRAY_EQ(times_expected, binner.get_bin_coord());
+  EXPECT_DOUBLE_EQ(2.5, binner.get_bin_size());
+
+  binner(1.5, 0) << 1.0_j;
+  binner(6.3, 1) << 10.0_j;
+  binner(2.0, 0) << 1.0;
+  binner(2.0, 0) << 100.0_j;
+
+  // boundary points
+  binner(0.0, 1) << 10.0;
+  binner(10.0, 1) << 100.0;
+  binner(2.5, 1) << 1000.0;
+  binner(5.0, 1) << 10'000.0;
+  binner(7.5, 1) << 100'000.0;
+
+  // dropped values
+  binner(-1.0, 0) << 1000.0_j;
+  binner(11.0, 0) << 10'000.0_j;
 
   // start testing
   EXPECT_EQ(2, binner.get_nr_values_dropped());

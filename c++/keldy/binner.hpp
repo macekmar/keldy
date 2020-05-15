@@ -130,6 +130,19 @@ struct discreet_axis_t {
 
 void mpi_broadcast(discreet_axis_t &in, mpi::communicator c = {}, int root = 0);
 
+/// Small object containing ref to a binner_t and list of coordinates.
+//  Used to produce nice accumulate syntax:
+//  binner(coord1, coord2, ...) << value;
+template <typename T, typename... Coord>
+struct accessor_t {
+  T &binner;
+  std::tuple<Coord...> coords;
+
+  void operator<<(dcomplex value) {
+    std::apply([&b = binner, value](auto &... args) { b.accumulate(value, args...); }, coords);
+  }
+};
+
 /*
  * Multidimentional binner with N continuous coordinates and M discreet ones.
  * Continuous coordinates are before discreet ones.
@@ -229,6 +242,14 @@ class binner_t {
     accumulate_impl(value, std::make_index_sequence<N + M>(), coords...);
   };
 
+  /// nice syntax for accumulate:
+  //  binner(coord1, coord2, ...) << value;
+  template <typename... Coord>
+  accessor_t<binner_t<N, M>, Coord...> operator()(Coord... coords) {
+    static_assert(sizeof...(coords) == N + M);
+    return {*this, std::tie(coords...)};
+  };
+
   [[nodiscard]] auto const &get_data() const { return data; };
   [[nodiscard]] auto const &get_nr_values_added() const { return nr_values_added; };
   [[nodiscard]] auto const &get_nr_values_dropped() const { return nr_values_dropped; };
@@ -245,7 +266,6 @@ class binner_t {
       TRIQS_RUNTIME_ERROR << "Axis " << axis << " is larger than the number of dimensions.";
     }
     auto ax = continuous_axes[axis];
-    auto [xmin, xmax, n, bin_size] = continuous_axes[axis];
     mda::array<double, 1> bin_coord(ax.nr_bins);
     for (int i = 0; i < ax.nr_bins; ++i) {
       bin_coord(i) = ax.xmin + (i + 0.5) * ax.bin_size;
