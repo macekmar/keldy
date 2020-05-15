@@ -26,7 +26,7 @@ TEST(integrand_direct_time, time) { // NOLINT
   std::vector<double> time_vec = {2.5, 1.2};
   binner::sparse_binner_t<1> res = integrand(time_vec).first;
   EXPECT_EQ(res.data.size(), 1);
-  EXPECT_EQ(std::get<double>(res.data[0].first[0]), 1.2);
+  EXPECT_EQ(res.data[0].first.first[0], 1.2);
 }
 
 TEST(integrand_direct_time, consistency) { // NOLINT

@@ -31,7 +31,7 @@ for N, M in [(1, 0), (1, 1), (2, 0), (2, 1)]:
                     doc = """Construct empty sparse binner""")
 
     c.add_member(c_name = "data",
-                 c_type = "std::vector<std::pair<std::array<double_or_int, {}>, dcomplex>>".format(N + M),
+            c_type = "std::vector<std::pair<sparse_binner_t<{}, {}>::coord_arr_t, dcomplex>>".format(N, M),
                  read_only = False,
     )
 
@@ -73,11 +73,11 @@ for N, M in [(1, 0), (1, 1), (2, 0), (2, 1)]:
         args += "long b{}, ".format(m)
     c.add_method("void accumulate(dcomplex value, " + args[:-2] + ")")
 
-    c.add_method("array<dcomplex, {}> get_data()".format(N + M))
-    c.add_method("array<unsigned long, {}> get_nr_values_added()".format(N + M))
-    c.add_method("unsigned long  get_nr_values_dropped()")
-    c.add_method("auto get_continuous_axes()")
-    c.add_method("auto get_discreet_axes()")
+    c.add_method("mda::array<dcomplex, {}> const& get_data()".format(N + M))
+    c.add_method("mda::array<long, {}> const& get_nr_values_added()".format(N + M))
+    c.add_method("auto const& get_nr_values_dropped()")
+    c.add_method("auto const& get_continuous_axes()")
+    c.add_method("auto const& get_discreet_axes()")
 
     c.add_method("auto get_bin_coord(size_t axis = 0)")
     c.add_method("auto get_bin_size(size_t axis = 0)")
