@@ -50,7 +50,7 @@ TEST(ProjectionWarper, SigmaValue) { // NOLINT
 
   auto proj_warper = warper_plasma_projection_t(integrand, warper, tmax, 1, int(1e2), int(1e2), int(1e2), 0.1, true);
 
-  EXPECT_NEAR(proj_warper.get_sigmas()[0], 0.0828658, tol);
+  EXPECT_NEAR(proj_warper.get_sigmas()[0], 0.0828658 / std::sqrt(2), tol);
 }
 
 TEST(ProjectionWarper, Values) { // NOLINT
@@ -67,8 +67,8 @@ TEST(ProjectionWarper, Values) { // NOLINT
   auto cst = [](double x) -> double { return 1.; };
   warper_product_1d_simple_t warper = {cst, tmax, 10};
 
-  auto proj_warper =
-     warper_plasma_projection_t(integrand, warper, tmax, 1, int(1e2), int(1e2), int(1e2), 0.0828658, false);
+  auto proj_warper = warper_plasma_projection_t(integrand, warper, tmax, 1, int(1e2), int(1e2), int(1e2),
+                                                0.0828658 / std::sqrt(2), false);
 
   //std::cout << proj_warper({0.3}) << std::endl;
   //std::cout << proj_warper({0.5}) << std::endl;

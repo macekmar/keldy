@@ -28,6 +28,7 @@
 #include "product_1d.hpp"
 #include "product_1d_simple.hpp"
 #include "../common.hpp"
+#include "../interfaces/gsl_filter_gaussian_wrap.hpp"
 #include "../interfaces/gsl_interp_wrap.hpp"
 #include "../interfaces/gsl_minimize.hpp"
 #include "../qrng.hpp"
@@ -84,13 +85,11 @@ class CPP2PY_IGNORE hist_xi {
 };
 
 // sigma is in unit of time step
-auto gaussian = [](double x, double x0, double sigma) { return std::exp(-std::pow((x - x0) / sigma, 2)); };
+auto gaussian = [](double x, double x0, double sigma) { return std::exp(-std::pow((x - x0) / sigma, 2) / 2); };
 
 inline auto CPP2PY_IGNORE gaussian_filter(array<double, 1> &y_in, double sigma) {
   int const N = y_in.size();
 
-  array<double, 1> y_out(N);
-  y_out() = 0;
   array<double, 1> norm(N);
   norm() = 0;
 
@@ -104,22 +103,10 @@ inline auto CPP2PY_IGNORE gaussian_filter(array<double, 1> &y_in, double sigma) 
     norm(i) = norm(i - 1) + kernel2(N - i - 1) - kernel2(2 * N - i - 1);
   }
 
-  mpi::communicator comm {};
-  int mpi_rank = comm.rank();
-  int mpi_size = comm.size();
-
-  array<double, 1> kernel(N);
-  for (int i = 0; i < N; ++i) {
-    if (i % mpi_size == mpi_rank) {
-      for (int j = 0; j < N; ++j) {
-        kernel(j) = gaussian(j, i, sigma);
-      }
-      norm(i) = sum(kernel);
-      y_out(i) = sum(kernel * y_in);
-    }
-  }
-  y_out = mpi::mpi_all_reduce(y_out, comm);
-  norm = mpi::mpi_all_reduce(norm, comm);
+  long const K = std::max(std::min(int(10 * sigma), N), 3);
+  auto y_out = details::gsl_filter_gaussian_wrapper(y_in, K, sigma, GSL_FILTER_END_PADZERO);
+  auto kernel = details::gsl_filter_gaussian_kernel_wrapper(K, sigma, false);
+  y_out *= sum(kernel);
 
   return std::make_pair(y_out, norm);
 }
@@ -240,7 +227,6 @@ class warper_plasma_projection_t {
       if (optimize_sigma) {
         auto f = [&val = xi[axis].values](double s) { return LOOCV(val, s); };
 
-        // TODO: should this be done by all ranks ??
         sigma = details::gsl_minimize(f, 0.5, sigma, 1.0 / xi[axis].delta, 1e-8, 0., 20).x;
         // sigma should not be too small compared to xi[axis].delta, or gaussian is narrower than bin
         if (comm.rank() == 0) {
