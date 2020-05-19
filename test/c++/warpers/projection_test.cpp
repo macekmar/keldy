@@ -1,5 +1,5 @@
 #include "keldy/warpers/plasma_uv.hpp"
-#include "keldy/warpers/plasma_projection.hpp"
+#include "keldy/warpers/projection.hpp"
 #include "./warper_tests_common.hpp"
 
 #include <triqs/test_tools/arrays.hpp>
@@ -11,44 +11,45 @@ using namespace triqs::arrays;
 
 /// --------------------------------------------------------
 
-// FIX THIS TEST
-
 TEST(ProjectionWarper, OneToOne) { // NOLINT
   double const tmax = 1.;
-  auto integrand = [](std::vector<double> const xi) -> std::pair<double, int> {
+  auto integrand = [](std::vector<double> const xi) -> double {
     double output = 1.;
     for (double x : xi) {
       output *= std::sin(3 * x);
     }
-    return std::make_pair(output, 1);
+    return output;
   };
 
-  auto cst = [](double x) -> double { return 1.; };
-  warper_product_1d_simple_t warper = {cst, tmax, 10};
+  auto proj_warper = warper_projection_t(integrand, tmax, 4, int(1e3), int(1e3), 0.0828658 / std::sqrt(2), false);
 
-  EXPECT_EQ(0,1); // fix rest of test
-
-  //auto proj_warper = warper_plasma_projection_t(integrand, warper, tmax, 4, int(1e3), int(1e3), int(1e3), 0.1);
-
-  //basic_test_warper_at_order_1(proj_warper, 1.);
-  //basic_test_warper_multidim(proj_warper, 1.);
+  // TODO: that is not very good precision
+  basic_test_warper_at_order_1(proj_warper, tmax, 1e-6);
+  basic_test_warper_multidim(proj_warper, tmax, 1e-6);
 }
 
 TEST(ProjectionWarper, SigmaValue) { // NOLINT
   double const tmax = 1.;
   double const tol = 1e-6;
-  auto integrand = [](std::vector<double> const xi) -> std::pair<double, int> {
+  auto integrand = [](std::vector<double> const xi) -> double {
     double output = 1.;
     for (double x : xi) {
       output *= std::sin(3 * x);
     }
-    return std::make_pair(output, 1);
+    return output;
   };
 
+  // TODO: get rid of this warper in tests?
   auto cst = [](double x) -> double { return 1.; };
   warper_product_1d_simple_t warper = {cst, tmax, 10};
 
-  auto proj_warper = warper_plasma_projection_t(integrand, warper, tmax, 1, int(1e2), int(1e2), int(1e2), 0.1, true);
+  auto warped_integrand = [&warper, &integrand, tmax](std::vector<double> const li) -> double {
+    auto [vi, jac] = warper.map_forward(li);
+    auto ui = ui_from_vi(tmax, vi);
+    return integrand(ui) * jac;
+  };
+
+  auto proj_warper = warper_projection_t(warped_integrand, tmax, 1, int(1e2), int(1e2), 0.1, true);
 
   EXPECT_NEAR(proj_warper.get_sigmas()[0], 0.0828658 / std::sqrt(2), tol);
 }
@@ -56,19 +57,26 @@ TEST(ProjectionWarper, SigmaValue) { // NOLINT
 TEST(ProjectionWarper, Values) { // NOLINT
   double const tmax = 1.;
   double const tol = 1e-6;
-  auto integrand = [](std::vector<double> const xi) -> std::pair<double, int> {
+  auto integrand = [](std::vector<double> const xi) -> double {
     double output = 1.;
     for (double x : xi) {
       output *= std::sin(3 * x);
     }
-    return std::make_pair(output, 1);
+    return output;
   };
 
+  // TODO: get rid of this warper in tests?
   auto cst = [](double x) -> double { return 1.; };
   warper_product_1d_simple_t warper = {cst, tmax, 10};
 
-  auto proj_warper = warper_plasma_projection_t(integrand, warper, tmax, 1, int(1e2), int(1e2), int(1e2),
-                                                0.0828658 / std::sqrt(2), false);
+  auto warped_integrand = [&warper, &integrand, tmax](std::vector<double> const li) -> double {
+    auto [vi, jac] = warper.map_forward(li);
+    auto ui = ui_from_vi(tmax, vi);
+    return integrand(ui) * jac;
+  };
+
+  auto proj_warper =
+     warper_projection_t(warped_integrand, tmax, 1, int(1e2), int(1e2), 0.0828658 / std::sqrt(2), false);
 
   //std::cout << proj_warper({0.3}) << std::endl;
   //std::cout << proj_warper({0.5}) << std::endl;
@@ -83,9 +91,9 @@ TEST(ProjectionWarper, Values) { // NOLINT
   //std::cout << proj_warper.jacobian_reverse({0.5}) << std::endl;
   //std::cout << proj_warper.jacobian_reverse({0.9}) << std::endl;
 
-  EXPECT_NEAR(proj_warper({0.3}), 0.776918, tol);
-  EXPECT_NEAR(proj_warper({0.5}), 0.862528, tol);
-  EXPECT_NEAR(proj_warper({0.9}), 0.288564, tol);
+  EXPECT_NEAR(proj_warper.jacobian_forward({0.3}), 0.776918, tol);
+  EXPECT_NEAR(proj_warper.jacobian_forward({0.5}), 0.862528, tol);
+  EXPECT_NEAR(proj_warper.jacobian_forward({0.9}), 0.288564, tol);
   EXPECT_NEAR(proj_warper.ui_from_li({0.3})[0], 0.338162, tol);
   EXPECT_NEAR(proj_warper.ui_from_li({0.5})[0], 0.483316, tol);
   EXPECT_NEAR(proj_warper.ui_from_li({0.9})[0], 0.801651, tol);

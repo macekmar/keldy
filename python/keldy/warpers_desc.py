@@ -145,21 +145,15 @@ c.add_method("""double jacobian_forward (std::vector<double> ui_vec)""",
 
 module.add_class(c)
 
-# The class warper_plasma_projection_t
+# The class warper_projection_t
 c = class_(
-        py_type = "WarperPlasmaProjectionT",  # name of the python class
-        c_type = "keldy::warpers::warper_plasma_projection_t",   # name of the C++ class
+        py_type = "WarperProjectionT",  # name of the python class
+        c_type = "keldy::warpers::warper_projection_t",   # name of the C++ class
         doc = r"""""",   # doc of the C++ class
         hdf5 = False,
 )
 
-c.add_constructor("""(std::function<std::pair<dcomplex, int> (std::vector<double>)> integrand_, keldy::warpers::warper_product_1d_simple_t w_warper_, double t_max, int order, int nr_sample_points_warper_, int num_bins, int npts_mean, double sigma, bool optimize_sigma = true)""", doc = r"""""")
-
-c.add_method("""void gather_data (int npts_mean)""",
-             doc = r"""""")
-
-c.add_method("""void update_sigma (double sigma, bool optimize_sigma = true)""",
-             doc = r"""""")
+c.add_constructor("""(std::function<dcomplex (std::vector<double>)> integrand_, double t_max, int order, int num_bins, int nr_samples, double sigma, bool optimize_sigma = true)""", doc = r"""""")
 
 c.add_method("""std::vector<triqs::arrays::array<double, 1> > get_xi (int axis)""",
              doc = r"""""")
@@ -167,17 +161,22 @@ c.add_method("""std::vector<triqs::arrays::array<double, 1> > get_xi (int axis)"
 c.add_method("""std::vector<double> get_sigmas ()""",
              doc = r"""""")
 
-c.add_method("""std::vector<double> ui_from_li (std::vector<double> li_vec)""",
+c.add_method("""std::pair<std::vector<double>, double> map_reverse (std::vector<double> li_vec)""",
              doc = r"""""")
 
-c.add_method("""std::vector<double> li_from_ui (std::vector<double> ui_vec)""",
+c.add_method("""std::pair<std::vector<double>, double> map_forward (std::vector<double> ui_vec)""",
              doc = r"""""")
 
 c.add_method("""double jacobian_reverse (std::vector<double> li_vec)""",
              doc = r"""""")
 
-c.add_method("""double operator() (std::vector<double> ui_vec)""",
-             name = "__call__",
+c.add_method("""double jacobian_forward (std::vector<double> ui_vec)""",
+             doc = r"""""")
+
+c.add_method("""std::vector<double> ui_from_li (std::vector<double> li_vec)""",
+             doc = r"""""")
+
+c.add_method("""std::vector<double> li_from_ui (std::vector<double> ui_vec)""",
              doc = r"""""")
 
 module.add_class(c)

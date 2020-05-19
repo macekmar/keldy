@@ -24,10 +24,11 @@
 
 #pragma once
 
-#include "plasma_uv.hpp"
-#include "product_1d.hpp"
+#include "warpers_common.hpp"
+//#include "warpers.hpp"
+//#include "plasma_uv.hpp"
+//#include "product_1d.hpp"
 #include "product_1d_simple.hpp"
-#include "../common.hpp"
 #include "../interfaces/gsl_filter_gaussian_wrap.hpp"
 #include "../interfaces/gsl_interp_wrap.hpp"
 #include "../interfaces/gsl_minimize.hpp"
@@ -43,9 +44,8 @@
 #include <functional>
 #include <numeric>
 //#include <iomanip>
-#include <complex>
+//#include <complex>
 #include <cmath>
-
 
 namespace keldy::warpers {
 
@@ -62,14 +62,12 @@ class CPP2PY_IGNORE hist_xi {
   array<double, 1> counts; // TODO: should be int, complicates get_xi and others...
   double delta;
   int num_bins;
-  int nr_sample_points_warper;
 
-  hist_xi(int num_bins_, int nr_sample_points_warper_)
-     : num_bins(num_bins_), nr_sample_points_warper(nr_sample_points_warper_) {
+  hist_xi(int num_bins_) : num_bins(num_bins_) {
     bin_times = array<double, 1>(num_bins + 1);
     delta = 1.0 / (num_bins - 1);
     for (int i = 0; i < num_bins + 1; i++) {
-      bin_times(i) = -delta/2.0 + i*delta;
+      bin_times(i) = -delta / 2.0 + i * delta;
     }
 
     bin_centers = array<double, 1>(num_bins);
@@ -125,47 +123,41 @@ inline double CPP2PY_IGNORE LOOCV(array<double, 1> &y_in, double sigma) {
   return sum(pow(y_estim - y_in, 2));
 }
 
-class warper_plasma_projection_t {
+class warper_projection_t {
  private:
   int order;
-  int nr_sample_points_warper;
   int num_bins;
-  double t_max{};
-  std::function<std::pair<dcomplex, int>(std::vector<double>)> integrand;
-  std::vector<double> fn_integrate_norm{};
+  double t_max;
+  std::vector<double> fn_integrate_norm;
   std::vector<gf_t> fn_integrated;
   std::vector<gf_t> fn_integrated_inverse;
-  warper_product_1d_simple_t w_warper;
-  // warper_train_t warper_train;
   std::vector<hist_xi> xi;
-  array<double, 1> values;
 
   std::vector<gf_t> fn;
   std::vector<double> sigmas;
-  mpi::communicator comm {};
- public:
+  mpi::communicator comm{};
 
-  void gather_data(int npts_mean) {
+ public:
+  void CPP2PY_IGNORE gather_data(std::function<dcomplex(std::vector<double>)> const &warped_integrand,
+                                 int const nr_samples) {
     int bin;
     double value;
-    mpi::communicator comm {};
+    mpi::communicator comm{};
     int mpi_rank = comm.rank();
     int mpi_size = comm.size();
 
     sobol g = sobol(order, 0); // TODO: different generators
-    for (int i = 0; i < npts_mean; i++) {
-      auto w = g();
+    for (int i = 0; i < nr_samples; i++) {
+      auto l = g();
 
       if (i % mpi_size != mpi_rank) {
         continue;
       }
 
-      auto u = ui_from_vi(t_max, w_warper.ui_from_li(w));  // TODO: Should have pass warper train
-      value = std::abs(integrand(u).first * w_warper.jacobian_reverse(w));
-      values(i) = std::real(std::pow(std::complex<double>(0,1), order+1)*integrand(u).first);
+      value = std::abs(warped_integrand(l));
 
       for (int axis = 0; axis < order; axis++) {
-        bin = int(floor((w[axis] - (-xi[axis].delta / 2.0)) / xi[axis].delta));
+        bin = int(floor((l[axis] - (-xi[axis].delta / 2.0)) / xi[axis].delta));
         if (bin < 0 or bin > xi[axis].num_bins - 1) {
           TRIQS_RUNTIME_ERROR << "out of bin range";
         }
@@ -181,7 +173,7 @@ class warper_plasma_projection_t {
     for (int axis = 0; axis < order; axis++) {
       for (int bin = 0; bin < xi[axis].num_bins; bin++) {
         if (xi[axis].counts(bin) > 0) {
-          xi[axis].values(bin) = xi[axis].values(bin)/xi[axis].counts(bin);
+          xi[axis].values(bin) = xi[axis].values(bin) / xi[axis].counts(bin);
         } else {
           xi[axis].values(bin) = 0.0;
         }
@@ -189,30 +181,23 @@ class warper_plasma_projection_t {
     }
   };
 
-  warper_plasma_projection_t(std::function<std::pair<dcomplex, int>(std::vector<double>)> integrand_,
-                             warper_product_1d_simple_t w_warper_, double t_max, int order,
-                             int nr_sample_points_warper_, int num_bins, int npts_mean, double sigma,
-                             bool optimize_sigma = true)
-     : integrand(std::move(integrand_)),
-       w_warper(w_warper_),
-       t_max(t_max),
-       order(order),
-       nr_sample_points_warper(nr_sample_points_warper_),
-       num_bins(num_bins) {
+  warper_projection_t(std::function<dcomplex(std::vector<double>)> const &warped_integrand, double const t_max,
+                      int const order, int const num_bins, int const nr_samples, const double sigma,
+                      bool const optimize_sigma = true)
+     : t_max(t_max), num_bins(num_bins), order(order) {
     // Initialize xi;
     for (int axis = 0; axis < order; axis++) {
-      xi.push_back(hist_xi(num_bins, nr_sample_points_warper));
+      xi.push_back(hist_xi(num_bins));
     }
-    values = array<double, 1>(npts_mean);
-    gather_data(npts_mean);
+    gather_data(warped_integrand, nr_samples);
 
     // Fill function vectors
     // TODO: should the number of bins be different (smaller) than the number of interpolation points?
     for (int axis = 0; axis < order; axis++) {
-      fn_integrated.push_back(gf_t({0.0, 1.0, nr_sample_points_warper}));
+      fn_integrated.push_back(gf_t({0.0, 1.0, num_bins}));
       fn_integrate_norm.push_back(0);
-      fn_integrated_inverse.push_back(gf_t({0.0, 1.0, 1 + 5 * (nr_sample_points_warper - 1)}));
-      fn.push_back(gf_t({0.0, 1.0, nr_sample_points_warper}));
+      fn_integrated_inverse.push_back(gf_t({0.0, 1.0, 1 + 5 * (num_bins - 1)}));
+      fn.push_back(gf_t({0.0, 1.0, num_bins}));
       sigmas.push_back(0);
     }
     update_sigma(sigma, optimize_sigma);
@@ -220,7 +205,7 @@ class warper_plasma_projection_t {
     populate_functions();
   };
 
-  void update_sigma(double sigma, bool optimize_sigma = true) {
+  void CPP2PY_IGNORE update_sigma(double sigma, bool optimize_sigma = true) {
     //Smooth and update functions
     for (int axis = 0; axis < order; axis++) {
       sigma /= xi[axis].delta; // change of unit
@@ -237,7 +222,7 @@ class warper_plasma_projection_t {
     }
   }
 
-  void populate_functions() {
+  void CPP2PY_IGNORE populate_functions() {
 
     for (int axis = 0; axis < order; axis++) {
       auto &hist = xi[axis];
@@ -269,7 +254,7 @@ class warper_plasma_projection_t {
       data /= fn_integrate_norm[axis]; // normalize each axis separtely
 
       // Inverse Function via interpolation
-      array<double, 1> mesh_time(nr_sample_points_warper);
+      array<double, 1> mesh_time(num_bins);
       for (auto const &[i, t] : itertools::enumerate(fn[axis].mesh())) {
         mesh_time(i) = t;
       }
@@ -281,12 +266,13 @@ class warper_plasma_projection_t {
   };
 
   std::vector<array<double, 1>> get_xi(int axis) const {
-    return {xi[axis].bin_times, xi[axis].values, xi[axis].counts, values};
+    return {xi[axis].bin_times, xi[axis].values, xi[axis].counts};
   };
 
   std::vector<double> get_sigmas() const {
     std::vector<double> output{};
     for (int i = 0; i < order; ++i) {
+      // convert sigmas in natural units
       output.emplace_back(sigmas[i] * xi[i].delta);
     };
     return output;
@@ -319,13 +305,21 @@ class warper_plasma_projection_t {
     return result;
   }
 
-  double operator()(std::vector<double> const &ui_vec) const {
+  double jacobian_forward(std::vector<double> const &ui_vec) const {
     double result = 1.0;
-    // auto vi_vec = vi_from_ui(t_max, ui_vec);
     for (auto [i, vi] : itertools::enumerate(ui_vec)) {
       result *= fn[i](vi);
     }
     return result;
   }
+
+  [[nodiscard]] std::pair<std::vector<double>, double> map_reverse(std::vector<double> const &li_vec) const {
+    return std::make_pair(ui_from_li(li_vec), jacobian_reverse(li_vec));
+  }
+
+  [[nodiscard]] std::pair<std::vector<double>, double> map_forward(std::vector<double> const &ui_vec) const {
+    return std::make_pair(li_from_ui(ui_vec), jacobian_forward(ui_vec));
+  }
 };
+
 } // namespace keldy::warpers
