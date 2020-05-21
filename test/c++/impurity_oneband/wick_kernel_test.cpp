@@ -80,21 +80,27 @@ TEST(integrand_kernel, Order_2) { // NOLINT
   };
 
   auto expected_res = binner::sparse_binner_t<1, 1>();
-  expected_res.accumulate(det_prod_u(forward, forward) + det_prod_u(forward, backward), u, forward);
-  expected_res.accumulate(det_prod_u(backward, forward) + det_prod_u(backward, backward), u, backward);
-  expected_res.accumulate(det_prod_v(forward, forward) + det_prod_v(backward, forward), v, forward);
+  expected_res.accumulate(det_prod_u(forward, forward), u, forward);
+  expected_res.accumulate(det_prod_u(forward, backward), u, forward);
+  expected_res.accumulate(det_prod_u(backward, forward), u, backward);
+  expected_res.accumulate(det_prod_u(backward, backward), u, backward);
+  expected_res.accumulate(det_prod_v(forward, forward), v, forward);
+  expected_res.accumulate(det_prod_v(backward, forward), v, forward);
   expected_res.accumulate(det_prod_v(forward, backward) + det_prod_v(backward, backward), v, backward);
   sort(expected_res);
 
   binner::sparse_binner_t<1, 1> computed_res = integrand(std::vector<double>{u, v}).first;
   sort(computed_res);
 
-  ASSERT_EQ(computed_res.data.size(), 4);
+  ASSERT_EQ(computed_res.data.size(), 8);
 
   for (int i = 0; i < 4; ++i) {
-    std::cout << computed_res.data[i].first << " ; " << expected_res.data[i].first << std::endl;
-    std::cout << computed_res.data[i].second << " ; " << expected_res.data[i].second << std::endl;
-    EXPECT_COMPLEX_NEAR(computed_res.data[i].second, expected_res.data[i].second, 1e-16);
+    std::cout << computed_res.data[2 * i].first << " ; " << expected_res.data[2 * i].first << std::endl;
+    std::cout << computed_res.data[2 * i + 1].first << " ; " << expected_res.data[2 * i + 1].first << std::endl;
+    std::cout << computed_res.data[2 * i].second << " ; " << expected_res.data[2 * i].second << std::endl;
+    std::cout << computed_res.data[2 * i + 1].second << " ; " << expected_res.data[2 * i + 1].second << std::endl;
+    EXPECT_COMPLEX_NEAR(computed_res.data[2 * i].second + computed_res.data[2 * i + 1].second,
+                        expected_res.data[2 * i].second + expected_res.data[2 * i + 1].second, 1e-16);
   }
 }
 

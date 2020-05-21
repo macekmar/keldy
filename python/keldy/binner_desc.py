@@ -44,12 +44,10 @@ for N, M in [(1, 0), (1, 1), (2, 0), (2, 1)]:
         args += "long b{}, ".format(m)
     c.add_method("void accumulate(dcomplex value, " + args[:-2] + ")")
 
-    c.add_method("double sum_moduli()")
-
     module.add_class(c)
 
-    # module.add_function("friend double sum_moduli(keldy::binner::sparse_binner_t const& in)")
-    # module.add_function("friend double sum_moduli(keldy::binner::sparse_binner_t<{}, {}> const& in)".format(N, M))
+    # TODO: this does not compile
+    # module.add_function("double sum_moduli<{}, {}>(keldy::binner::sparse_binner_t<{}, {}> const& sp_bin)".format(N, M, N, M), name='sum_moduli_{}_{}'.format(N, M))
 
     ###########################
     # The class binner_t<N, M>
@@ -61,17 +59,10 @@ for N, M in [(1, 0), (1, 1), (2, 0), (2, 1)]:
                is_printable = False
     )
 
-    c.add_constructor("""(std::array<std::tuple<double, double, size_t>, {}> _continuous_axes, std::array<size_t, {}> _discreet_axes = {{}})""".format(N, M),
+    c.add_constructor("""(std::array<std::tuple<double, double, long>, {}> _continuous_axes, std::array<long, {}> _discreet_axes = {{}})""".format(N, M),
                       doc = "")
 
     c.add_method_copy()
-
-    args = ""
-    for n in range(N):
-        args += "double a{}, ".format(n)
-    for m in range(M):
-        args += "long b{}, ".format(m)
-    c.add_method("void accumulate(dcomplex value, " + args[:-2] + ")")
 
     c.add_method("mda::array<dcomplex, {}> const& get_data()".format(N + M))
     c.add_method("mda::array<long, {}> const& get_nr_values_added()".format(N + M))
@@ -79,8 +70,8 @@ for N, M in [(1, 0), (1, 1), (2, 0), (2, 1)]:
     c.add_method("auto const& get_continuous_axes()")
     c.add_method("auto const& get_discreet_axes()")
 
-    c.add_method("auto get_bin_coord(size_t axis = 0)")
-    c.add_method("auto get_bin_size(size_t axis = 0)")
+    c.add_method("auto get_bin_coord(int axis = 0)")
+    c.add_method("auto get_bin_size(int axis = 0)")
 
     module.add_class(c)
 

@@ -37,11 +37,6 @@ namespace mda = triqs::arrays;
 using cont_coord_t = double;
 using disc_coord_t = long;
 
-template <typename... Args>
-bool all(Args... args) {
-  return (... && args);
-}
-
 /// MPI broadcast for std::array
 template <typename T, size_t N>
 void mpi_broadcast(std::array<T, N> &v, mpi::communicator c = {}, int root = 0) {
@@ -66,16 +61,8 @@ class sparse_binner_t {
   inline void accumulate_impl(dcomplex value, std::index_sequence<cont_axes...>, std::index_sequence<disc_axes...>,
                               Coord... coords_) {
     auto coords = std::tie(coords_...);
-    coord_arr_t coord_array = {{}, {}};
-    coord_array.first = {static_cast<cont_coord_t>(std::get<cont_axes>(coords))...};
-    coord_array.second = {static_cast<disc_coord_t>(std::get<N + disc_axes>(coords))...};
+    coord_arr_t coord_array = {{std::get<cont_axes>(coords)...}, {std::get<N + disc_axes>(coords)...}};
 
-    auto loc =
-       std::find_if(std::begin(data), std::end(data), [coord = coord_array](auto &el) { return (el.first == coord); });
-    if (loc != std::end(data)) {
-      (*loc).second += value;
-      return;
-    }
     data.push_back(make_pair(coord_array, value));
   };
 
@@ -85,7 +72,7 @@ class sparse_binner_t {
   /// list of stored values
   std::vector<std::pair<coord_arr_t, dcomplex>> data;
 
-  // to multiply with jacibian e.g.
+  // to multiply with jacobian e.g.
   auto &operator*=(dcomplex scalar) {
     for (auto &rh : data) {
       rh.second *= scalar;
@@ -93,22 +80,36 @@ class sparse_binner_t {
     return *this;
   };
 
-  /// Accumulate a value into the list `data`.
-  /// If `coords` already exist, the value is added to the pre-existing entry instead of appending a new one.
+  /// Append a value into the list `data`.
   template <typename... Coord>
   void accumulate(dcomplex value, Coord... coords) {
     static_assert(sizeof...(coords) == N + M);
     accumulate_impl(value, std::make_index_sequence<N>(), std::make_index_sequence<M>(), coords...);
   };
+};
 
-  /// sum moduli of values stored in `data`.
-  [[nodiscard]] double sum_moduli() const {
-    double res = 0;
-    for (const auto &p : data) {
-      res += std::abs(p.second);
+/// sum moduli of values stored in sparese binner.
+//  Values with same coordinates are summed before taking the modulus.
+template <int N, int M>
+[[nodiscard]] double sum_moduli(sparse_binner_t<N, M> const &sp_bin) {
+
+  std::vector<std::pair<typename sparse_binner_t<N, M>::coord_arr_t, dcomplex>> data_reduced;
+
+  for (auto const &p : sp_bin.data) {
+    auto loc =
+       std::find_if(std::begin(data_reduced), std::end(data_reduced), [&p](auto &el) { return (el.first == p.first); });
+    if (loc != std::end(data_reduced)) {
+      (*loc).second += p.second;
+    } else {
+      data_reduced.push_back(p);
     }
-    return res;
-  };
+  }
+
+  double res = 0;
+  for (auto const &q : data_reduced) {
+    res += std::abs(q.second);
+  }
+  return res;
 };
 
 ///%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -116,7 +117,7 @@ class sparse_binner_t {
 struct continuous_axis_t {
   double xmin;
   double xmax;
-  size_t nr_bins;
+  long nr_bins;
   double bin_size;
 };
 
@@ -125,23 +126,10 @@ void mpi_broadcast(continuous_axis_t &in, mpi::communicator c = {}, int root = 0
 bool operator==(continuous_axis_t const &a, continuous_axis_t const &b);
 
 struct discreet_axis_t {
-  size_t nr_bins;
+  long nr_bins;
 };
 
 void mpi_broadcast(discreet_axis_t &in, mpi::communicator c = {}, int root = 0);
-
-/// Small object containing ref to a binner_t and list of coordinates.
-//  Used to produce nice accumulate syntax:
-//  binner(coord1, coord2, ...) << value;
-template <typename T, typename... Coord>
-struct accessor_t {
-  T &binner;
-  std::tuple<Coord...> coords;
-
-  void operator<<(dcomplex value) {
-    std::apply([&b = binner, value](auto &... args) { b.accumulate(value, args...); }, coords);
-  }
-};
 
 /*
  * Multidimentional binner with N continuous coordinates and M discreet ones.
@@ -154,17 +142,19 @@ class binner_t {
 
  private:
   mda::array<dcomplex, N + M> data;
+  mda::array_view<dcomplex, 1> data_view;
   std::array<continuous_axis_t, N> continuous_axes;
   std::array<discreet_axis_t, M> discreet_axes;
 
   mda::array<long, N + M> nr_values_added;
+  mda::array_view<long, 1> nr_value_added_view;
   long nr_values_dropped = 0;
 
   /// Find bin index from a coordinate on a given axis.
   template <size_t axis, typename T>
-  [[nodiscard]] size_t coord2index(T x) const {
+  [[nodiscard]] long coord2index(T x) const {
     if constexpr (axis < N) {
-      auto ax = continuous_axes[axis];
+      auto const &ax = continuous_axes[axis];
       if (x == ax.xmax) {
         return ax.nr_bins - 1;
       }
@@ -174,13 +164,13 @@ class binner_t {
     }
   };
 
-  template <typename... Indices>
-  void accumulate_impl_core(dcomplex value, Indices... indices) {
-    static_assert(sizeof...(Indices) == N + M);
-    data(indices...) += value;
-    nr_values_added(indices...)++;
+  /// Find flattened index from complete list of coordinates
+  template <size_t... axes, typename... Coord>
+  [[nodiscard]] long coord2flatidx(std::index_sequence<axes...>, Coord... coords) {
+    return data.indexmap()(coord2index<axes>(coords)...);
   };
 
+  /// Check if coordinate lies inside the binner on a given axis.
   template <size_t axis, typename T>
   bool in_bounds(T x) {
     if constexpr (axis < N) {
@@ -190,19 +180,18 @@ class binner_t {
     return (0 <= x && x < discreet_axes[axis - N].nr_bins);
   };
 
+  /// Check if complete list of coordinates lies inside the binner.
   template <size_t... axes, typename... Coord>
-  void accumulate_impl(dcomplex value, std::index_sequence<axes...>, Coord... coords) {
-    if (all(in_bounds<axes>(coords)...)) {
-      accumulate_impl_core(value, coord2index<axes>(coords)...);
-    } else {
-      nr_values_dropped++;
-    }
+  [[nodiscard]] long in_bounds(std::index_sequence<axes...>, Coord... coords) {
+    auto all = [](auto... args) -> bool { return (... && args); };
+    return all(in_bounds<axes>(coords)...);
   };
 
+  /// Accumulate a value from a sparse binner.
   template <size_t... cont_axes, size_t... disc_axes>
-  void accumulate_impl_array(dcomplex value, std::index_sequence<cont_axes...>, std::index_sequence<disc_axes...>,
-                             coord_arr_t coords) {
-    accumulate_impl(value, std::make_index_sequence<N + M>(), coords.first[cont_axes]..., coords.second[disc_axes]...);
+  void accumulate_array(dcomplex value, std::index_sequence<cont_axes...>, std::index_sequence<disc_axes...>,
+                        coord_arr_t coords) {
+    (*this)(coords.first[cont_axes]..., coords.second[disc_axes]...) << value;
   };
 
  public:
@@ -213,10 +202,9 @@ class binner_t {
    *    continous_axes_: list of tuples (xmin, xmax, nr_bins) for each continuous axis
    *    discreet_axes_: list of number of bins for each discreet axis
    */
-  binner_t(std::array<std::tuple<double, double, size_t>, N> continuous_axes_,
-           std::array<size_t, M> discreet_axes_ = {}) {
+  binner_t(std::array<std::tuple<double, double, long>, N> continuous_axes_, std::array<long, M> discreet_axes_ = {}) {
 
-    triqs::utility::mini_vector<size_t, N + M> shape;
+    triqs::utility::mini_vector<int, N + M> shape;
     for (auto [k, tuple] : itertools::enumerate(continuous_axes_)) {
       auto [xmin, xmax, n] = tuple;
       if (xmin >= xmax) {
@@ -229,17 +217,33 @@ class binner_t {
       discreet_axes[k].nr_bins = n;
       shape[N + k] = n;
     }
+
     data = mda::array<dcomplex, N + M>(shape);
     data() = 0;
+    data_view.rebind(mda::array_view<dcomplex, 1>({mda::make_shape(data.size())}, data.storage()));
     nr_values_added = mda::array<long, N + M>(shape);
     nr_values_added() = 0;
+    nr_value_added_view.rebind(
+       mda::array_view<long, 1>({mda::make_shape(nr_values_added.size())}, nr_values_added.storage()));
   };
 
-  /// Accumulate a value in the binner at given coordinates
-  template <typename... Coord>
-  void accumulate(dcomplex value, Coord... coords) {
-    static_assert(sizeof...(coords) == N + M);
-    accumulate_impl(value, std::make_index_sequence<N + M>(), coords...);
+  /// Small object containing ref to a binner_t and to a particular bin
+  //  Used to produce nice accumulate syntax:
+  //  binner(coord1, coord2, ...) << value;
+  template <typename T, typename... Coord>
+  struct accessor_t {
+    T &binner;
+    long flat_idx; // < 0 means out of binner
+
+    /// Accumulate a value in the binner at given coordinates
+    void operator<<(dcomplex value) {
+      if (flat_idx < 0) {
+        binner.nr_values_dropped++;
+      } else {
+        binner.data_view(flat_idx) += value;
+        binner.nr_value_added_view(flat_idx)++;
+      }
+    }
   };
 
   /// nice syntax for accumulate:
@@ -247,7 +251,10 @@ class binner_t {
   template <typename... Coord>
   accessor_t<binner_t<N, M>, Coord...> operator()(Coord... coords) {
     static_assert(sizeof...(coords) == N + M);
-    return {*this, std::tie(coords...)};
+    if (in_bounds(std::make_index_sequence<N + M>(), coords...)) {
+      return {*this, coord2flatidx(std::make_index_sequence<N + M>(), coords...)};
+    }
+    return {*this, -1};
   };
 
   [[nodiscard]] auto const &get_data() const { return data; };
@@ -258,7 +265,7 @@ class binner_t {
 
   /// Get the coordinates of bins along a given (continuous) axis.
   // Returns a 1D triqs array
-  [[nodiscard]] auto get_bin_coord(size_t axis = 0) const {
+  [[nodiscard]] auto get_bin_coord(int axis = 0) const {
     if (axis >= N) {
       TRIQS_RUNTIME_ERROR << "Axis " << axis << " is discreet.";
     }
@@ -274,7 +281,7 @@ class binner_t {
   };
 
   /// Get the width of a bin on a given (continuous) axis.
-  [[nodiscard]] double get_bin_size(size_t axis = 0) const {
+  [[nodiscard]] double get_bin_size(int axis = 0) const {
     if (axis >= N) {
       TRIQS_RUNTIME_ERROR << "Axis " << axis << " is discreet.";
     }
@@ -288,7 +295,7 @@ class binner_t {
   /// Accumulate a sparse binner into this binner
   auto &operator+=(sparse_binner_t<N, M> const &rhs) {
     for (const auto &rh : rhs.data) {
-      accumulate_impl_array(rh.second, std::make_index_sequence<N>(), std::make_index_sequence<M>(), rh.first);
+      accumulate_array(rh.second, std::make_index_sequence<N>(), std::make_index_sequence<M>(), rh.first);
     }
     return *this;
   }

@@ -10,12 +10,6 @@ class test_binner(unittest.TestCase):
     def test_basics(self):
         b = binner.Binner_1_1([(-5., 5., 10)], [3])
 
-        b.accumulate(4j + 2, 2.5, 2)
-        b.accumulate(10, 4.0, 0)
-        b.accumulate(1j, 10.0, 0) # out of binner
-
-        # b *= 10.0 # not implemented in pyhton (TODO)
-
         data = b.get_data()
         nr_values_added = b.get_nr_values_added()
         nr_values_dropped = b.get_nr_values_dropped()
@@ -23,27 +17,18 @@ class test_binner(unittest.TestCase):
         bin_size = b.get_bin_size(0)
 
         self.assertEqual(data.shape, (10, 3))
-        self.assertEqual(nr_values_dropped, 1)
-        # TODO: test values
+        self.assertEqual(nr_values_dropped, 0)
 
 class test_sparse_binner(unittest.TestCase):
 
-    def test_basics(self):
+    def test_sum_moduli(self):
         b = binner.SparseBinner_1_1()
 
         b.accumulate(4j + 2, 2.5, 2)
         b.accumulate(10, 4.0, 0)
         b.accumulate(1j, 10.0, 0)
 
-        # b *= 10.0 # not implemented in pyhton (TODO)
-
-        data = b.data
-
-        self.assertEqual(len(data), 3)
-        # TODO: test values
-
-        weight = b.sum_moduli()
-        self.assertEqual(weight, sqrt(20.) + 11.)
+        self.assertEqual(sum_moduli(b), sqrt(20.) + 11.)
 
 if __name__ == '__main__':
     unittest.main()
