@@ -24,8 +24,9 @@
 
 #pragma once
 
-#include <gsl/gsl_fit.h>
 #include <triqs/arrays.hpp>
+#include <gsl/gsl_fit.h>
+#include <algorithm>
 
 using namespace triqs::arrays;
 
@@ -38,8 +39,8 @@ struct gsl_fit_linear_result {
   double chisq;
 };
 
-gsl_fit_linear_result gsl_fit_wlinear_wrapper(array_view<double, 1> const &x, array_view<double, 1> const &y,
-                                              array_view<double, 1> const &w) {
+gsl_fit_linear_result gsl_fit_wlinear_wrapper(array<double, 1> const &x, array<double, 1> const &y,
+                                              array<double, 1> const &w) {
   if (x.size() != y.size() or x.size() != w.size()) {
     TRIQS_RUNTIME_ERROR << "x, y and w should have the same size.";
   }
@@ -57,6 +58,38 @@ gsl_fit_linear_result gsl_fit_wlinear_wrapper(array_view<double, 1> const &x, ar
   res.cov(1, 1) = cov11;
 
   return res;
+};
+
+/// kernel must be odd in size
+// in and out must have the same size
+void local_linear_reg(array<double, 1> const &x, array<double, 1> const &y, array<double, 1> &y_out,
+                      array<double, 1> const &kernel) {
+
+  long const N = x.size();
+  long const K = kernel.size();
+  long const H = K / 2;
+  size_t n;
+  size_t s;
+  double c0;
+  double c1;
+  double cov00, cov01, cov11, chisq;
+
+  //TODO: what if H > N ?
+  for (auto [i, x0] : itertools::enumerate(x)) {
+    if (i < H) {
+      n = i + H + 1;
+    } else if (i >= N - H) {
+      n = N - i + H;
+    } else {
+      n = K;
+    }
+    s = std::max(i - H, 0l);
+
+    gsl_fit_wlinear(x.storage().data() + s, 1, kernel.storage().data() + std::max(H - i, 0l), 1, y.storage().data() + s,
+                    1, n, &c0, &c1, &cov00, &cov01, &cov11, &chisq);
+
+    y_out(i) = c0 + x0 * c1;
+  }
 };
 
 } // namespace keldy::details

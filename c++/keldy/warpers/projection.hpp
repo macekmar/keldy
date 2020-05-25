@@ -25,10 +25,8 @@
 #pragma once
 
 #include "warpers_common.hpp"
-//#include "warpers.hpp"
-//#include "plasma_uv.hpp"
-//#include "product_1d.hpp"
 #include "product_1d_simple.hpp"
+#include "../interfaces/gsl_fit_linear_wrap.hpp"
 #include "../interfaces/gsl_filter_gaussian_wrap.hpp"
 #include "../interfaces/gsl_interp_wrap.hpp"
 #include "../interfaces/gsl_minimize.hpp"
@@ -37,15 +35,10 @@
 #include <triqs/gfs.hpp>
 #include <triqs/arrays.hpp>
 #include <triqs/arrays/mpi.hpp>
-#include <mpi/mpi.hpp>
-#include <gsl/gsl_min.h>
+//#include <mpi/mpi.hpp>
 
 #include <algorithm>
 #include <functional>
-#include <numeric>
-//#include <iomanip>
-//#include <complex>
-#include <cmath>
 
 namespace keldy::warpers {
 
@@ -85,43 +78,55 @@ class CPP2PY_IGNORE hist_xi {
 // sigma is in unit of time step
 auto gaussian = [](double x, double x0, double sigma) { return std::exp(-std::pow((x - x0) / sigma, 2) / 2); };
 
-inline auto CPP2PY_IGNORE gaussian_filter(array<double, 1> &y_in, double sigma) {
-  int const N = y_in.size();
-
-  array<double, 1> norm(N);
-  norm() = 0;
-
-  array<double, 1> kernel2(2 * N - 1);
-  for (int i = 0; i < 2 * N - 1; ++i) {
-    kernel2(i) = gaussian(i, N - 1, sigma);
-  }
-
-  norm(0) = sum(kernel2(range(N - 1, 2 * N - 2)));
-  for (int i = 1; i < N; ++i) {
-    norm(i) = norm(i - 1) + kernel2(N - i - 1) - kernel2(2 * N - i - 1);
-  }
-
-  long const K = std::max(std::min(int(10 * sigma), N), 3);
-  auto y_out = details::gsl_filter_gaussian_wrapper(y_in, K, sigma, GSL_FILTER_END_PADZERO);
-  auto kernel = details::gsl_filter_gaussian_kernel_wrapper(K, sigma, false);
-  y_out *= sum(kernel);
-
-  return std::make_pair(y_out, norm);
-}
-
 inline array<double, 1> CPP2PY_IGNORE kernel_smoothing(array<double, 1> &y_in, double sigma) {
-  auto [y_out, norm] = gaussian_filter(y_in, sigma);
-  return y_out / norm;
+  int const N = y_in.size();
+  array<double, 1> y_out(N);
+  array<double, 1> x(N);
+  for (int i = 0; i < N; ++i) {
+    x(i) = i;
+  }
+
+  int const H = std::max(std::min(int(3 * sigma), N), 1);
+  int const K = 2 * H + 1;
+  array<double, 1> kernel(K);
+  for (int j = 0; j < K; ++j) {
+    kernel(j) = gaussian(j, H, sigma);
+  }
+
+  details::local_linear_reg(x, y_in, y_out, kernel);
+
+  for (int k = 0; k < N; ++k) {
+    if (y_out(k) < 0) y_out(k) = 0;
+  }
+
+  return y_out;
 }
 
-inline double CPP2PY_IGNORE LOOCV(array<double, 1> &y_in, double sigma) {
-  auto [y_out, norm] = gaussian_filter(y_in, sigma);
+[[nodiscard]] CPP2PY_IGNORE inline double optimize_sigma(array<double, 1> y, double lower, double sigma, double upper) {
+  int const N = y.size();
+  array<double, 1> y_out(N);
+  array<double, 1> x(N);
+  for (int i = 0; i < N; ++i) {
+    x(i) = i;
+  }
 
-  // We exclude the i-th point
-  array<double, 1> y_estim = (y_out - y_in) / (norm - 1.);
+  std::cout << sigma << std::endl;
+  int const H = std::max(std::min(int(3 * sigma), N), 1);
+  int const K = 2 * H + 1;
+  array<double, 1> kernel(K);
 
-  return sum(pow(y_estim - y_in, 2));
-}
+  auto f = [&x, &y, &kernel, &y_out, &H](double sigma) -> double {
+    for (int j = 0; j < kernel.size(); ++j) {
+      kernel(j) = gaussian(j, H, sigma);
+    }
+    kernel(H) = 0;
+    details::local_linear_reg(x, y, y_out, kernel);
+
+    return sum(pow(y_out - y, 2));
+  };
+
+  return details::gsl_minimize(f, lower, sigma, upper, 1e-8, 0., 20).x;
+};
 
 class warper_projection_t {
  private:
@@ -192,33 +197,33 @@ class warper_projection_t {
     gather_data(warped_integrand, nr_samples);
 
     // Fill function vectors
-    // TODO: should the number of bins be different (smaller) than the number of interpolation points?
     for (int axis = 0; axis < order; axis++) {
       fn_integrated.push_back(gf_t({0.0, 1.0, num_bins}));
       fn_integrate_norm.push_back(0);
       fn_integrated_inverse.push_back(gf_t({0.0, 1.0, 1 + 5 * (num_bins - 1)}));
       fn.push_back(gf_t({0.0, 1.0, num_bins}));
-      sigmas.push_back(0);
     }
-    update_sigma(sigma, optimize_sigma);
+    populate_sigmas(sigma, optimize_sigma);
 
     populate_functions();
   };
 
-  void CPP2PY_IGNORE update_sigma(double sigma, bool optimize_sigma = true) {
+  void CPP2PY_IGNORE populate_sigmas(double const sigma, bool const optimize = true) {
     //Smooth and update functions
     for (int axis = 0; axis < order; axis++) {
-      sigma /= xi[axis].delta; // change of unit
-      if (optimize_sigma) {
-        auto f = [&val = xi[axis].values](double s) { return LOOCV(val, s); };
+      sigmas.push_back(sigma / xi[axis].delta); // default sigma, change of unit
 
-        sigma = details::gsl_minimize(f, 0.5, sigma, 1.0 / xi[axis].delta, 1e-8, 0., 20).x;
+      if (optimize) {
         // sigma should not be too small compared to xi[axis].delta, or gaussian is narrower than bin
+        if (xi[axis].delta >= 2) {
+          TRIQS_RUNTIME_ERROR << "delta too large";
+        }
+        sigmas[axis] = optimize_sigma(xi[axis].values, 0.5, sigmas[axis], 1.0 / xi[axis].delta);
+
         if (comm.rank() == 0) {
-          std::cout << "Optimal sigma = " << sigma * xi[axis].delta << " (axis " << axis << ")" << std::endl;
+          std::cout << "Optimal sigma = " << sigmas[axis] * xi[axis].delta << " (axis " << axis << ")" << std::endl;
         }
       }
-      sigmas[axis] = sigma;
     }
   }
 
