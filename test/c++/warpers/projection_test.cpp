@@ -12,7 +12,6 @@ using namespace triqs::arrays;
 /// --------------------------------------------------------
 
 TEST(ProjectionWarper, OneToOne) { // NOLINT
-  double const tmax = 1.;
   auto integrand = [](std::vector<double> const xi) -> double {
     double output = 1.;
     for (double x : xi) {
@@ -21,11 +20,11 @@ TEST(ProjectionWarper, OneToOne) { // NOLINT
     return output;
   };
 
-  auto proj_warper = warper_projection_t(integrand, tmax, 4, int(1e3), int(1e3), 0.06, false);
+  auto proj_warper = warper_projection_t(integrand, 4, int(1e3), int(1e3), 0.06, false);
 
   // TODO: that is not very good precision
-  basic_test_warper_at_order_1(proj_warper, tmax, 1e-6);
-  basic_test_warper_multidim(proj_warper, tmax, 1e-6);
+  basic_test_warper_at_order_1(proj_warper, 1.0, 1e-6);
+  basic_test_warper_multidim(proj_warper, 1.0, 1e-6);
 }
 
 TEST(ProjectionWarper, SigmaValue) { // NOLINT
@@ -49,7 +48,7 @@ TEST(ProjectionWarper, SigmaValue) { // NOLINT
     return integrand(ui) * jac;
   };
 
-  auto proj_warper = warper_projection_t(warped_integrand, tmax, 1, int(1e2), int(1e2), 0.1, true);
+  auto proj_warper = warper_projection_t(warped_integrand, 1, int(1e2), int(1e2), 0.1, true);
 
   EXPECT_NEAR(proj_warper.get_sigmas()[0], 0.06754688329, tol);
 }
@@ -75,7 +74,7 @@ TEST(ProjectionWarper, Values) { // NOLINT
     return integrand(ui) * jac;
   };
 
-  auto proj_warper = warper_projection_t(warped_integrand, tmax, 1, int(1e2), int(1e2), 0.06754688329, false);
+  auto proj_warper = warper_projection_t(warped_integrand, 1, int(1e2), int(1e2), 0.06754688329, false);
 
   //std::cout << proj_warper.jacobian_forward({0.3}) << std::endl;
   //std::cout << proj_warper.jacobian_forward({0.5}) << std::endl;

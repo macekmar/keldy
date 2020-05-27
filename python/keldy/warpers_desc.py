@@ -153,9 +153,9 @@ c = class_(
         hdf5 = False,
 )
 
-c.add_constructor("""(std::function<dcomplex (std::vector<double>)> integrand_, double t_max, int order, int num_bins, int nr_samples, double sigma, bool optimize_sigma = true)""", doc = r"""""")
+c.add_constructor("""(std::function<dcomplex (std::vector<double>)> integrand_, int order, int num_bins, int nr_samples, double sigma, bool optimize_sigma = true)""", doc = r"""""")
 
-c.add_method("""std::vector<triqs::arrays::array<double, 1> > get_xi (int axis)""",
+c.add_method("""keldy::binner::binner_t<1, 0, double> const& get_xi (int axis)""",
              doc = r"""""")
 
 c.add_method("""std::vector<double> get_sigmas ()""",

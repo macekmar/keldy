@@ -31,6 +31,7 @@
 #include "../interfaces/gsl_interp_wrap.hpp"
 #include "../interfaces/gsl_minimize.hpp"
 #include "../qrng.hpp"
+#include "../binner.hpp"
 
 #include <triqs/gfs.hpp>
 #include <triqs/arrays.hpp>
@@ -47,38 +48,10 @@ using namespace triqs::arrays;
 
 using gf_t = gf<retime, scalar_real_valued>;
 
-class CPP2PY_IGNORE hist_xi {
- public:
-  array<double, 1> bin_times;
-  array<double, 1> bin_centers;
-  array<double, 1> values;
-  array<double, 1> counts; // TODO: should be int, complicates get_xi and others...
-  double delta;
-  int num_bins;
-
-  hist_xi(int num_bins_) : num_bins(num_bins_) {
-    bin_times = array<double, 1>(num_bins + 1);
-    delta = 1.0 / (num_bins - 1);
-    for (int i = 0; i < num_bins + 1; i++) {
-      bin_times(i) = -delta / 2.0 + i * delta;
-    }
-
-    bin_centers = array<double, 1>(num_bins);
-    for (int i = 0; i < bin_centers.size(); i++) {
-      bin_centers(i) = (bin_times(i) + bin_times(i + 1)) / 2.0;
-    }
-
-    values = array<double, 1>(num_bins);
-    values() = 0;
-    counts = array<double, 1>(num_bins); // TODO: should be int
-    counts() = 0;
-  }
-};
-
-// sigma is in unit of time step
 auto gaussian = [](double x, double x0, double sigma) { return std::exp(-std::pow((x - x0) / sigma, 2) / 2); };
 
-inline array<double, 1> CPP2PY_IGNORE kernel_smoothing(array<double, 1> &y_in, double sigma) {
+// sigma is in unit of time step
+inline array<double, 1> CPP2PY_IGNORE kernel_smoothing(array<double, 1> const &y_in, double const sigma) {
   int const N = y_in.size();
   array<double, 1> y_out(N);
   array<double, 1> x(N);
@@ -96,13 +69,15 @@ inline array<double, 1> CPP2PY_IGNORE kernel_smoothing(array<double, 1> &y_in, d
   details::local_linear_reg(x, y_in, y_out, kernel);
 
   for (int k = 0; k < N; ++k) {
-    if (y_out(k) < 0) y_out(k) = 0;
+    if (y_out(k) < 0) y_out(k) = 0; // TODO: or should we raise an error?
   }
 
   return y_out;
 }
 
-[[nodiscard]] CPP2PY_IGNORE inline double optimize_sigma(array<double, 1> y, double lower, double sigma, double upper) {
+// sigma is in unit of time step
+[[nodiscard]] CPP2PY_IGNORE inline double optimize_sigma(array<double, 1> const &y, double const lower,
+                                                         double const sigma, double const upper) {
   int const N = y.size();
   array<double, 1> y_out(N);
   array<double, 1> x(N);
@@ -130,13 +105,12 @@ inline array<double, 1> CPP2PY_IGNORE kernel_smoothing(array<double, 1> &y_in, d
 
 class warper_projection_t {
  private:
-  int order;
   int num_bins;
-  double t_max;
+  int order;
   std::vector<double> fn_integrate_norm;
   std::vector<gf_t> fn_integrated;
   std::vector<gf_t> fn_integrated_inverse;
-  std::vector<hist_xi> xi;
+  std::vector<binner::binner_t<1, 0, double>> xi;
 
   std::vector<gf_t> fn;
   std::vector<double> sigmas;
@@ -145,9 +119,7 @@ class warper_projection_t {
  public:
   void CPP2PY_IGNORE gather_data(std::function<dcomplex(std::vector<double>)> const &warped_integrand,
                                  int const nr_samples) {
-    int bin;
     double value;
-    mpi::communicator comm{};
     int mpi_rank = comm.rank();
     int mpi_size = comm.size();
 
@@ -162,37 +134,31 @@ class warper_projection_t {
       value = std::abs(warped_integrand(l));
 
       for (int axis = 0; axis < order; axis++) {
-        bin = int(floor((l[axis] - (-xi[axis].delta / 2.0)) / xi[axis].delta));
-        if (bin < 0 or bin > xi[axis].num_bins - 1) {
-          TRIQS_RUNTIME_ERROR << "out of bin range";
-        }
-        xi[axis].values(bin) += value;
-        xi[axis].counts(bin)++;
+        xi[axis](l[axis]) << value;
       }
     }
     for (int axis = 0; axis < order; axis++) {
-      xi[axis].values = mpi::mpi_all_reduce(xi[axis].values, comm);
-      xi[axis].counts = mpi::mpi_all_reduce(xi[axis].counts, comm);
+      xi[axis] = mpi_reduce(xi[axis], comm, 0, true);
     }
 
     for (int axis = 0; axis < order; axis++) {
-      for (int bin = 0; bin < xi[axis].num_bins; bin++) {
-        if (xi[axis].counts(bin) > 0) {
-          xi[axis].values(bin) = xi[axis].values(bin) / xi[axis].counts(bin);
-        } else {
-          xi[axis].values(bin) = 0.0;
+      auto data = xi[axis].data();             // view
+      auto count = xi[axis].nr_values_added(); // view
+      for (int bin = 0; bin < xi[axis].get_nr_bins(); bin++) {
+        if (count(bin) > 0) {
+          data(bin) = data(bin) / count(bin);
         }
       }
     }
   };
 
-  warper_projection_t(std::function<dcomplex(std::vector<double>)> const &warped_integrand, double const t_max,
-                      int const order, int const num_bins, int const nr_samples, const double sigma,
-                      bool const optimize_sigma = true)
-     : t_max(t_max), num_bins(num_bins), order(order) {
+  warper_projection_t(std::function<dcomplex(std::vector<double>)> const &warped_integrand, int const order,
+                      int const num_bins, int const nr_samples, const double sigma, bool const optimize_sigma = true)
+     : num_bins(num_bins), order(order) {
     // Initialize xi;
+    double const delta = 1.0 / (num_bins - 1.0);
     for (int axis = 0; axis < order; axis++) {
-      xi.push_back(hist_xi(num_bins));
+      xi.push_back(binner::binner_t<1, 0, double>({std::make_tuple(-delta / 2, 1 + delta / 2, num_bins)}));
     }
     gather_data(warped_integrand, nr_samples);
 
@@ -211,17 +177,18 @@ class warper_projection_t {
   void CPP2PY_IGNORE populate_sigmas(double const sigma, bool const optimize = true) {
     //Smooth and update functions
     for (int axis = 0; axis < order; axis++) {
-      sigmas.push_back(sigma / xi[axis].delta); // default sigma, change of unit
+      sigmas.push_back(sigma / xi[axis].get_bin_size()); // default sigma, change of unit
 
       if (optimize) {
         // sigma should not be too small compared to xi[axis].delta, or gaussian is narrower than bin
-        if (xi[axis].delta >= 2) {
+        if (xi[axis].get_bin_size() >= 2) {
           TRIQS_RUNTIME_ERROR << "delta too large";
         }
-        sigmas[axis] = optimize_sigma(xi[axis].values, 0.5, sigmas[axis], 1.0 / xi[axis].delta);
+        sigmas[axis] = optimize_sigma(xi[axis].get_data(), 0.5, sigmas[axis], 1.0 / xi[axis].get_bin_size());
 
         if (comm.rank() == 0) {
-          std::cout << "Optimal sigma = " << sigmas[axis] * xi[axis].delta << " (axis " << axis << ")" << std::endl;
+          std::cout << "Optimal sigma = " << sigmas[axis] * xi[axis].get_bin_size() << " (axis " << axis << ")"
+                    << std::endl;
         }
       }
     }
@@ -230,14 +197,13 @@ class warper_projection_t {
   void CPP2PY_IGNORE populate_functions() {
 
     for (int axis = 0; axis < order; axis++) {
-      auto &hist = xi[axis];
 
       array<double, 1> smoothed_proj;
-      smoothed_proj = kernel_smoothing(hist.values, sigmas[axis]);
+      smoothed_proj = kernel_smoothing(xi[axis].get_data(), sigmas[axis]);
 
       // Interpolate convolution
       // linear interp of positive data is always a positive function
-      details::gsl_interp_wrapper_t smoothed_proj_interp(gsl_interp_linear, hist.bin_centers, smoothed_proj);
+      details::gsl_interp_wrapper_t smoothed_proj_interp(gsl_interp_linear, xi[axis].get_bin_coord(), smoothed_proj);
 
       for (auto const &t : fn[axis].mesh()) {
         fn[axis][t] = smoothed_proj_interp(t);
@@ -270,15 +236,13 @@ class warper_projection_t {
     }
   };
 
-  std::vector<array<double, 1>> get_xi(int axis) const {
-    return {xi[axis].bin_times, xi[axis].values, xi[axis].counts};
-  };
+  auto const &get_xi(int axis) const { return xi[axis]; };
 
   std::vector<double> get_sigmas() const {
     std::vector<double> output{};
     for (int i = 0; i < order; ++i) {
       // convert sigmas in natural units
-      output.emplace_back(sigmas[i] * xi[i].delta);
+      output.emplace_back(sigmas[i] * xi[i].get_bin_size());
     };
     return output;
   }
