@@ -69,6 +69,7 @@ for N, M in [(1, 0), (1, 1), (2, 0), (2, 1)]:
     c.add_method("auto const& get_nr_values_dropped()")
     c.add_method("auto const& get_continuous_axes()")
     c.add_method("auto const& get_discreet_axes()")
+    c.add_method("int get_nr_bins(int axis = 0)")
 
     c.add_method("auto get_bin_coord(int axis = 0)")
     c.add_method("auto get_bin_size(int axis = 0)")

@@ -142,20 +142,19 @@ inline void mpi_broadcast(discreet_axis_t &in, mpi::communicator c, int root) { 
  * Multidimentional binner with N continuous coordinates and M discreet ones.
  * Continuous coordinates are before discreet ones.
  */
-template <int N, int M = 0>
+template <int N, int M = 0, typename data_t = dcomplex>
 class binner_t {
   static_assert(N > 0);
   using coord_arr_t = std::pair<std::array<cont_coord_t, N>, std::array<disc_coord_t, M>>;
 
  private:
-  mda::array<dcomplex, N + M> data;
-  mda::array_view<dcomplex, 1> data_view;
+  mda::array<data_t, N + M> _data;
+  mda::array_view<data_t, 1> data_flat_view;
   std::array<continuous_axis_t, N> continuous_axes;
   std::array<discreet_axis_t, M> discreet_axes;
 
-  mda::array<long, N + M> nr_values_added;
-  mda::array_view<long, 1> nr_value_added_view;
-  long nr_values_dropped = 0;
+  mda::array<long, N + M> _nr_values_added;
+  mda::array_view<long, 1> nr_values_flat_view;
 
   /// Find bin index from a coordinate on a given axis.
   template <size_t axis, typename T>
@@ -174,7 +173,7 @@ class binner_t {
   /// Find flattened index from complete list of coordinates
   template <size_t... axes, typename... Coord>
   [[nodiscard]] long coord2flatidx(std::index_sequence<axes...>, Coord... coords) {
-    return data.indexmap()(coord2index<axes>(coords)...);
+    return _data.indexmap()(coord2index<axes>(coords)...);
   };
 
   /// Check if coordinate lies inside the binner on a given axis.
@@ -189,19 +188,21 @@ class binner_t {
 
   /// Check if complete list of coordinates lies inside the binner.
   template <size_t... axes, typename... Coord>
-  [[nodiscard]] long in_bounds(std::index_sequence<axes...>, Coord... coords) {
+  [[nodiscard]] bool in_bounds(std::index_sequence<axes...>, Coord... coords) {
     auto all = [](auto... args) -> bool { return (... && args); };
     return all(in_bounds<axes>(coords)...);
   };
 
   /// Accumulate a value from a sparse binner.
   template <size_t... cont_axes, size_t... disc_axes>
-  void accumulate_array(dcomplex value, std::index_sequence<cont_axes...>, std::index_sequence<disc_axes...>,
+  void accumulate_array(data_t value, std::index_sequence<cont_axes...>, std::index_sequence<disc_axes...>,
                         coord_arr_t coords) {
     (*this)(coords.first[cont_axes]..., coords.second[disc_axes]...) << value;
   };
 
  public:
+  long nr_values_dropped = 0;
+
   /*
    * Constructs a multidimentional binner.
    *
@@ -225,13 +226,13 @@ class binner_t {
       shape[N + k] = n;
     }
 
-    data = mda::array<dcomplex, N + M>(shape);
-    data() = 0;
-    data_view.rebind(mda::array_view<dcomplex, 1>({mda::make_shape(data.size())}, data.storage()));
-    nr_values_added = mda::array<long, N + M>(shape);
-    nr_values_added() = 0;
-    nr_value_added_view.rebind(
-       mda::array_view<long, 1>({mda::make_shape(nr_values_added.size())}, nr_values_added.storage()));
+    _data = mda::array<data_t, N + M>(shape);
+    _data() = 0;
+    data_flat_view.rebind(mda::array_view<data_t, 1>({mda::make_shape(_data.size())}, _data.storage()));
+    _nr_values_added = mda::array<long, N + M>(shape);
+    _nr_values_added() = 0;
+    nr_values_flat_view.rebind(
+       mda::array_view<long, 1>({mda::make_shape(_nr_values_added.size())}, _nr_values_added.storage()));
   };
 
   /// Small object containing ref to a binner_t and to a particular bin
@@ -243,12 +244,12 @@ class binner_t {
     long flat_idx; // < 0 means out of binner
 
     /// Accumulate a value in the binner at given coordinates
-    void operator<<(dcomplex value) {
+    void operator<<(data_t value) {
       if (flat_idx < 0) {
         binner.nr_values_dropped++;
       } else {
-        binner.data_view(flat_idx) += value;
-        binner.nr_value_added_view(flat_idx)++;
+        binner.data_flat_view(flat_idx) += value;
+        binner.nr_values_flat_view(flat_idx)++;
       }
     }
   };
@@ -256,7 +257,7 @@ class binner_t {
   /// nice syntax for accumulate:
   //  binner(coord1, coord2, ...) << value;
   template <typename... Coord>
-  accessor_t<binner_t<N, M>, Coord...> operator()(Coord... coords) {
+  accessor_t<binner_t<N, M, data_t>, Coord...> operator()(Coord... coords) {
     static_assert(sizeof...(coords) == N + M);
     if (in_bounds(std::make_index_sequence<N + M>(), coords...)) {
       return {*this, coord2flatidx(std::make_index_sequence<N + M>(), coords...)};
@@ -264,11 +265,14 @@ class binner_t {
     return {*this, -1};
   };
 
-  [[nodiscard]] auto const &get_data() const { return data; };
-  [[nodiscard]] auto const &get_nr_values_added() const { return nr_values_added; };
+  mda::array_view<data_t, N + M> data() const { return _data; };
+  mda::array_view<long, N + M> nr_values_added() const { return _nr_values_added; };
+  [[nodiscard]] auto const &get_data() const { return _data; };
+  [[nodiscard]] auto const &get_nr_values_added() const { return _nr_values_added; };
   [[nodiscard]] auto const &get_nr_values_dropped() const { return nr_values_dropped; };
   [[nodiscard]] auto const &get_continuous_axes() const { return continuous_axes; };
   [[nodiscard]] auto const &get_discreet_axes() const { return discreet_axes; };
+  [[nodiscard]] int get_nr_bins(int axis = 0) const { return _data.shape()[axis]; };
 
   /// Get the coordinates of bins along a given (continuous) axis.
   // Returns a 1D triqs array
@@ -307,14 +311,14 @@ class binner_t {
     return *this;
   }
 
-  template <typename dcomplex>
-  auto &operator*=(dcomplex scalar) {
-    data *= scalar;
+  auto &operator*=(data_t scalar) {
+    _data *= scalar;
     return *this;
   }
 
-  friend inline binner_t<N, M> CPP2PY_IGNORE mpi_reduce(binner_t<N, M> const &in, mpi::communicator c = {},
-                                                        int root = 0, bool all = false, MPI_Op op = MPI_SUM) {
+  friend inline binner_t<N, M, data_t> CPP2PY_IGNORE mpi_reduce(binner_t<N, M, data_t> const &in,
+                                                                mpi::communicator c = {}, int root = 0,
+                                                                bool all = false, MPI_Op op = MPI_SUM) {
 
     if (op != MPI_SUM) {
       TRIQS_RUNTIME_ERROR << "mpi_reduce of binner_t can only be performed with op = MPI_SUM";
@@ -337,8 +341,8 @@ class binner_t {
 
     binner_t out = in; // copy
 
-    out.data() = mpi::reduce(in.data, c, root, all, MPI_SUM);
-    out.nr_values_added() = mpi::reduce(in.nr_values_added, c, root, all, MPI_SUM);
+    out._data() = mpi::reduce(in._data, c, root, all, MPI_SUM);
+    out._nr_values_added() = mpi::reduce(in._nr_values_added, c, root, all, MPI_SUM);
     out.nr_values_dropped = mpi::reduce(in.nr_values_dropped, c, root, all, MPI_SUM);
 
     return out;
