@@ -203,7 +203,10 @@ class warper_projection_t {
 
       // Interpolate convolution
       // linear interp of positive data is always a positive function
-      details::gsl_interp_wrapper_t smoothed_proj_interp(gsl_interp_linear, xi[axis].get_bin_coord(), smoothed_proj);
+      auto times = xi[axis].get_bin_coord();
+      times(0) = 0;                // snap boundaries
+      times(times.size() - 1) = 1; // snap boundaries
+      details::gsl_interp_wrapper_t smoothed_proj_interp(gsl_interp_linear, times, smoothed_proj);
 
       for (auto const &t : fn[axis].mesh()) {
         fn[axis][t] = smoothed_proj_interp(t);
