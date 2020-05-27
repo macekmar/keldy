@@ -44,10 +44,9 @@ for N, M in [(1, 0), (1, 1), (2, 0), (2, 1)]:
         args += "long b{}, ".format(m)
     c.add_method("void accumulate(dcomplex value, " + args[:-2] + ")")
 
-    module.add_class(c)
+    c.add_method("double sum_moduli()")
 
-    # TODO: this does not compile
-    # module.add_function("double sum_moduli<{}, {}>(keldy::binner::sparse_binner_t<{}, {}> const& sp_bin)".format(N, M, N, M), name='sum_moduli_{}_{}'.format(N, M))
+    module.add_class(c)
 
     ###########################
     # The class binner_t<N, M>
@@ -75,5 +74,6 @@ for N, M in [(1, 0), (1, 1), (2, 0), (2, 1)]:
     c.add_method("auto get_bin_size(int axis = 0)")
 
     module.add_class(c)
+
 
 module.generate_code()

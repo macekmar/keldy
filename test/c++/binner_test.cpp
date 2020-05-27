@@ -119,7 +119,7 @@ TEST(SparseBinner, weight) { // NOLINT
   sp_binner.accumulate(-100.0_j, 2.0, 0);
   sp_binner.accumulate(1000.0_j, 2.0, 0);
 
-  EXPECT_DOUBLE_EQ(911.0, sum_moduli(sp_binner));
+  EXPECT_DOUBLE_EQ(911.0, sp_binner.sum_moduli());
 }
 
 TEST(SparseBinner, product_scalar) { // NOLINT
@@ -131,7 +131,7 @@ TEST(SparseBinner, product_scalar) { // NOLINT
 
   sp_binner *= 2.0;
 
-  EXPECT_DOUBLE_EQ(2.0 * 911.0, sum_moduli(sp_binner));
+  EXPECT_DOUBLE_EQ(2.0 * 911.0, sp_binner.sum_moduli());
 }
 
 TEST(BinnerAndSparseBinner, accumulate) { // NOLINT

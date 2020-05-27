@@ -28,7 +28,7 @@ class test_sparse_binner(unittest.TestCase):
         b.accumulate(10, 4.0, 0)
         b.accumulate(1j, 10.0, 0)
 
-        self.assertEqual(sum_moduli(b), sqrt(20.) + 11.)
+        self.assertEqual(b.sum_moduli(), sqrt(20.) + 11.)
 
 if __name__ == '__main__':
     unittest.main()

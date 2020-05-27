@@ -86,30 +86,29 @@ class sparse_binner_t {
     static_assert(sizeof...(coords) == N + M);
     accumulate_impl(value, std::make_index_sequence<N>(), std::make_index_sequence<M>(), coords...);
   };
-};
 
-/// sum moduli of values stored in sparese binner.
-//  Values with same coordinates are summed before taking the modulus.
-template <int N, int M>
-[[nodiscard]] double sum_moduli(sparse_binner_t<N, M> const &sp_bin) {
+  /// sum moduli of values stored in sparse binner.
+  //  Values with same coordinates are summed before taking the modulus.
+  [[nodiscard]] double sum_moduli() const {
 
-  std::vector<std::pair<typename sparse_binner_t<N, M>::coord_arr_t, dcomplex>> data_reduced;
+    std::vector<std::pair<coord_arr_t, dcomplex>> data_reduced;
 
-  for (auto const &p : sp_bin.data) {
-    auto loc =
-       std::find_if(std::begin(data_reduced), std::end(data_reduced), [&p](auto &el) { return (el.first == p.first); });
-    if (loc != std::end(data_reduced)) {
-      (*loc).second += p.second;
-    } else {
-      data_reduced.push_back(p);
+    for (auto const &p : data) {
+      auto loc = std::find_if(std::begin(data_reduced), std::end(data_reduced),
+                              [&p](auto &el) { return (el.first == p.first); });
+      if (loc != std::end(data_reduced)) {
+        (*loc).second += p.second;
+      } else {
+        data_reduced.push_back(p);
+      }
     }
-  }
 
-  double res = 0;
-  for (auto const &q : data_reduced) {
-    res += std::abs(q.second);
-  }
-  return res;
+    double res = 0;
+    for (auto const &q : data_reduced) {
+      res += std::abs(q.second);
+    }
+    return res;
+  };
 };
 
 ///%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
