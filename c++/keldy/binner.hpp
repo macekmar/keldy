@@ -41,10 +41,13 @@ using disc_coord_t = long;
 template <typename T, size_t N>
 void mpi_broadcast(std::array<T, N> &v, mpi::communicator c = {}, int root = 0) {
   if constexpr (mpi::has_mpi_type<T>) {
-    if (N != 0) MPI_Bcast(v.data(), N, mpi::mpi_type<T>::get(), root, c.get());
+    if (N != 0) {
+      MPI_Bcast(v.data(), N, mpi::mpi_type<T>::get(), root, c.get());
+    }
   } else {
-    for (auto &x : v)
+    for (auto &x : v) {
       mpi::broadcast(x, c, root);
+    }
   }
 }
 

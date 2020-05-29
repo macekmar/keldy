@@ -54,7 +54,7 @@ class integrand_g_kernel {
   [[nodiscard]] std::pair<result_t, int> operator()(std::vector<double> const &times) const;
 
   integrand_g_kernel(g0_keldysh_contour_t g0_, gf_index_t g_idx_X_)
-     : g0(std::move(g0_)), g_idx_X(std::move(g_idx_X_)){};
+     : g0(std::move(g0_)), g_idx_X(g_idx_X_){};
 };
 
 } // namespace keldy::impurity_oneband

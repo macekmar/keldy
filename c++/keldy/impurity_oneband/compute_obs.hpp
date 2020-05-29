@@ -38,6 +38,7 @@
 #include <triqs/utility/first_include.hpp>
 #include <string>
 #include <algorithm>
+#include <utility>
 
 namespace keldy::impurity_oneband {
 
@@ -49,7 +50,7 @@ class compute_charge_Q_direct : public integrator<dcomplex, impurity_oneband::in
  public:
   compute_charge_Q_direct(g0_model model, double time, int order, double cutoff_integrand)
      : integrator{dcomplex{0},
-                  integrand_g_direct{g0_keldysh_contour_t{model}, gf_index_t{time, up, forward},
+                  integrand_g_direct{g0_keldysh_contour_t{std::move(model)}, gf_index_t{time, up, forward},
                                      gf_index_t{time, up, backward}, cutoff_integrand},
                   {},
                   order,
@@ -65,7 +66,7 @@ class compute_current_J_direct : public integrator<dcomplex, integrand_g_direct>
  public:
   compute_current_J_direct(g0_model model, double time, int order, double cutoff_integrand)
      : integrator{dcomplex{0},
-                  integrand_g_direct{g0_keldysh_contour_t{model}, gf_index_t{time, up, forward, 0, 1},
+                  integrand_g_direct{g0_keldysh_contour_t{std::move(model)}, gf_index_t{time, up, forward, 0, 1},
                                      gf_index_t{time, up, backward, 0, 0}, cutoff_integrand},
                   {},
                   order,
@@ -83,7 +84,7 @@ class compute_charge_Q_direct_time : public integrator<binner::binner_t<1>, inte
  public:
   compute_charge_Q_direct_time(g0_model model, double time, int order, int nr_time_slices, double cutoff_integrand)
      : integrator{binner::binner_t<1>({std::make_tuple(0., time, nr_time_slices)}),
-                  integrand_g_direct_time{g0_keldysh_contour_t{model}, gf_index_t{time, up, forward},
+                  integrand_g_direct_time{g0_keldysh_contour_t{std::move(model)}, gf_index_t{time, up, forward},
                                           gf_index_t{time, up, backward}, cutoff_integrand},
                   {},
                   order,
@@ -103,7 +104,7 @@ class compute_gf_kernel : public integrator<binner::binner_t<1, 1>, integrand_g_
  public:
   compute_gf_kernel(g0_model model, double time, int order, int nr_bins = 100)
      : integrator{binner::binner_t<1, 1>({std::make_tuple(0.0, time, nr_bins)}, {2}),
-                  integrand_g_kernel{g0_keldysh_contour_t{model}, gf_index_t{time, up, forward}},
+                  integrand_g_kernel{g0_keldysh_contour_t{std::move(model)}, gf_index_t{time, up, forward}},
                   {},
                   order,
                   "sobol_unshifted",

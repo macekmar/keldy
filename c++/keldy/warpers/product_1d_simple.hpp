@@ -139,7 +139,7 @@ class warper_product_1d_simple_t {
 
   double jacobian_forward(std::vector<double> const &ui_vec) const {
     double result = 1.0;
-    for (auto &vi : ui_vec) {
+    for (const auto &vi : ui_vec) {
       result *= f1(vi);
     }
     return result;

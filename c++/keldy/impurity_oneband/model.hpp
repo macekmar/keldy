@@ -175,7 +175,7 @@ class g0_model {
 
   static std::string hdf5_scheme() { return "KELDY_G0Model"; }
 
-  friend void h5_write(triqs::h5::group h5group, std::string subgroup_name, g0_model const &c) {
+  friend void h5_write(triqs::h5::group &h5group, std::string const &subgroup_name, g0_model const &c) {
     auto grp = h5group.create_group(subgroup_name);
     h5_write_attribute(grp, "TRIQS_HDF5_data_scheme", g0_model::hdf5_scheme());
     h5_write(grp, "model_omega", c.model_omega);
@@ -187,7 +187,7 @@ class g0_model {
   }
 
   // Function that read all containers to hdf5 file
-  friend void h5_read(triqs::h5::group h5group, std::string subgroup_name, g0_model &c) {
+  friend void h5_read(triqs::h5::group &h5group, std::string const &subgroup_name, g0_model &c) {
     auto grp = h5group.open_group(subgroup_name);
     h5_read(grp, "model_omega", c.model_omega);
     h5_read(grp, "make_dot_lead", c.make_dot_lead);
@@ -199,7 +199,7 @@ class g0_model {
 
   // Function that read all containers to hdf5 file
   CPP2PY_IGNORE
-  static g0_model h5_read_construct(triqs::h5::group h5group, std::string subgroup_name) {
+  static g0_model h5_read_construct(triqs::h5::group h5group, std::string const &subgroup_name) {
     g0_model c{};
     h5_read(h5group, subgroup_name, c);
     return c;

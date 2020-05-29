@@ -47,7 +47,6 @@ class warper_product_1d_t {
   std::vector<std::function<double(double)>> fn;
 
  public:
-
   warper_product_1d_t(std::vector<std::function<double(double)>> fn_, double t_max_,
                       int nr_function_sample_points) // points vs resampling points
      : t_max(t_max_), fn(std::move(fn_)) {
@@ -87,7 +86,7 @@ class warper_product_1d_t {
     return std::make_pair(li_from_ui(ui_vec), jacobian_forward(ui_vec));
   }
 
-  std::vector<double> ui_from_li(std::vector<double> const &li_vec) const {
+  [[nodiscard]] std::vector<double> ui_from_li(std::vector<double> const &li_vec) const {
     std::vector<double> result = li_vec;
     for (auto [i, li] : itertools::enumerate(result)) {
       li = fn_integrated_inverse[i](li);
@@ -95,7 +94,7 @@ class warper_product_1d_t {
     return result;
   }
 
-  std::vector<double> li_from_ui(std::vector<double> const &ui_vec) const {
+  [[nodiscard]] std::vector<double> li_from_ui(std::vector<double> const &ui_vec) const {
     auto result = ui_vec;
     for (auto [i, ui] : itertools::enumerate(result)) {
       ui = fn_integrated[i](ui);
@@ -103,7 +102,7 @@ class warper_product_1d_t {
     return result;
   }
 
-  double jacobian_reverse(std::vector<double> const &li_vec) const {
+  [[nodiscard]] double jacobian_reverse(std::vector<double> const &li_vec) const {
     double result = 1.0;
     for (auto [i, li] : itertools::enumerate(li_vec)) {
       result *= fn_integrate_norm[i] / fn[i](fn_integrated_inverse[i](li));
@@ -111,7 +110,7 @@ class warper_product_1d_t {
     return result;
   }
 
-  double jacobian_forward(std::vector<double> const &ui_vec) const {
+  [[nodiscard]] double jacobian_forward(std::vector<double> const &ui_vec) const {
     double result = 1.0;
     for (auto [i, vi] : itertools::enumerate(ui_vec)) {
       result *= fn[i](vi);
@@ -129,9 +128,9 @@ inline warper_product_1d_t make_product_1d_inverse_cube_alternate(int order, dou
   std::vector<std::function<double(double)>> f_list = {};
   for (int n = 1; n <= order; ++n) {
     if (n % 2 == 0) {
-      f_list.push_back(f2);
+      f_list.emplace_back(f2);
     } else {
-      f_list.push_back(f1);
+      f_list.emplace_back(f1);
     }
   }
   return {f_list, time, nr_sample_points_warper};

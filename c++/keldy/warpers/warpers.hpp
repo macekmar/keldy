@@ -47,13 +47,12 @@ class warper_train_t {
   std::vector<warper_variant> warpers{};
 
  public:
-
   warper_train_t() = default;
   //warper_train_t& operator=(warper_train_t&) = delete;
 
   // Add warpers
-  void emplace_back(warper_identity_t w) { warpers.emplace_back(std::move(w)); }
-  void emplace_back(warper_plasma_uv_t w) { warpers.emplace_back(std::move(w)); }
+  void emplace_back(warper_identity_t w) { warpers.emplace_back(w); }
+  void emplace_back(warper_plasma_uv_t w) { warpers.emplace_back(w); }
   void emplace_back(warper_product_1d_simple_t w) { warpers.emplace_back(std::move(w)); }
   void emplace_back(warper_product_1d_t w) { warpers.emplace_back(std::move(w)); }
   void emplace_back(warper_projection_t w) { warpers.emplace_back(std::move(w)); }
@@ -123,8 +122,8 @@ class warper_train_t {
 
   std::vector<double> li_from_ui(std::vector<double> const &ui_vec) const {
     auto result = ui_vec;
-    for (auto it = warpers.cbegin(); it != warpers.cend(); it++) { // FORWARD
-      result = std::visit([&result](auto &&arg) -> std::vector<double> { return arg.li_from_ui(result); }, *it);
+    for (const auto & warper : warpers) { // FORWARD
+      result = std::visit([&result](auto &&arg) -> std::vector<double> { return arg.li_from_ui(result); }, warper);
     }
     return result;
   }
