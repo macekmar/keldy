@@ -50,30 +50,31 @@ for N, M in [(1, 0), (1, 1), (2, 0), (2, 1)]:
 
     ###########################
     # The class binner_t<N, M>
-    c = class_(
-               py_type = "Binner_{}_{}".format(N, M),
-               c_type = "binner_t<{}, {}>".format(N, M),
-               c_type_absolute = "keldy::binner::binner_t<{}, {}>".format(N, M),
-               hdf5 = False,
-               is_printable = False
-    )
+    for data_t in ['double', 'dcomplex']:
+        c = class_(
+                py_type = "Binner_{}_{}_{}".format(N, M, data_t),
+                c_type = "binner_t<{}, {}, {}>".format(N, M, data_t),
+                c_type_absolute = "keldy::binner::binner_t<{}, {}, {}>".format(N, M, data_t),
+                hdf5 = False,
+                is_printable = False
+        )
 
-    c.add_constructor("""(std::array<std::tuple<double, double, long>, {}> _continuous_axes, std::array<long, {}> _discreet_axes = {{}})""".format(N, M),
-                      doc = "")
+        c.add_constructor("""(std::array<std::tuple<double, double, long>, {}> _continuous_axes, std::array<long, {}> _discreet_axes = {{}})""".format(N, M),
+                        doc = "")
 
-    c.add_method_copy()
+        c.add_method_copy()
 
-    c.add_method("mda::array<dcomplex, {}> const& get_data()".format(N + M))
-    c.add_method("mda::array<long, {}> const& get_nr_values_added()".format(N + M))
-    c.add_method("auto const& get_nr_values_dropped()")
-    c.add_method("auto const& get_continuous_axes()")
-    c.add_method("auto const& get_discreet_axes()")
-    c.add_method("int get_nr_bins(int axis = 0)")
+        c.add_method("mda::array<{}, {}> const& get_data()".format(data_t, N + M))
+        c.add_method("mda::array<long, {}> const& get_nr_values_added()".format(N + M))
+        c.add_method("auto const& get_nr_values_dropped()")
+        c.add_method("auto const& get_continuous_axes()")
+        c.add_method("auto const& get_discreet_axes()")
+        c.add_method("int get_nr_bins(int axis = 0)")
 
-    c.add_method("auto get_bin_coord(int axis = 0)")
-    c.add_method("auto get_bin_size(int axis = 0)")
+        c.add_method("auto get_bin_coord(int axis = 0)")
+        c.add_method("auto get_bin_size(int axis = 0)")
 
-    module.add_class(c)
+        module.add_class(c)
 
 
 module.generate_code()

@@ -8,7 +8,7 @@ from keldy import binner
 class test_binner(unittest.TestCase):
 
     def test_basics(self):
-        b = binner.Binner_1_1([(-5., 5., 10)], [3])
+        b = binner.Binner_1_1_dcomplex([(-5., 5., 10)], [3])
 
         data = b.get_data()
         nr_values_added = b.get_nr_values_added()
