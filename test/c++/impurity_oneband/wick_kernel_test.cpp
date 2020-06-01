@@ -86,13 +86,15 @@ TEST(integrand_kernel, Order_2) { // NOLINT
   expected_res.accumulate(det_prod_u(backward, backward), u, backward);
   expected_res.accumulate(det_prod_v(forward, forward), v, forward);
   expected_res.accumulate(det_prod_v(backward, forward), v, forward);
-  expected_res.accumulate(det_prod_v(forward, backward) + det_prod_v(backward, backward), v, backward);
+  expected_res.accumulate(det_prod_v(forward, backward), v, backward);
+  expected_res.accumulate(det_prod_v(backward, backward), v, backward);
   sort(expected_res);
 
   binner::sparse_binner_t<1, 1> computed_res = integrand(std::vector<double>{u, v}).first;
   sort(computed_res);
 
   ASSERT_EQ(computed_res.data.size(), 8);
+  ASSERT_EQ(expected_res.data.size(), 8);
 
   for (int i = 0; i < 4; ++i) {
     std::cout << computed_res.data[2 * i].first << " ; " << expected_res.data[2 * i].first << std::endl;
