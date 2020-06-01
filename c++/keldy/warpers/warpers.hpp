@@ -56,6 +56,7 @@ class warper_train_t {
   void emplace_back(warper_plasma_uv_t w) { warpers.emplace_back(std::move(w)); }
   void emplace_back(warper_product_1d_simple_t w) { warpers.emplace_back(std::move(w)); }
   void emplace_back(warper_product_1d_t w) { warpers.emplace_back(std::move(w)); }
+  void emplace_back(warper_projection_t w) { warpers.emplace_back(std::move(w)); }
 
   // Warper Vector
   void clear() { warpers.clear(); }

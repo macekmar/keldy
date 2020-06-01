@@ -18,6 +18,7 @@ module.add_preamble("""
 #include <cpp2py/converters/pair.hpp>
 #include <cpp2py/converters/vector.hpp>
 #include <triqs/cpp2py_converters/arrays.hpp>
+#include <triqs/cpp2py_converters/gf.hpp>
 
 using namespace keldy::warpers;
 """)
@@ -158,6 +159,9 @@ c.add_constructor("""(std::function<dcomplex (std::vector<double>)> integrand_, 
 c.add_method("""keldy::binner::binner_t<1, 0, double> const& get_xi (int axis)""",
              doc = r"""""")
 
+c.add_method("""auto get_fi(int axis)""",
+             doc = r"""""")
+
 c.add_method("""std::vector<double> get_sigmas ()""",
              doc = r"""""")
 
@@ -201,6 +205,9 @@ c.add_method("""void emplace_back (keldy::warpers::warper_product_1d_simple_t w)
              doc = r"""""")
 
 c.add_method("""void emplace_back (keldy::warpers::warper_product_1d_t w)""",
+             doc = r"""""")
+
+c.add_method("""void emplace_back (keldy::warpers::warper_projection_t w)""",
              doc = r"""""")
 
 c.add_method("""void clear ()""",

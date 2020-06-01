@@ -27,7 +27,7 @@ TEST(ProjectionWarper, OneToOne) { // NOLINT
   basic_test_warper_multidim(proj_warper, 1.0, 1e-6);
 }
 
-TEST(ProjectionWarper, SigmaValue) { // NOLINT
+TEST(ProjectionWarper, OptimizeSigma) { // NOLINT
   double const tmax = 1.;
   double const tol = 1e-6;
   auto integrand = [](std::vector<double> const xi) -> double {
@@ -51,6 +51,8 @@ TEST(ProjectionWarper, SigmaValue) { // NOLINT
   auto proj_warper = warper_projection_t(warped_integrand, 1, int(1e2), int(1e2), 0.1, true);
 
   EXPECT_NEAR(proj_warper.get_sigmas()[0], 0.06754688329, tol);
+
+  auto proj_warper_higher_order = warper_projection_t(warped_integrand, 3, int(1e2), int(1e2), 0.1, true);
 }
 
 TEST(ProjectionWarper, Values) { // NOLINT
