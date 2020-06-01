@@ -39,6 +39,7 @@ struct gsl_fit_linear_result {
   double chisq;
 };
 
+/// not used, I kept it for possible future usage
 gsl_fit_linear_result gsl_fit_wlinear_wrapper(array<double, 1> const &x, array<double, 1> const &y,
                                               array<double, 1> const &w) {
   if (x.size() != y.size() or x.size() != w.size()) {
@@ -68,27 +69,31 @@ void local_linear_reg(array<double, 1> const &x, array<double, 1> const &y, arra
   long const N = x.size();
   long const K = kernel.size();
   long const H = K / 2;
-  size_t n;
-  size_t s;
+  assert(K == 2 * H + 1);
+  size_t size_fit;
+  size_t start_x;
+  size_t start_ker;
+  size_t end_ker;
   double c0;
   double c1;
   double cov00, cov01, cov11, chisq;
 
-  //TODO: what if H > N ?
-  for (auto [i, x0] : itertools::enumerate(x)) {
-    if (i < H) {
-      n = i + H + 1;
-    } else if (i >= N - H) {
-      n = N - i + H;
-    } else {
-      n = K;
-    }
-    s = std::max(i - H, 0l);
+  for (int i = 0; i < x.size(); ++i) {
+    start_ker = std::max(0l, H - i);
+    end_ker = std::min(N + H - i - 1, K - 1);
+    size_fit = end_ker - start_ker + 1;
+    start_x = start_ker - H + i;
 
-    gsl_fit_wlinear(x.storage().data() + s, 1, kernel.storage().data() + std::max(H - i, 0l), 1, y.storage().data() + s,
-                    1, n, &c0, &c1, &cov00, &cov01, &cov11, &chisq);
+    assert(start_x >= 0);
+    assert(start_ker >= 0);
+    assert(size_fit > 0);
+    assert(start_x + size_fit <= N);
+    assert(start_ker + size_fit <= K);
 
-    y_out(i) = c0 + x0 * c1;
+    gsl_fit_wlinear(x.storage().data() + start_x, 1, kernel.storage().data() + start_ker, 1,
+                    y.storage().data() + start_x, 1, size_fit, &c0, &c1, &cov00, &cov01, &cov11, &chisq);
+
+    y_out(i) = c0 + x(i) * c1;
   }
 };
 
