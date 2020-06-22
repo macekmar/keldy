@@ -2,7 +2,7 @@
 Utility functions to extract retarded kernel and Green function.
 """
 import numpy as _np
-from numpy import _fft
+from numpy import fft as _fft
 
 
 # stolen from scipy.signal.fftconvolve
