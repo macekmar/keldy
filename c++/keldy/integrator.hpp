@@ -91,36 +91,6 @@ class integrator {
     }
   }
 
-  triqs::arrays::array<double, 2> gather_data(int nr_points, std::function<std::vector<double>()> rng) {
-    dcomplex im_unit (0.0,1.0);
-    triqs::arrays::array<double, 2> values(nr_points, 5);
-    values() = 0;
-
-    int mpi_rank = comm.rank();
-    int mpi_size = comm.size();
-    
-    for (int i = 0; i < nr_points; i++) {
-      auto li_vec = rng();
-      if (i % mpi_size != mpi_rank) {
-        continue;
-      }
-      std::vector<double> ui_vec = warper.ui_from_li(li_vec);
-
-      auto [eval, in_domain] = integrand(ui_vec, false);
-      auto [min, max] = std::minmax_element(ui_vec.begin(), ui_vec.end());
-      values(i,0) = *min;
-      values(i,1) = *max;
-      values(i,2) = ((-im_unit)*std::pow(im_unit, ui_vec.size())*eval).real();
-      values(i,3) = in_domain;
-      values(i,4) = warper.jacobian_reverse(li_vec);
-    }
-
-    values = mpi::mpi_all_reduce(values, comm);
-
-
-    return values;
-  }
-
   void reset_rng(std::string rng_name, int rng_state_seed, bool do_shift = false, bool do_scramble = false,
                  int rng_seed_shift = 0) {
     if (rng_name == "sobol_unshifted") {
