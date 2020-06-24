@@ -56,10 +56,10 @@ TEST(integration_direct_time, consistency) { // NOLINT
   compute_charge_Q_direct_time computer(params, time, 4, 10, 0.0);
 
   computer_direct.warper.emplace_back(warpers::warper_plasma_uv_t{time});
-  computer_direct.warper.emplace_back(warpers::make_product_1d_simple_exponential(time, 1.0, 1000));
+  computer_direct.warper.emplace_back(warpers::make_product_1d_simple_exponential_nointerp(time, 1.0));
 
   computer.warper.emplace_back(warpers::warper_plasma_uv_t{time});
-  computer.warper.emplace_back(warpers::make_product_1d_simple_exponential(time, 1.0, 1000));
+  computer.warper.emplace_back(warpers::make_product_1d_simple_exponential_nointerp(time, 1.0));
 
   computer_direct.run(10);
   computer.run(10);

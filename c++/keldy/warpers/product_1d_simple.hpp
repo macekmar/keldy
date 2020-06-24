@@ -24,158 +24,241 @@
 
 #include "../common.hpp"
 #include "warpers_common.hpp"
-#include "../interfaces/gsl_interp_wrap.hpp"
 #include <algorithm>
 #include <any>
 #include <functional>
+#include <itertools/omp_chunk.hpp>
 #include <numeric>
 #include <triqs/gfs.hpp>
+#include <triqs/utility/exceptions.hpp>
+#include <triqs/utility/macros.hpp>
+#include <gsl/gsl_interp.h>
+#include <gsl/gsl_spline.h>
 
 namespace keldy::warpers {
 
 using gf_t = triqs::gfs::gf<triqs::gfs::retime, triqs::gfs::scalar_real_valued>;
 
-class warper_product_1d_simple_t {
- private:
-  double t_max{};
-  double f1_integrated_norm{};
-  gf_t f1_integrated;
-  gf_t f1_integrated_inverse;
-  std::function<double(double)> f1;
+class warper_product_1d_simple_nointerp_t {
+ protected:
+  double f_integrated_normalization = 1.0;
+
+  std::function<double(double)> f1 = [](double /*u*/) { return 1.0; };
+  std::function<double(double)> f1_integrated = [](double u) { return u; };
+  std::function<double(double)> f1_integrated_inverse = [](double l) { return l; };
+
+  constexpr static double domain_u_min = 0.0; // alwyas start at 0.0
+  double domain_u_max = 1.0;            // "t_max"
+
+  constexpr static double codomain_l_min = 0.0;
+  constexpr static double codomain_l_max = 1.0;
 
  public:
-  // Pass Warping Function: numerically perform integration
-  // TODO: points vs resampling points
-  warper_product_1d_simple_t(std::function<double(double)> f1_, double t_max_, int nr_function_sample_points)
-     : t_max(t_max_), f1(std::move(f1_)) {
-
-    // Integrate Ansatz using Trapezoid Rule
-    f1_integrated = gf_t({0.0, t_max, nr_function_sample_points});
-    double delta = f1_integrated.mesh().delta();
-    for (auto const &t : f1_integrated.mesh()) {
-      f1_integrated[t] = f1(t - delta / 2) * delta;
-    }
-
-    auto &data = f1_integrated.data();
-    data(0) = 0.0;
-
-    std::partial_sum(data.begin(), data.end(), data.begin());
-    f1_integrated_norm = data(data.size() - 1);
-    data /= f1_integrated_norm; // normalize
-
-    // Inverse Function via interpolation
-    triqs::arrays::array<double, 1> mesh_time(nr_function_sample_points);
-    for (auto const &[i, t] : itertools::enumerate(f1_integrated.mesh())) {
-      mesh_time(i) = t;
-    }
-
-    f1_integrated_inverse = gf_t({0.0, 1.0, 1 + 5 * (nr_function_sample_points - 1)});
-    details::gsl_interp_wrapper_t interpolate(gsl_interp_akima, data, mesh_time); //gsl_interp_steffen
-    for (auto l : f1_integrated_inverse.mesh()) {
-      f1_integrated_inverse[l] = interpolate(l);
-    }
-  }
-
   // Constructor to use if f1, f1_integrated and f1_integrated_inverse can be provided analytically
-  // To do:points vs resampling points
-  warper_product_1d_simple_t(std::function<double(double)> f1_, std::function<double(double)> f1_integrated_,
-                             std::function<double(double)> f1_integrated_inverse_, double t_max_,
-                             int nr_function_sample_points)
-     : t_max(t_max_), f1_integrated_norm(f1_integrated_(t_max)), f1(std::move(f1_)) {
+  warper_product_1d_simple_nointerp_t(std::function<double(double)> f1_, std::function<double(double)> f1_integrated_,
+                                      std::function<double(double)> f1_integrated_inverse_, double domain_u_max_,
+                                      bool do_domain_checks = true)
+     : f1(std::move(f1_)),
+       f1_integrated(std::move(f1_integrated_)),
+       f1_integrated_inverse(std::move(f1_integrated_inverse_)),
+       domain_u_max(domain_u_max_) {
 
-    // check consistency of functions provided
-    double l_prime = 0.;
-    for (double l : {0., 0.25, 0.5, 0.75, 1.}) {
-      l_prime = f1_integrated_norm * l + f1_integrated_(0) * (1 - l);
-      if (std::abs(f1_integrated_(f1_integrated_inverse_(l_prime)) - l_prime) > 1e-10) {
-        TRIQS_RUNTIME_ERROR << "Inconsistent functions: f1_integrated_inverse should be the inverse of f1_integrated ("
-                            << f1_integrated_(f1_integrated_inverse_(l_prime)) << " != " << l_prime << ")";
+    // Checks:
+    if (!(domain_u_min < domain_u_max)) {
+      TRIQS_RUNTIME_ERROR << "coord_domain_u coordinates must be ordered.";
+    }
+
+    if (do_domain_checks) {
+
+      bool domain_match = (std::abs(f1_integrated(domain_u_min) - codomain_l_min) < 1e-12)
+         && (std::abs(f1_integrated(domain_u_max) - codomain_l_max) < 1e-12)
+         && (std::abs(f1_integrated_inverse(codomain_l_min) - domain_u_min) < 1e-12)
+         && (std::abs(f1_integrated_inverse(codomain_l_max) - domain_u_max) < 1e-12);
+
+      if (!domain_match) {
+        TRIQS_RUNTIME_ERROR << "f1_integrated and f1_integrated_inverse do not map domain boundaries correctly.";
       }
-    }
 
-    f1_integrated = gf_t({0.0, t_max, nr_function_sample_points});
-    for (auto const &t : f1_integrated.mesh()) {
-      f1_integrated[t] = (f1_integrated_(t) - f1_integrated_(0.)) / (f1_integrated_norm - f1_integrated_(0.));
-    }
+      // f1 > 0 : for Jacobian consistancy
+      // f1_integrated & f1_integrated_inverse should be monotonous
+      // f1_integrated & f1_integrated_inverse are inverses
 
-    f1_integrated_inverse = gf_t({0.0, 1.0, 1 + 5 * (nr_function_sample_points - 1)});
-    for (auto const &l : f1_integrated_inverse.mesh()) {
-      f1_integrated_inverse[l] = f1_integrated_inverse_(f1_integrated_norm * l + f1_integrated(0) * (1 - l));
+      // check consistency of functions provided
+      for (double l_prime : {0., 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1.}) {
+        if (std::abs(f1_integrated(f1_integrated_inverse(l_prime)) - l_prime) > 1e-12) {
+          TRIQS_RUNTIME_ERROR
+             << "Inconsistent functions: f1_integrated_inverse should be the inverse of f1_integrated ("
+             << f1_integrated_(f1_integrated_inverse_(l_prime)) << " != " << l_prime << ")";
+        }
+      }
     }
   }
 
   [[nodiscard]] std::pair<std::vector<double>, double> map_reverse(std::vector<double> const &li_vec) const {
-    return std::make_pair(ui_from_li(li_vec), jacobian_reverse(li_vec));
+    auto xi_vec = li_vec;
+    double jacobian_r = 1.0;
+    for (auto &xi : xi_vec) {
+      xi = f1_integrated_inverse(xi);
+      jacobian_r *= 1.0 / f1(xi); // f1 defined in ui, so evaluate after map
+    }
+    return std::make_pair(xi_vec, jacobian_r);
   }
 
   [[nodiscard]] std::pair<std::vector<double>, double> map_forward(std::vector<double> const &ui_vec) const {
-    return std::make_pair(li_from_ui(ui_vec), jacobian_forward(ui_vec));
-  }
-
-  std::vector<double> ui_from_li(std::vector<double> const &li_vec) const {
-    std::vector<double> result = li_vec;
-    for (auto &li : result) {
-      li = f1_integrated_inverse(li);
+    auto xi_vec = ui_vec;
+    double jacobian_f = 1.0;
+    for (auto &xi : xi_vec) {
+      jacobian_f *= f1(xi); // f1 defined in ui, so evaluate before map
+      xi = f1_integrated_inverse(xi);
     }
-    return result;
+    return std::make_pair(xi_vec, jacobian_f);
   }
 
-  std::vector<double> li_from_ui(std::vector<double> const &ui_vec) const {
-    auto result = ui_vec;
-    // map ui to vi
-    for (auto &ui : result) {
-      ui = f1_integrated(ui);
+  [[nodiscard]] std::vector<double> ui_from_li(std::vector<double> const &li_vec) const {
+    std::vector<double> ui_vec = li_vec;
+    for (auto &ui : ui_vec) {
+      ui = f1_integrated_inverse(ui);
     }
-    return result;
+    return ui_vec;
   }
 
-  double jacobian_reverse(std::vector<double> const &li_vec) const {
+  [[nodiscard]] std::vector<double> li_from_ui(std::vector<double> const &ui_vec) const {
+    std::vector<double> li_vec = ui_vec;
+    for (auto &li : li_vec) {
+      li = f1_integrated(li);
+    }
+    return li_vec;
+  }
+
+  [[nodiscard]] double jacobian_reverse(std::vector<double> const &li_vec) const {
     double result = 1.0;
-    for (auto li : li_vec) {
-      result *= f1_integrated_norm / f1(f1_integrated_inverse(li));
+    for (const auto &li : li_vec) {
+      result *= 1.0 / f1(f1_integrated_inverse(li));
     }
     return result;
   }
 
-  double jacobian_forward(std::vector<double> const &ui_vec) const {
+  [[nodiscard]] double jacobian_forward(std::vector<double> const &ui_vec) const {
     double result = 1.0;
-    for (const auto &vi : ui_vec) {
-      result *= f1(vi);
+    for (const auto &ui : ui_vec) {
+      result *= f1(ui);
+    }
+    return result;
+  }
+
+  [[nodiscard]] double operator()(std::vector<double> const &ui_vec) const {
+    double result = 1.0;
+    for (const auto &ui : ui_vec) {
+      result *= f1(ui) / f_integrated_normalization;
     }
     return result;
   }
 };
 
-// Maker Functions:
+// *****************
 
-inline warper_product_1d_simple_t make_product_1d_simple_exponential(double time, double w_scale,
-                                                                     int nr_sample_points_warper) {
+namespace nda = triqs::arrays;
+
+class warper_product_1d_simple_t : public warper_product_1d_simple_nointerp_t {
+ private:
+  int nr_sample_points;
+
+  nda::vector<double> times_u_pts;
+  nda::vector<double> waper_f_pts;
+  nda::vector<double> waper_f_integrated_pts;
+
+  // f is constant interpolated to nearest downward: this piggy-backs on the acc lookup for f_integrated
+
+  gsl_interp_accel *acc_f_integrated;
+  gsl_spline *sp_f_integrated;
+
+  gsl_interp_accel *acc_f_integrated_inverse;
+  gsl_spline *sp_f_integrated_inverse;
+
+ public:
+  warper_product_1d_simple_t(std::function<double(double)> const &f1_, double domain_u_max_, int nr_sample_points_)
+     : warper_product_1d_simple_nointerp_t{
+        [this](double u) {
+          auto i = gsl_interp_accel_find(acc_f_integrated, times_u_pts.data_start(), nr_sample_points, u);
+          if (i == times_u_pts.size() - 1) {
+            return waper_f_pts[i];
+          };
+          return 0.5 * (waper_f_pts[i] + waper_f_pts[i + 1]);
+        },
+        [this](double u) { return gsl_spline_eval(sp_f_integrated, u, acc_f_integrated); },
+        [this](double l) { return gsl_spline_eval(sp_f_integrated_inverse, l, acc_f_integrated_inverse); },
+        domain_u_max_, false},
+       nr_sample_points(nr_sample_points_),
+       times_u_pts(nr_sample_points),
+       waper_f_pts(nr_sample_points),
+       waper_f_integrated_pts(nr_sample_points),
+       acc_f_integrated(gsl_interp_accel_alloc()),
+       sp_f_integrated(gsl_spline_alloc(gsl_interp_linear, nr_sample_points)),
+       acc_f_integrated_inverse(gsl_interp_accel_alloc()),
+       sp_f_integrated_inverse(gsl_spline_alloc(gsl_interp_linear, nr_sample_points)) {
+
+    if (!(nr_sample_points >= 3)) {
+      TRIQS_RUNTIME_ERROR << "Expect nr_sample_points to be >= 3. Given was " << nr_sample_points;
+    }
+
+    // Just do naive linear interpolation on grid
+    //#pragma omp parallel for
+    for (int i = 0; i < nr_sample_points; i++) {
+      times_u_pts[i] = domain_u_min + static_cast<double>(i) / (nr_sample_points - 1) * (domain_u_max - domain_u_min);
+      waper_f_pts[i] = f1_(times_u_pts[i]);
+    }
+
+    waper_f_integrated_pts[0] = 0.0; // scale co-ordinates later
+    for (int i = 1; i < nr_sample_points; i++) {
+      waper_f_integrated_pts[i] = waper_f_integrated_pts[i - 1]
+         + 0.5 * (waper_f_pts[i - 1] + waper_f_pts[i]) * (times_u_pts[i] - times_u_pts[i - 1]);
+    }
+
+    f_integrated_normalization = waper_f_integrated_pts[nr_sample_points - 1];
+
+    //#pragma omp parallel for
+    for (int i = 0; i < nr_sample_points; i++) {
+      waper_f_integrated_pts[i] *= codomain_l_max / f_integrated_normalization;
+      waper_f_pts[i] *= codomain_l_max / f_integrated_normalization;
+    }
+
+    gsl_spline_init(sp_f_integrated, times_u_pts.data_start(), waper_f_integrated_pts.data_start(), nr_sample_points);
+    gsl_spline_init(sp_f_integrated_inverse, waper_f_integrated_pts.data_start(), times_u_pts.data_start(),
+                    nr_sample_points);
+  }
+
+  ~warper_product_1d_simple_t() {
+    gsl_spline_free(sp_f_integrated_inverse);
+    gsl_interp_accel_free(acc_f_integrated_inverse);
+
+    gsl_spline_free(sp_f_integrated);
+    gsl_interp_accel_free(acc_f_integrated);
+  }
+};
+
+// ***************************************************************************************************************
+
+// Maker Functions (TODO: Fix Normalization issues):
+
+inline warper_product_1d_simple_nointerp_t make_product_1d_simple_exponential_nointerp(double domain_u_max,
+                                                                                       double w_scale) {
   return {[w_scale](double t) -> double { return std::exp(-(t / w_scale)); },
           [w_scale](double t) -> double { return w_scale * (1 - std::exp(-t / w_scale)); },
-          [w_scale](double l) -> double { return -w_scale * std::log(1 - l / w_scale); }, time,
-          nr_sample_points_warper};
+          [w_scale](double l) -> double { return -w_scale * std::log(1 - l / w_scale); }, domain_u_max};
 }
 
-inline warper_product_1d_simple_t make_product_1d_simple_inverse(double time, double w_scale,
-                                                                 int nr_sample_points_warper) {
+inline warper_product_1d_simple_nointerp_t make_product_1d_simple_inverse_nointerp(double domain_u_max,
+                                                                                   double w_scale) {
   return {[w_scale](double t) -> double { return w_scale / (w_scale + t); },
           [w_scale](double t) -> double { return w_scale * std::log(1. + t / w_scale); },
-          [w_scale](double l) -> double { return w_scale * (std::exp(l / w_scale) - 1.); }, time,
-          nr_sample_points_warper};
+          [w_scale](double l) -> double { return w_scale * (std::exp(l / w_scale) - 1.); }, domain_u_max};
 }
 
-inline warper_product_1d_simple_t make_product_1d_simple_inverse_square(double time, double w_scale,
-                                                                        int nr_sample_points_warper) {
+inline warper_product_1d_simple_nointerp_t make_product_1d_simple_inverse_square_nointerp(double domain_u_max,
+                                                                                          double w_scale) {
   return {[w_scale](double t) -> double { return w_scale * w_scale / ((w_scale + t) * (w_scale + t)); },
           [w_scale](double t) -> double { return w_scale * t / (w_scale + t); },
-          [w_scale](double l) -> double { return w_scale * l / (w_scale - l); }, time, nr_sample_points_warper};
+          [w_scale](double l) -> double { return w_scale * l / (w_scale - l); }, domain_u_max};
 }
-
-// (std::string const &label, integrand_g_direct const &f, double time, int nr_sample_points_warper, double w_scale) {
-//   if (label == "first_order") {
-//     return {[time, &f](double t) -> double { return std::abs(f(std::vector<double>{time - t}).first) + 1e-12; }, time,
-//             nr_sample_points_warper};
-//   }
-// }
 
 } // namespace keldy::warpers

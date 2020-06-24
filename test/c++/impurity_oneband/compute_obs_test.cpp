@@ -46,7 +46,7 @@ TEST(ComputeObs, InitializeInverseSquare) { // NOLINT
   compute_charge_Q_direct computer(params, time, 4, 0.0);
 
   computer.warper.emplace_back(warpers::warper_plasma_uv_t{time});
-  computer.warper.emplace_back(warpers::make_product_1d_simple_inverse_square(time, 1.5, 1000));
+  computer.warper.emplace_back(warpers::make_product_1d_simple_inverse_square_nointerp(time, 1.5));
 
   computer.run(10);
 }
@@ -58,7 +58,7 @@ TEST(ComputeObs, InitializeExponential) { // NOLINT
   compute_charge_Q_direct computer(params, 10.0, 4, 0.0);
 
   computer.warper.emplace_back(warpers::warper_plasma_uv_t{time});
-  computer.warper.emplace_back(warpers::make_product_1d_simple_exponential(time, 1.5, 1000));
+  computer.warper.emplace_back(warpers::make_product_1d_simple_exponential_nointerp(time, 1.5));
 
   computer.run(10);
 }
@@ -120,7 +120,7 @@ TEST(ComputeChargeQDirect, FlatbandAnalyticCompare1) { // NOLINT
     compute_charge_Q_direct computer(params, t_max, order, 0.0);
 
     computer.warper.emplace_back(warpers::warper_plasma_uv_t{t_max});
-    computer.warper.emplace_back(warpers::make_product_1d_simple_inverse_square(t_max, 1.0, 1e5));
+    computer.warper.emplace_back(warpers::make_product_1d_simple_inverse_square_nointerp(t_max, 1.0));
 
     computer.run(1e4);
 
@@ -165,7 +165,7 @@ TEST(ComputeChargeQDirect, FlatbandAnalyticCompare2) { // NOLINT
     compute_charge_Q_direct computer(params, t_max, order, 0.0);
 
     computer.warper.emplace_back(warpers::warper_plasma_uv_t{t_max});
-    computer.warper.emplace_back(warpers::make_product_1d_simple_exponential(t_max, 2.0, 1e5));
+    computer.warper.emplace_back(warpers::make_product_1d_simple_exponential_nointerp(t_max, 2.0));
 
     computer.run(5e4);
 
@@ -195,7 +195,7 @@ TEST(ComputeObs, ValueCurrent1) { // NOLINT
   compute_current_J_direct computer(params, t_max, 1, 0.0);
 
   computer.warper.emplace_back(warpers::warper_plasma_uv_t{t_max});
-  computer.warper.emplace_back(warpers::make_product_1d_simple_inverse_square(t_max, 0.5, 1e5));
+  computer.warper.emplace_back(warpers::make_product_1d_simple_inverse_square_nointerp(t_max, 0.5));
 
   computer.run(1e5);
 

@@ -53,10 +53,7 @@ TEST(WarperTrain, ConstructionAddingWarpers) { // NOLINT
 
   // construct exponential warper
   double warper_scale = 1.0;
-  w.emplace_back(warper_product_1d_simple_t{
-     [warper_scale](double t) -> double { return std::exp(-(t / warper_scale)); },
-     [warper_scale](double t) -> double { return warper_scale * (1 - std::exp(-t / warper_scale)); },
-     [warper_scale](double l) -> double { return -warper_scale * std::log(1 - l / warper_scale); }, t_max, 100});
+  w.emplace_back(make_product_1d_simple_exponential_nointerp(t_max, warper_scale));
 
   // Make tests
 }
