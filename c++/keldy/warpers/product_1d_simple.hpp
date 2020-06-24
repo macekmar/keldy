@@ -48,7 +48,7 @@ class warper_product_1d_simple_nointerp_t {
   std::function<double(double)> f1_integrated_inverse = [](double l) { return l; };
 
   constexpr static double domain_u_min = 0.0; // alwyas start at 0.0
-  double domain_u_max = 1.0;            // "t_max"
+  double domain_u_max = 1.0;                  // "t_max"
 
   constexpr static double codomain_l_min = 0.0;
   constexpr static double codomain_l_max = 1.0;
@@ -238,27 +238,57 @@ class warper_product_1d_simple_t : public warper_product_1d_simple_nointerp_t {
 
 // ***************************************************************************************************************
 
-// Maker Functions (TODO: Fix Normalization issues):
+// Maker Functions:
 
 inline warper_product_1d_simple_nointerp_t make_product_1d_simple_exponential_nointerp(double domain_u_max,
                                                                                        double w_scale) {
-  return {[w_scale](double t) -> double { return std::exp(-(t / w_scale)); },
-          [w_scale](double t) -> double { return w_scale * (1 - std::exp(-t / w_scale)); },
-          [w_scale](double l) -> double { return -w_scale * std::log(1 - l / w_scale); }, domain_u_max};
+  return {[w_scale, domain_u_max](double t) -> double {
+            double norm = 1. - std::exp(-domain_u_max / w_scale);
+            return std::exp(-(t / w_scale)) / (norm * w_scale);
+          },
+          [w_scale, domain_u_max](double t) -> double {
+            double norm = 1. - std::exp(-domain_u_max / w_scale);
+            return (1. - std::exp(-t / w_scale)) / norm;
+          },
+          [w_scale, domain_u_max](double l) -> double {
+            double norm = 1. - std::exp(-domain_u_max / w_scale);
+            return -w_scale * std::log(1. - l * norm);
+          },
+          domain_u_max};
 }
 
 inline warper_product_1d_simple_nointerp_t make_product_1d_simple_inverse_nointerp(double domain_u_max,
                                                                                    double w_scale) {
-  return {[w_scale](double t) -> double { return w_scale / (w_scale + t); },
-          [w_scale](double t) -> double { return w_scale * std::log(1. + t / w_scale); },
-          [w_scale](double l) -> double { return w_scale * (std::exp(l / w_scale) - 1.); }, domain_u_max};
+  return {[w_scale, domain_u_max](double t) -> double {
+            double norm = std::log(1. + domain_u_max / w_scale);
+            return 1.0 / (norm * (w_scale + t));
+          },
+          [w_scale, domain_u_max](double t) -> double {
+            double norm = std::log(1. + domain_u_max / w_scale);
+            return std::log(1. + t / w_scale) / norm;
+          },
+          [w_scale, domain_u_max](double l) -> double {
+            double norm = std::log(1. + domain_u_max / w_scale);
+            return w_scale * (std::exp(l * norm) - 1.);
+          },
+          domain_u_max};
 }
 
 inline warper_product_1d_simple_nointerp_t make_product_1d_simple_inverse_square_nointerp(double domain_u_max,
                                                                                           double w_scale) {
-  return {[w_scale](double t) -> double { return w_scale * w_scale / ((w_scale + t) * (w_scale + t)); },
-          [w_scale](double t) -> double { return w_scale * t / (w_scale + t); },
-          [w_scale](double l) -> double { return w_scale * l / (w_scale - l); }, domain_u_max};
+  return {[w_scale, domain_u_max](double t) -> double {
+            double norm = domain_u_max / (w_scale + domain_u_max);
+            return w_scale / ((w_scale + t) * (w_scale + t) * norm);
+          },
+          [w_scale, domain_u_max](double t) -> double {
+            double norm = domain_u_max / (w_scale + domain_u_max);
+            return t / ((w_scale + t) * norm);
+          },
+          [w_scale, domain_u_max](double l) -> double {
+            double norm = domain_u_max / (w_scale + domain_u_max);
+            return norm * l * w_scale / (1.0 - norm * l);
+          },
+          domain_u_max};
 }
 
 } // namespace keldy::warpers
