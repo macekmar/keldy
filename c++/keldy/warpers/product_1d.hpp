@@ -26,6 +26,7 @@
 
 #include "../common.hpp"
 #include "warpers_common.hpp"
+#include "product_1d_simple.hpp"
 #include "../interfaces/gsl_interp_wrap.hpp"
 #include <algorithm>
 #include <any>
@@ -39,57 +40,46 @@ using gf_t = triqs::gfs::gf<triqs::gfs::retime, triqs::gfs::scalar_real_valued>;
 
 class warper_product_1d_t {
  private:
-  double t_max{};
-  std::vector<double> fn_integrate_norm{};
-  std::vector<gf_t> fn_integrated;
-  std::vector<gf_t> fn_integrated_inverse;
-
-  std::vector<std::function<double(double)>> fn;
+  std::vector<std::variant<warper_product_1d_simple_nointerp_t, warper_product_1d_simple_t>> warpers_dims{};
 
  public:
-  warper_product_1d_t(std::vector<std::function<double(double)>> fn_, double t_max_,
-                      int nr_function_sample_points) // points vs resampling points
-     : t_max(t_max_), fn(std::move(fn_)) {
-    for (int axis = 0; axis < fn.size(); axis++) {
-      // Integrate Ansatz using Trapezoid Rule
-      fn_integrated.push_back(gf_t({0.0, t_max, nr_function_sample_points}));
-      double delta = fn_integrated[axis].mesh().delta();
-      for (auto const &t : fn_integrated[axis].mesh()) {
-        fn_integrated[axis][t] = fn[axis](t - delta / 2) * delta;
-      }
-      auto &data = fn_integrated[axis].data();
-      data(0) = 0.0;
+  warper_product_1d_t() = default;
 
-      std::partial_sum(data.begin(), data.end(), data.begin());
-      fn_integrate_norm.push_back(data(data.size() - 1));
-      data /= fn_integrate_norm[axis]; // normalize each axis separtely
+  int size() { return warpers_dims.size(); }
 
-      // Inverse Function via interpolation
-      triqs::arrays::array<double, 1> mesh_time(nr_function_sample_points);
-      for (auto const &[i, t] : itertools::enumerate(fn_integrated[axis].mesh())) {
-        mesh_time(i) = t;
-      }
+  void emplace_back(warper_product_1d_simple_nointerp_t&& w) { warpers_dims.emplace_back(w); }
+  void emplace_back(warper_product_1d_simple_t&& w) { warpers_dims.emplace_back(w); }
 
-      fn_integrated_inverse.push_back(gf_t({0.0, 1.0, 1 + 5 * (nr_function_sample_points - 1)}));
-      details::gsl_interp_wrapper_t interpolate(gsl_interp_akima, data, mesh_time); //gsl_interp_steffen
-      for (auto l : fn_integrated_inverse[axis].mesh()) {
-        fn_integrated_inverse[axis][l] = interpolate(l);
-      }
-    }
-  }
+  // ***
 
   [[nodiscard]] std::pair<std::vector<double>, double> map_reverse(std::vector<double> const &li_vec) const {
-    return std::make_pair(ui_from_li(li_vec), jacobian_reverse(li_vec));
+    auto xi_vec = li_vec;
+    double jacobian_r = 1.0;
+    for (auto [i, xi] : itertools::enumerate(xi_vec)) {
+      // f1 defined in ui, so evaluate jacobian_f after map
+      xi = std::visit([li = xi](auto &&arg) { return arg.ui_from_li(std::vector<double>{li}); }, warpers_dims[i]).at(0);
+      jacobian_r *=
+         std::visit([li = xi](auto &&arg) { return arg.jacobian_reverse(std::vector<double>{li}); }, warpers_dims[i]);
+    }
+    return std::make_pair(xi_vec, jacobian_r);
   }
 
   [[nodiscard]] std::pair<std::vector<double>, double> map_forward(std::vector<double> const &ui_vec) const {
-    return std::make_pair(li_from_ui(ui_vec), jacobian_forward(ui_vec));
+    auto xi_vec = ui_vec;
+    double jacobian_f = 1.0;
+    for (auto [i, xi] : itertools::enumerate(xi_vec)) {
+      // f1 defined in ui, so evaluate jacobian_f before map
+      jacobian_f *=
+         std::visit([ui = xi](auto &&arg) { return arg.jacobian_forward(std::vector<double>{ui}); }, warpers_dims[i]);
+      xi = std::visit([ui = xi](auto &&arg) { return arg.li_from_ui(std::vector<double>{ui}); }, warpers_dims[i]).at(0);
+    }
+    return std::make_pair(xi_vec, jacobian_f);
   }
 
   [[nodiscard]] std::vector<double> ui_from_li(std::vector<double> const &li_vec) const {
     std::vector<double> result = li_vec;
     for (auto [i, li] : itertools::enumerate(result)) {
-      li = fn_integrated_inverse[i](li);
+      li = std::visit([li = li](auto &&arg) { return arg.ui_from_li(std::vector<double>{li}); }, warpers_dims[i]).at(0);
     }
     return result;
   }
@@ -97,30 +87,45 @@ class warper_product_1d_t {
   [[nodiscard]] std::vector<double> li_from_ui(std::vector<double> const &ui_vec) const {
     auto result = ui_vec;
     for (auto [i, ui] : itertools::enumerate(result)) {
-      ui = fn_integrated[i](ui);
+      ui = std::visit([ui = ui](auto &&arg) { return arg.li_from_ui(std::vector<double>{ui}); }, warpers_dims[i]).at(0);
     }
     return result;
   }
 
   [[nodiscard]] double jacobian_reverse(std::vector<double> const &li_vec) const {
     double result = 1.0;
-    for (auto [i, li] : itertools::enumerate(li_vec)) {
-      result *= fn_integrate_norm[i] / fn[i](fn_integrated_inverse[i](li));
+    for (auto const [i, li] : itertools::enumerate(li_vec)) {
+      result *=
+         std::visit([li = li](auto &&arg) { return arg.jacobian_reverse(std::vector<double>{li}); }, warpers_dims[i]);
     }
     return result;
   }
 
   [[nodiscard]] double jacobian_forward(std::vector<double> const &ui_vec) const {
     double result = 1.0;
-    for (auto [i, vi] : itertools::enumerate(ui_vec)) {
-      result *= fn[i](vi);
+    for (auto const [i, ui] : itertools::enumerate(ui_vec)) {
+      result *=
+         std::visit([ui = ui](auto &&arg) { return arg.jacobian_forward(std::vector<double>{ui}); }, warpers_dims[i]);
+    }
+    return result;
+  }
+
+  [[nodiscard]] double operator()(std::vector<double> const &ui_vec) const {
+    double result = 1.0;
+    for (auto const [i, ui] : itertools::enumerate(ui_vec)) {
+      result *= std::visit([ui = ui](auto &&arg) { return arg(std::vector<double>{ui}); }, warpers_dims[i]);
     }
     return result;
   }
 };
 
+// // *****
+// // Maker functions
+
 inline warper_product_1d_t make_product_1d_inverse_cube_alternate(int order, double time, double warper_scale,
                                                                   int nr_sample_points_warper) {
+  warper_product_1d_t result{};
+
   auto f1 = [warper_scale](double t) -> double { return warper_scale / (warper_scale + t); };
   auto f2 = [warper_scale](double t) -> double {
     return warper_scale * warper_scale * warper_scale / ((warper_scale + t) * (warper_scale + t) * (warper_scale + t));
@@ -128,12 +133,12 @@ inline warper_product_1d_t make_product_1d_inverse_cube_alternate(int order, dou
   std::vector<std::function<double(double)>> f_list = {};
   for (int n = 1; n <= order; ++n) {
     if (n % 2 == 0) {
-      f_list.emplace_back(f2);
+      result.emplace_back(warper_product_1d_simple_t{f2, time, nr_sample_points_warper});
     } else {
-      f_list.emplace_back(f1);
+      result.emplace_back(warper_product_1d_simple_t{f1, time, nr_sample_points_warper});
     }
   }
-  return {f_list, time, nr_sample_points_warper};
+  return result;
 }
 
 } // namespace keldy::warpers

@@ -55,6 +55,8 @@ class warper_product_1d_simple_nointerp_t {
   constexpr static double codomain_l_max = 1.0;
 
  public:
+  warper_product_1d_simple_nointerp_t() = default;
+
   // Constructor to use if f1, f1_integrated and f1_integrated_inverse can be provided analytically
   warper_product_1d_simple_nointerp_t(std::function<double(double)> f1_, std::function<double(double)> f1_integrated_,
                                       std::function<double(double)> f1_integrated_inverse_, double domain_u_max_,
@@ -71,7 +73,6 @@ class warper_product_1d_simple_nointerp_t {
 
     if (do_domain_checks) {
 
-
       double eps = 1e-12;
 
       bool domain_match = (std::abs(f1_integrated(domain_u_min) - codomain_l_min) < eps)
@@ -84,11 +85,11 @@ class warper_product_1d_simple_nointerp_t {
                             << "* std::abs(f1_integrated(domain_u_min) - codomain_l_min): "
                             << (std::abs(f1_integrated(domain_u_min) - codomain_l_min)) << "\n"
                             << "* std::abs(f1_integrated(domain_u_max) - codomain_l_max): "
-                            << (std::abs(f1_integrated(domain_u_max) - codomain_l_max) ) << "\n"
+                            << (std::abs(f1_integrated(domain_u_max) - codomain_l_max)) << "\n"
                             << "* std::abs(f1_integrated_inverse(codomain_l_min) - domain_u_min): "
                             << (std::abs(f1_integrated_inverse(codomain_l_min) - domain_u_min)) << "\n"
                             << "* std::abs(f1_integrated_inverse(codomain_l_max) - domain_u_max): "
-                            << (std::abs(f1_integrated_inverse(codomain_l_max) - domain_u_max) ) << "\n";
+                            << (std::abs(f1_integrated_inverse(codomain_l_max) - domain_u_max)) << "\n";
       }
 
       // f1 > 0 : for Jacobian consistancy
@@ -144,7 +145,7 @@ class warper_product_1d_simple_nointerp_t {
 
   [[nodiscard]] double jacobian_reverse(std::vector<double> const &li_vec) const {
     double result = 1.0;
-    for (const auto &li : li_vec) {
+    for (auto const &li : li_vec) {
       result *= 1.0 / f1(f1_integrated_inverse(li));
     }
     return result;
@@ -152,7 +153,7 @@ class warper_product_1d_simple_nointerp_t {
 
   [[nodiscard]] double jacobian_forward(std::vector<double> const &ui_vec) const {
     double result = 1.0;
-    for (const auto &ui : ui_vec) {
+    for (auto const &ui : ui_vec) {
       result *= f1(ui);
     }
     return result;
@@ -160,7 +161,7 @@ class warper_product_1d_simple_nointerp_t {
 
   [[nodiscard]] double operator()(std::vector<double> const &ui_vec) const {
     double result = 1.0;
-    for (const auto &ui : ui_vec) {
+    for (auto const &ui : ui_vec) {
       result *= f1(ui) / f_integrated_normalization;
     }
     return result;
@@ -188,6 +189,7 @@ class warper_product_1d_simple_t : public warper_product_1d_simple_nointerp_t {
   gsl_spline *sp_f_integrated_inverse;
 
  public:
+  warper_product_1d_simple_t() = default;
   warper_product_1d_simple_t(std::function<double(double)> const &f1_, double domain_u_max_, int nr_sample_points_)
      : warper_product_1d_simple_nointerp_t{
         [this](double u) {
@@ -238,6 +240,33 @@ class warper_product_1d_simple_t : public warper_product_1d_simple_nointerp_t {
     gsl_spline_init(sp_f_integrated_inverse, waper_f_integrated_pts.data_start(), times_u_pts.data_start(),
                     nr_sample_points);
   }
+
+  // can't copy due to gsl
+
+  warper_product_1d_simple_t &operator=(const warper_product_1d_simple_t &other) = default;
+
+  warper_product_1d_simple_t &operator=(warper_product_1d_simple_t &&other) noexcept // move assignment
+  {
+    std::swap(*this, other);
+    return *this;
+  }
+
+  warper_product_1d_simple_t(const warper_product_1d_simple_t &) = default;
+  warper_product_1d_simple_t(warper_product_1d_simple_t &&o) noexcept
+     : warper_product_1d_simple_nointerp_t(std::move(o)),
+       nr_sample_points(o.nr_sample_points),
+       times_u_pts(std::move(o.times_u_pts)),
+       waper_f_pts(std::move(o.waper_f_pts)),
+       waper_f_integrated_pts(std::move(o.waper_f_integrated_pts)),
+       acc_f_integrated(o.acc_f_integrated),
+       sp_f_integrated(o.sp_f_integrated),
+       acc_f_integrated_inverse(o.acc_f_integrated_inverse),
+       sp_f_integrated_inverse(o.sp_f_integrated_inverse) {
+    o.acc_f_integrated = nullptr;
+    o.sp_f_integrated = nullptr;
+    o.acc_f_integrated_inverse = nullptr;
+    o.sp_f_integrated_inverse = nullptr;
+  };
 
   ~warper_product_1d_simple_t() {
     gsl_spline_free(sp_f_integrated_inverse);

@@ -22,9 +22,9 @@ using namespace triqs::arrays;
 TEST(Product1DWarper, Default) { // NOLINT
   double const t_max = 1.5;
 
-  std::function<double(double)> const_function = [](double t){return 1.0;};
-  auto warper = warper_product_1d_t({const_function}, t_max, 8);
-
+  std::function<double(double)> const_function = [](double t) { return 1.0; };
+  auto warper = warper_product_1d_t{};
+  warper.emplace_back({const_function, t_max, 8});
 
   /// only order 1 exists
   basic_test_warper_at_order_1(warper, t_max);
@@ -33,7 +33,12 @@ TEST(Product1DWarper, Default) { // NOLINT
 TEST(Product1DWarper, Identity) { // NOLINT
   double const t_max = 1.5;
   auto cst = [](double u) -> double { return 1.; };
-  auto const warper = warper_product_1d_t({cst, cst, cst, cst}, t_max, 1e2);
+
+  auto warper = warper_product_1d_t{};
+  warper.emplace_back({cst, t_max, int(1e2)});
+  warper.emplace_back({cst, t_max, int(1e2)});
+  warper.emplace_back({cst, t_max, int(1e2)});
+  warper.emplace_back({cst, t_max, int(1e2)});
 
   basic_test_warper_at_order_1(warper, t_max);
   basic_test_warper_multidim(warper, t_max);
@@ -48,7 +53,12 @@ TEST(Product1DWarper, AlternateInverseAndCube) { // NOLINT
   double const t_max = 5.;
   auto f1 = [](double u) -> double { return 1. / (2. + u); };
   auto f2 = [](double u) -> double { return 1. / ((3. + u) * (3. + u) * (3. + u)); };
-  auto const warper = warper_product_1d_t({f1, f2, f1, f2}, t_max, 1e5);
+
+  auto warper = warper_product_1d_t{};
+  warper.emplace_back({f1, t_max, int(1e5)});
+  warper.emplace_back({f2, t_max, int(1e5)});
+  warper.emplace_back({f1, t_max, int(1e5)});
+  warper.emplace_back({f2, t_max, int(1e5)});
 
   basic_test_warper_at_order_1(warper, t_max, 1e-9);
   basic_test_warper_multidim(warper, t_max, 1e-9);

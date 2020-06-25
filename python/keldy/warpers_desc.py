@@ -6,7 +6,7 @@ from cpp2py.wrap_generator import *
 module = module_(full_name = "warpers", doc = r"", app_name = "keldy")
 
 # Imports
-module.add_imports(*['keldy.common', 'pytriqs.gf'])
+module.add_imports(*['keldy.binner', 'keldy.common', 'keldy.warpers', 'pytriqs.gf'])
 
 # Add here all includes
 module.add_include("keldy/warpers/warpers.hpp")
@@ -91,6 +91,8 @@ c = class_(
         hdf5 = False,
 )
 
+c.add_constructor("""()""", doc = r"""""")
+
 c.add_constructor("""(std::function<double(double)> f1_, std::function<double(double)> f1_integrated_, std::function<double(double)> f1_integrated_inverse_, double domain_u_max_, bool do_domain_checks = true)""", doc = r"""""")
 
 c.add_method("""std::pair<std::vector<double>,double> map_reverse (std::vector<double> li_vec)""",
@@ -159,7 +161,16 @@ c = class_(
         hdf5 = False,
 )
 
-c.add_constructor("""(std::vector<std::function<double(double)>> fn_, double t_max_, int nr_function_sample_points)""", doc = r"""""")
+c.add_constructor("""()""", doc = r"""""")
+
+c.add_method("""int size ()""",
+             doc = r"""""")
+
+c.add_method("""void emplace_back (keldy::warpers::warper_product_1d_simple_nointerp_t w)""",
+             doc = r"""""")
+
+c.add_method("""void emplace_back (keldy::warpers::warper_product_1d_simple_t w)""",
+             doc = r"""""")
 
 c.add_method("""std::pair<std::vector<double>,double> map_reverse (std::vector<double> li_vec)""",
              doc = r"""""")
@@ -177,6 +188,10 @@ c.add_method("""double jacobian_reverse (std::vector<double> li_vec)""",
              doc = r"""""")
 
 c.add_method("""double jacobian_forward (std::vector<double> ui_vec)""",
+             doc = r"""""")
+
+c.add_method("""double operator() (std::vector<double> ui_vec)""",
+             name = "__call__",
              doc = r"""""")
 
 module.add_class(c)
