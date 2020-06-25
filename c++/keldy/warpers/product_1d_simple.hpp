@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <any>
 #include <functional>
+#include <iomanip>
 #include <itertools/omp_chunk.hpp>
 #include <numeric>
 #include <triqs/gfs.hpp>
@@ -70,13 +71,24 @@ class warper_product_1d_simple_nointerp_t {
 
     if (do_domain_checks) {
 
-      bool domain_match = (std::abs(f1_integrated(domain_u_min) - codomain_l_min) < 1e-12)
-         && (std::abs(f1_integrated(domain_u_max) - codomain_l_max) < 1e-12)
-         && (std::abs(f1_integrated_inverse(codomain_l_min) - domain_u_min) < 1e-12)
-         && (std::abs(f1_integrated_inverse(codomain_l_max) - domain_u_max) < 1e-12);
+
+      double eps = 1e-12;
+
+      bool domain_match = (std::abs(f1_integrated(domain_u_min) - codomain_l_min) < eps)
+         && (std::abs(f1_integrated(domain_u_max) - codomain_l_max) < eps)
+         && (std::abs(f1_integrated_inverse(codomain_l_min) - domain_u_min) < eps)
+         && (std::abs(f1_integrated_inverse(codomain_l_max) - domain_u_max) < eps);
 
       if (!domain_match) {
-        TRIQS_RUNTIME_ERROR << "f1_integrated and f1_integrated_inverse do not map domain boundaries correctly.";
+        TRIQS_RUNTIME_ERROR << "f1_integrated and f1_integrated_inverse do not map domain boundaries correctly.\n"
+                            << "* std::abs(f1_integrated(domain_u_min) - codomain_l_min): "
+                            << (std::abs(f1_integrated(domain_u_min) - codomain_l_min)) << "\n"
+                            << "* std::abs(f1_integrated(domain_u_max) - codomain_l_max): "
+                            << (std::abs(f1_integrated(domain_u_max) - codomain_l_max) ) << "\n"
+                            << "* std::abs(f1_integrated_inverse(codomain_l_min) - domain_u_min): "
+                            << (std::abs(f1_integrated_inverse(codomain_l_min) - domain_u_min)) << "\n"
+                            << "* std::abs(f1_integrated_inverse(codomain_l_max) - domain_u_max): "
+                            << (std::abs(f1_integrated_inverse(codomain_l_max) - domain_u_max) ) << "\n";
       }
 
       // f1 > 0 : for Jacobian consistancy
@@ -243,16 +255,16 @@ class warper_product_1d_simple_t : public warper_product_1d_simple_nointerp_t {
 inline warper_product_1d_simple_nointerp_t make_product_1d_simple_exponential_nointerp(double domain_u_max,
                                                                                        double w_scale) {
   return {[w_scale, domain_u_max](double t) -> double {
-            double norm = 1. - std::exp(-domain_u_max / w_scale);
-            return std::exp(-(t / w_scale)) / (norm * w_scale);
+            long double norm = -std::expm1(-static_cast<long double>(domain_u_max) / w_scale);
+            return std::exp(-t / w_scale) / (w_scale * norm);
           },
           [w_scale, domain_u_max](double t) -> double {
-            double norm = 1. - std::exp(-domain_u_max / w_scale);
-            return (1. - std::exp(-t / w_scale)) / norm;
+            long double norm = -std::expm1(-static_cast<long double>(domain_u_max) / w_scale);
+            return -std::expm1(-t / w_scale) / norm;
           },
           [w_scale, domain_u_max](double l) -> double {
-            double norm = 1. - std::exp(-domain_u_max / w_scale);
-            return -w_scale * std::log(1. - l * norm);
+            long double norm = -std::expm1(-static_cast<long double>(domain_u_max) / w_scale);
+            return -w_scale * std::log1p(-l * norm);
           },
           domain_u_max};
 }
@@ -260,16 +272,16 @@ inline warper_product_1d_simple_nointerp_t make_product_1d_simple_exponential_no
 inline warper_product_1d_simple_nointerp_t make_product_1d_simple_inverse_nointerp(double domain_u_max,
                                                                                    double w_scale) {
   return {[w_scale, domain_u_max](double t) -> double {
-            double norm = std::log(1. + domain_u_max / w_scale);
+            long double norm = std::log1p(static_cast<long double>(domain_u_max) / w_scale);
             return 1.0 / (norm * (w_scale + t));
           },
           [w_scale, domain_u_max](double t) -> double {
-            double norm = std::log(1. + domain_u_max / w_scale);
-            return std::log(1. + t / w_scale) / norm;
+            long double norm = std::log1p(static_cast<long double>(domain_u_max) / w_scale);
+            return std::log1p(t / w_scale) / norm;
           },
           [w_scale, domain_u_max](double l) -> double {
-            double norm = std::log(1. + domain_u_max / w_scale);
-            return w_scale * (std::exp(l * norm) - 1.);
+            long double norm = std::log1p(static_cast<long double>(domain_u_max) / w_scale);
+            return w_scale * std::expm1(l * norm);
           },
           domain_u_max};
 }
@@ -277,15 +289,15 @@ inline warper_product_1d_simple_nointerp_t make_product_1d_simple_inverse_nointe
 inline warper_product_1d_simple_nointerp_t make_product_1d_simple_inverse_square_nointerp(double domain_u_max,
                                                                                           double w_scale) {
   return {[w_scale, domain_u_max](double t) -> double {
-            double norm = domain_u_max / (w_scale + domain_u_max);
+            long double norm = static_cast<long double>(domain_u_max) / (w_scale + domain_u_max);
             return w_scale / ((w_scale + t) * (w_scale + t) * norm);
           },
           [w_scale, domain_u_max](double t) -> double {
-            double norm = domain_u_max / (w_scale + domain_u_max);
+            long double norm = static_cast<long double>(domain_u_max) / (w_scale + domain_u_max);
             return t / ((w_scale + t) * norm);
           },
           [w_scale, domain_u_max](double l) -> double {
-            double norm = domain_u_max / (w_scale + domain_u_max);
+            long double norm = static_cast<long double>(domain_u_max) / (w_scale + domain_u_max);
             return norm * l * w_scale / (1.0 - norm * l);
           },
           domain_u_max};

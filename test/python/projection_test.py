@@ -27,7 +27,7 @@ class projection_usage(unittest.TestCase):
 
         warper_train = warpers.WarperTrainT()
         warper_train.emplace_back(warpers.WarperPlasmaUvT(tmax))
-        warper_train.emplace_back(warpers.make_product_1d_simple_exponential(tmax, 1.2, 50000))
+        warper_train.emplace_back(warpers.make_product_1d_simple_exponential_nointerp(15.0, 1.2))
 
         order = 3
         computer = qqmc.ComputeChargeQDirect(g0, tmax, order, 1e-15)
