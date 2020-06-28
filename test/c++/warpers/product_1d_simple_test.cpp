@@ -21,7 +21,7 @@ using namespace triqs::arrays;
 
 TEST(SimpleProduct1DWarper, Default) { // NOLINT
   double const t_max = 1.5;
-  auto warper = warper_product_1d_simple_t([](double /**/) { return 1.0; }, t_max, 8);
+  auto warper = warper_product_1d_simple_interp_nearest_t([](double /**/) { return 1.0; }, t_max, 8);
 
   basic_test_warper_at_order_1(warper, t_max);
   basic_test_warper_multidim(warper, t_max);
@@ -34,7 +34,7 @@ TEST(SimpleProduct1DWarper, Default) { // NOLINT
 
 TEST(SimpleProduct1DWarper, IdentityConstructor1) { // NOLINT
   double const t_max = 1.5;
-  auto const warper = warper_product_1d_simple_t([](double /**/) -> double { return 1.; }, t_max, 1.0e2);
+  auto const warper = warper_product_1d_simple_interp_nearest_t([](double /**/) -> double { return 1.; }, t_max, 1.0e2);
 
   basic_test_warper_at_order_1(warper, t_max);
   basic_test_warper_multidim(warper, t_max);
@@ -47,7 +47,7 @@ TEST(SimpleProduct1DWarper, IdentityConstructor1) { // NOLINT
 
 TEST(SimpleProduct1DWarper, ExponentialConstructor1) { // NOLINT
   double const t_max = 5.;
-  auto const warper = warper_product_1d_simple_t([](double u) -> double { return std::exp(-u / 2.); }, t_max, int(1e3));
+  auto const warper = warper_product_1d_simple_interp_nearest_t([](double u) -> double { return std::exp(-u / 2.); }, t_max, int(1e3));
 
   basic_test_warper_at_order_1(warper, t_max, 1e-9);
   basic_test_warper_multidim(warper, t_max, 1e-9);
@@ -79,7 +79,7 @@ TEST(SimpleProduct1DWarper, ExponentialConstructor1) { // NOLINT
 
 TEST(SimpleProduct1DWarperNointerp, IdentityConstructor2) { // NOLINT
   double const t_max = 1.5;
-  auto const warper = warper_product_1d_simple_nointerp_t([t_max](double /**/) -> double { return 1. / t_max; },
+  auto const warper = warper_product_1d_simple_t([t_max](double /**/) -> double { return 1. / t_max; },
                                                           [t_max](double u) -> double { return u / t_max; },
                                                           [t_max](double l) -> double { return t_max * l; }, t_max);
 
@@ -94,7 +94,7 @@ TEST(SimpleProduct1DWarperNointerp, IdentityConstructor2) { // NOLINT
 
 TEST(SimpleProduct1DWarper, ExponentialConstructor2) { // NOLINT
   double const t_max = 5.;
-  auto const warper = warper_product_1d_simple_nointerp_t(
+  auto const warper = warper_product_1d_simple_t(
      [t_max](double u) -> double { return -0.5 * std::exp(-u / 2.) / std::expm1(-t_max / 2.); },
      [t_max](double u) -> double { return std::expm1(-u / 2.) / std::expm1(-t_max / 2.); },
      [t_max](double l) -> double { return -2. * std::log(1 + l * std::expm1(-t_max / 2.)); }, t_max);

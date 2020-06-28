@@ -71,7 +71,7 @@ MAKE_MAIN; // NOLINT
 // TEST(WarperPlasmaSimple, integrate_ansatz) { // NOLINT
 //   double t_max       = 1.0;
 //   int nr_grid_points = 3;
-//   warper_product_1d_simple_t warper(linear_function, t_max, nr_grid_points);
+//   warper_product_1d_simple_interp_nearest_t warper(linear_function, t_max, nr_grid_points);
 
 //   array<double, 1> f1_compare(nr_grid_points);
 //   double delta = t_max / (nr_grid_points - 1);

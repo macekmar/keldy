@@ -40,7 +40,7 @@ TEST(ProjectionWarper, OptimizeSigma) { // NOLINT
 
   // TODO: get rid of this warper in tests?
   auto cst = [](double x) -> double { return 1.; };
-  warper_product_1d_simple_t warper = {cst, tmax, 10};
+  warper_product_1d_simple_interp_nearest_t warper = {cst, tmax, 10};
 
   auto warped_integrand = [&warper, &integrand, tmax](std::vector<double> const li) -> double {
     auto [vi, jac] = warper.map_forward(li);
@@ -68,7 +68,7 @@ TEST(ProjectionWarper, Values) { // NOLINT
 
   // TODO: get rid of this warper in tests?
   auto cst = [](double x) -> double { return 1.; };
-  warper_product_1d_simple_t warper = {cst, tmax, 10};
+  warper_product_1d_simple_interp_nearest_t warper = {cst, tmax, 10};
 
   auto warped_integrand = [&warper, &integrand, tmax](std::vector<double> const li) -> double {
     auto [vi, jac] = warper.map_forward(li);

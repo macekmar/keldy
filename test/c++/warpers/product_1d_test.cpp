@@ -23,7 +23,7 @@ TEST(Product1DWarper, Default) { // NOLINT
   double const t_max = 1.5;
 
   std::function<double(double)> const_function = [](double t) { return 1.0; };
-  auto warper = warper_product_1d_t{};
+  auto warper = warper_product_1d_interp_nearest_t{};
   warper.emplace_back({const_function, t_max, 8});
 
   /// only order 1 exists
@@ -34,7 +34,7 @@ TEST(Product1DWarper, Identity) { // NOLINT
   double const t_max = 1.5;
   auto cst = [](double u) -> double { return 1.; };
 
-  auto warper = warper_product_1d_t{};
+  auto warper = warper_product_1d_interp_nearest_t{};
   warper.emplace_back({cst, t_max, int(1e2)});
   warper.emplace_back({cst, t_max, int(1e2)});
   warper.emplace_back({cst, t_max, int(1e2)});
@@ -54,7 +54,7 @@ TEST(Product1DWarper, AlternateInverseAndCube) { // NOLINT
   auto f1 = [](double u) -> double { return 1. / (2. + u); };
   auto f2 = [](double u) -> double { return 1. / ((3. + u) * (3. + u) * (3. + u)); };
 
-  auto warper = warper_product_1d_t{};
+  auto warper = warper_product_1d_interp_nearest_t{};
   warper.emplace_back({f1, t_max, int(1e5)});
   warper.emplace_back({f2, t_max, int(1e5)});
   warper.emplace_back({f1, t_max, int(1e5)});
@@ -98,7 +98,7 @@ TEST(Product1DWarper, AlternateInverseAndCube) { // NOLINT
     return output;
   };
 
-  function_test_warper(warper, t_max, f, li_from_ui, jac, 1e-10, 1e-10, 1e-6);
+  function_test_warper(warper, t_max, f, li_from_ui, jac, 1e-3, 1e-3, 1e-3);
 }
 
 MAKE_MAIN; // NOLINT

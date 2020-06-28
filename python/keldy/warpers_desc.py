@@ -83,10 +83,10 @@ c.add_method("""double jacobian_forward (std::vector<double> ui_vec)""",
 
 module.add_class(c)
 
-# The class warper_product_1d_simple_nointerp_t
+# The class warper_product_1d_simple_t
 c = class_(
-        py_type = "WarperProduct1dSimpleNointerpT",  # name of the python class
-        c_type = "keldy::warpers::warper_product_1d_simple_nointerp_t",   # name of the C++ class
+        py_type = "WarperProduct1dSimpleT",  # name of the python class
+        c_type = "keldy::warpers::warper_product_1d_simple_t",   # name of the C++ class
         doc = r"""""",   # doc of the C++ class
         hdf5 = False,
 )
@@ -119,13 +119,15 @@ c.add_method("""double operator() (std::vector<double> ui_vec)""",
 
 module.add_class(c)
 
-# The class warper_product_1d_simple_t
+# The class warper_product_1d_simple_interp_nearest_t
 c = class_(
-        py_type = "WarperProduct1dSimpleT",  # name of the python class
-        c_type = "keldy::warpers::warper_product_1d_simple_t",   # name of the C++ class
+        py_type = "WarperProduct1dSimpleInterpNearestT",  # name of the python class
+        c_type = "keldy::warpers::warper_product_1d_simple_interp_nearest_t",   # name of the C++ class
         doc = r"""""",   # doc of the C++ class
         hdf5 = False,
 )
+
+c.add_constructor("""()""", doc = r"""""")
 
 c.add_constructor("""(std::function<double(double)> f1_, double domain_u_max_, int nr_sample_points_)""", doc = r"""""")
 
@@ -166,10 +168,47 @@ c.add_constructor("""()""", doc = r"""""")
 c.add_method("""int size ()""",
              doc = r"""""")
 
-c.add_method("""void emplace_back (keldy::warpers::warper_product_1d_simple_nointerp_t w)""",
+c.add_method("""void emplace_back (keldy::warpers::warper_product_1d_simple_t w)""",
              doc = r"""""")
 
-c.add_method("""void emplace_back (keldy::warpers::warper_product_1d_simple_t w)""",
+c.add_method("""std::pair<std::vector<double>,double> map_reverse (std::vector<double> li_vec)""",
+             doc = r"""""")
+
+c.add_method("""std::pair<std::vector<double>,double> map_forward (std::vector<double> ui_vec)""",
+             doc = r"""""")
+
+c.add_method("""std::vector<double> ui_from_li (std::vector<double> li_vec)""",
+             doc = r"""""")
+
+c.add_method("""std::vector<double> li_from_ui (std::vector<double> ui_vec)""",
+             doc = r"""""")
+
+c.add_method("""double jacobian_reverse (std::vector<double> li_vec)""",
+             doc = r"""""")
+
+c.add_method("""double jacobian_forward (std::vector<double> ui_vec)""",
+             doc = r"""""")
+
+c.add_method("""double operator() (std::vector<double> ui_vec)""",
+             name = "__call__",
+             doc = r"""""")
+
+module.add_class(c)
+
+# The class warper_product_1d_interp_nearest_t
+c = class_(
+        py_type = "WarperProduct1dInterpNearestT",  # name of the python class
+        c_type = "keldy::warpers::warper_product_1d_interp_nearest_t",   # name of the C++ class
+        doc = r"""""",   # doc of the C++ class
+        hdf5 = False,
+)
+
+c.add_constructor("""()""", doc = r"""""")
+
+c.add_method("""int size ()""",
+             doc = r"""""")
+
+c.add_method("""void emplace_back (keldy::warpers::warper_product_1d_simple_interp_nearest_t w)""",
              doc = r"""""")
 
 c.add_method("""std::pair<std::vector<double>,double> map_reverse (std::vector<double> li_vec)""",
@@ -254,10 +293,13 @@ c.add_method("""void emplace_back (keldy::warpers::warper_plasma_uv_t w)""",
 c.add_method("""void emplace_back (keldy::warpers::warper_product_1d_simple_t w)""",
              doc = r"""""")
 
-c.add_method("""void emplace_back (keldy::warpers::warper_product_1d_simple_nointerp_t w)""",
+c.add_method("""void emplace_back (keldy::warpers::warper_product_1d_simple_interp_nearest_t w)""",
              doc = r"""""")
 
 c.add_method("""void emplace_back (keldy::warpers::warper_product_1d_t w)""",
+             doc = r"""""")
+
+c.add_method("""void emplace_back (keldy::warpers::warper_product_1d_interp_nearest_t w)""",
              doc = r"""""")
 
 c.add_method("""void emplace_back (keldy::warpers::warper_projection_t w)""",
@@ -299,13 +341,13 @@ module.add_function ("std::vector<double> keldy::warpers::vi_from_ui (double t_m
 
 module.add_function ("std::vector<double> keldy::warpers::ui_from_vi (double t_max, std::vector<double> v_times)", doc = r"""""")
 
-module.add_function ("keldy::warpers::warper_product_1d_simple_nointerp_t keldy::warpers::make_product_1d_simple_exponential_nointerp (double domain_u_max, double w_scale)", doc = r"""""")
+module.add_function ("keldy::warpers::warper_product_1d_simple_t keldy::warpers::make_product_1d_simple_exponential_nointerp (double domain_u_max, double w_scale)", doc = r"""""")
 
-module.add_function ("keldy::warpers::warper_product_1d_simple_nointerp_t keldy::warpers::make_product_1d_simple_inverse_nointerp (double domain_u_max, double w_scale)", doc = r"""""")
+module.add_function ("keldy::warpers::warper_product_1d_simple_t keldy::warpers::make_product_1d_simple_inverse_nointerp (double domain_u_max, double w_scale)", doc = r"""""")
 
-module.add_function ("keldy::warpers::warper_product_1d_simple_nointerp_t keldy::warpers::make_product_1d_simple_inverse_square_nointerp (double domain_u_max, double w_scale)", doc = r"""""")
+module.add_function ("keldy::warpers::warper_product_1d_simple_t keldy::warpers::make_product_1d_simple_inverse_square_nointerp (double domain_u_max, double w_scale)", doc = r"""""")
 
-module.add_function ("keldy::warpers::warper_product_1d_t keldy::warpers::make_product_1d_inverse_cube_alternate (int order, double time, double warper_scale, int nr_sample_points_warper)", doc = r"""""")
+module.add_function ("keldy::warpers::warper_product_1d_interp_nearest_t keldy::warpers::make_product_1d_inverse_cube_alternate (int order, double time, double warper_scale, int nr_sample_points_warper)", doc = r"""""")
 
 
 
