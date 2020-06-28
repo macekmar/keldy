@@ -347,8 +347,6 @@ module.add_function ("keldy::warpers::warper_product_1d_simple_t keldy::warpers:
 
 module.add_function ("keldy::warpers::warper_product_1d_simple_t keldy::warpers::make_product_1d_simple_inverse_square_nointerp (double domain_u_max, double w_scale)", doc = r"""""")
 
-module.add_function ("keldy::warpers::warper_product_1d_simple_t keldy::warpers::make_product_1d_simple_inverse_cube_nointerp (double domain_u_max, double w_scale)", doc = r"""""")
-
 module.add_function ("keldy::warpers::warper_product_1d_t keldy::warpers::make_product_1d_inverse_cube_alternate (int order, double time, double warper_scale)", doc = r"""""")
 
 module.add_function ("keldy::warpers::warper_product_1d_interp_nearest_t keldy::warpers::make_product_1d_inverse_cube_alternate_interp (int order, double time, double warper_scale, int nr_sample_points_warper)", doc = r"""""")
