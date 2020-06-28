@@ -224,7 +224,7 @@ TEST(ComputeObs, ValueKernel) { // NOLINT
   compute_gf_kernel computer(g0, tmax, 2, nr_bins);
 
   computer.warper.emplace_back(warpers::warper_plasma_uv_t{tmax});
-  computer.warper.emplace_back(warpers::make_product_1d_inverse_cube_alternate(2, tmax, 1.0, 1e8));
+  computer.warper.emplace_back(warpers::make_product_1d_inverse_cube_alternate(2, tmax, 1.0));
 
   computer.run(1e6);
   auto const binner = computer.reduce_result();

@@ -38,8 +38,7 @@ namespace keldy::warpers {
 
 using gf_t = triqs::gfs::gf<triqs::gfs::retime, triqs::gfs::scalar_real_valued>;
 
-// anonymous namespace for standalone functions, as to not template classes (for python wrapping)
-namespace {
+// r standalone functions, as to not template classes (for python wrapping)
 
 template <typename W>
 [[nodiscard]] std::pair<std::vector<double>, double> warper_1d_map_reverse(std::vector<W> const &warpers_dims,
@@ -114,7 +113,7 @@ template <typename W>
   return result;
 }
 
-} // namespace
+// ****************************************************************************
 
 class warper_product_1d_t {
  private:
@@ -197,8 +196,21 @@ class warper_product_1d_interp_nearest_t {
 // // *****
 // // Maker functions
 
-inline warper_product_1d_interp_nearest_t
-make_product_1d_inverse_cube_alternate(int order, double time, double warper_scale, int nr_sample_points_warper) {
+inline warper_product_1d_t make_product_1d_inverse_cube_alternate(int order, double time, double warper_scale) {
+  warper_product_1d_t result{};
+  for (int n = 1; n <= order; ++n) {
+    if (n % 2 == 0) {
+      result.emplace_back(make_product_1d_simple_inverse_nointerp(time, warper_scale));
+    } else {
+      result.emplace_back(make_product_1d_simple_inverse_square_nointerp(time, warper_scale));
+    }
+  }
+  return result;
+}
+
+inline warper_product_1d_interp_nearest_t make_product_1d_inverse_cube_alternate_interp(int order, double time,
+                                                                                        double warper_scale,
+                                                                                        int nr_sample_points_warper) {
   warper_product_1d_interp_nearest_t result{};
 
   auto f1 = [warper_scale](double t) -> double { return warper_scale / (warper_scale + t); };
