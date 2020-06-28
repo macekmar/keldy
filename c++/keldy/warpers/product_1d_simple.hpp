@@ -40,7 +40,7 @@ namespace keldy::warpers {
 
 using gf_t = triqs::gfs::gf<triqs::gfs::retime, triqs::gfs::scalar_real_valued>;
 
-class warper_product_1d_simple_nointerp_t {
+class warper_product_1d_simple_t {
  protected:
   double f_integrated_normalization = 1.0;
 
@@ -55,12 +55,12 @@ class warper_product_1d_simple_nointerp_t {
   constexpr static double codomain_l_max = 1.0;
 
  public:
-  warper_product_1d_simple_nointerp_t() = default;
+  warper_product_1d_simple_t() = default;
 
   // Constructor to use if f1, f1_integrated and f1_integrated_inverse can be provided analytically
-  warper_product_1d_simple_nointerp_t(std::function<double(double)> f1_, std::function<double(double)> f1_integrated_,
-                                      std::function<double(double)> f1_integrated_inverse_, double domain_u_max_,
-                                      bool do_domain_checks = true)
+  warper_product_1d_simple_t(std::function<double(double)> f1_, std::function<double(double)> f1_integrated_,
+                             std::function<double(double)> f1_integrated_inverse_, double domain_u_max_,
+                             bool do_domain_checks = true)
      : f1(std::move(f1_)),
        f1_integrated(std::move(f1_integrated_)),
        f1_integrated_inverse(std::move(f1_integrated_inverse_)),
@@ -172,44 +172,50 @@ class warper_product_1d_simple_nointerp_t {
 
 namespace nda = triqs::arrays;
 
-class warper_product_1d_simple_t : public warper_product_1d_simple_nointerp_t {
+class warper_product_1d_simple_interp_nearest_t : public warper_product_1d_simple_t {
  private:
-  int nr_sample_points;
+  int nr_sample_points = 0;
 
-  nda::vector<double> times_u_pts;
-  nda::vector<double> waper_f_pts;
-  nda::vector<double> waper_f_integrated_pts;
+  nda::vector<double> times_u_pts{};
+  nda::vector<double> waper_f_pts{};
+  nda::vector<double> waper_f_integrated_pts{};
 
   // f is constant interpolated to nearest downward: this piggy-backs on the acc lookup for f_integrated
 
-  gsl_interp_accel *acc_f_integrated;
-  gsl_spline *sp_f_integrated;
+  std::unique_ptr<gsl_spline, decltype(&gsl_spline_free)> sp_f_integrated;
+  std::unique_ptr<gsl_spline, decltype(&gsl_spline_free)> sp_f_integrated_inverse;
 
-  gsl_interp_accel *acc_f_integrated_inverse;
-  gsl_spline *sp_f_integrated_inverse;
+  std::unique_ptr<gsl_interp_accel, decltype(&gsl_interp_accel_free)> acc_f_integrated;
+  std::unique_ptr<gsl_interp_accel, decltype(&gsl_interp_accel_free)> acc_f_integrated_inverse;
 
  public:
-  warper_product_1d_simple_t() = default;
-  warper_product_1d_simple_t(std::function<double(double)> const &f1_, double domain_u_max_, int nr_sample_points_)
-     : warper_product_1d_simple_nointerp_t{
+  warper_product_1d_simple_interp_nearest_t()
+     : sp_f_integrated{gsl_spline_alloc(gsl_interp_linear, nr_sample_points), gsl_spline_free},
+       sp_f_integrated_inverse{gsl_spline_alloc(gsl_interp_linear, nr_sample_points), gsl_spline_free},
+       acc_f_integrated{gsl_interp_accel_alloc(), gsl_interp_accel_free},
+       acc_f_integrated_inverse{gsl_interp_accel_alloc(), gsl_interp_accel_free} {};
+
+  warper_product_1d_simple_interp_nearest_t(std::function<double(double)> const &f1_, double domain_u_max_,
+                                            int nr_sample_points_)
+     : warper_product_1d_simple_t{
         [this](double u) {
-          auto i = gsl_interp_accel_find(acc_f_integrated, times_u_pts.data_start(), nr_sample_points, u);
+          auto i = gsl_interp_accel_find(acc_f_integrated.get(), times_u_pts.data_start(), nr_sample_points, u);
           if (i == times_u_pts.size() - 1) {
             return waper_f_pts[i];
           };
           return 0.5 * (waper_f_pts[i] + waper_f_pts[i + 1]);
         },
-        [this](double u) { return gsl_spline_eval(sp_f_integrated, u, acc_f_integrated); },
-        [this](double l) { return gsl_spline_eval(sp_f_integrated_inverse, l, acc_f_integrated_inverse); },
+        [this](double u) { return gsl_spline_eval(sp_f_integrated.get(), u, acc_f_integrated.get()); },
+        [this](double l) { return gsl_spline_eval(sp_f_integrated_inverse.get(), l, acc_f_integrated_inverse.get()); },
         domain_u_max_, false},
-       nr_sample_points(nr_sample_points_),
+       nr_sample_points{nr_sample_points_},
        times_u_pts(nr_sample_points),
        waper_f_pts(nr_sample_points),
        waper_f_integrated_pts(nr_sample_points),
-       acc_f_integrated(gsl_interp_accel_alloc()),
-       sp_f_integrated(gsl_spline_alloc(gsl_interp_linear, nr_sample_points)),
-       acc_f_integrated_inverse(gsl_interp_accel_alloc()),
-       sp_f_integrated_inverse(gsl_spline_alloc(gsl_interp_linear, nr_sample_points)) {
+       sp_f_integrated{gsl_spline_alloc(gsl_interp_linear, nr_sample_points), gsl_spline_free},
+       sp_f_integrated_inverse{gsl_spline_alloc(gsl_interp_linear, nr_sample_points), gsl_spline_free},
+       acc_f_integrated{gsl_interp_accel_alloc(), gsl_interp_accel_free},
+       acc_f_integrated_inverse{gsl_interp_accel_alloc(), gsl_interp_accel_free} {
 
     if (!(nr_sample_points >= 3)) {
       TRIQS_RUNTIME_ERROR << "Expect nr_sample_points to be >= 3. Given was " << nr_sample_points;
@@ -236,53 +242,52 @@ class warper_product_1d_simple_t : public warper_product_1d_simple_nointerp_t {
       waper_f_pts[i] *= codomain_l_max / f_integrated_normalization;
     }
 
-    gsl_spline_init(sp_f_integrated, times_u_pts.data_start(), waper_f_integrated_pts.data_start(), nr_sample_points);
-    gsl_spline_init(sp_f_integrated_inverse, waper_f_integrated_pts.data_start(), times_u_pts.data_start(),
+    gsl_spline_init(sp_f_integrated.get(), times_u_pts.data_start(), waper_f_integrated_pts.data_start(),
+                    nr_sample_points);
+    gsl_spline_init(sp_f_integrated_inverse.get(), waper_f_integrated_pts.data_start(), times_u_pts.data_start(),
                     nr_sample_points);
   }
 
-  // can't copy due to gsl
+  // Need to deep-copy for python layer
+  warper_product_1d_simple_interp_nearest_t(const warper_product_1d_simple_interp_nearest_t &o)
+     : warper_product_1d_simple_t{
+        [this](double u) {
+          auto i = gsl_interp_accel_find(acc_f_integrated.get(), times_u_pts.data_start(), nr_sample_points, u);
+          if (i == times_u_pts.size() - 1) {
+            return waper_f_pts[i];
+          };
+          return 0.5 * (waper_f_pts[i] + waper_f_pts[i + 1]);
+        },
+        [this](double u) { return gsl_spline_eval(sp_f_integrated.get(), u, acc_f_integrated.get()); },
+        [this](double l) { return gsl_spline_eval(sp_f_integrated_inverse.get(), l, acc_f_integrated_inverse.get()); },
+        o.domain_u_max, false},
+       nr_sample_points{o.nr_sample_points},
+       times_u_pts(o.times_u_pts),
+       waper_f_pts(o.waper_f_pts),
+       waper_f_integrated_pts(o.waper_f_integrated_pts),
+       sp_f_integrated{gsl_spline_alloc(gsl_interp_linear, nr_sample_points), gsl_spline_free},
+       sp_f_integrated_inverse{gsl_spline_alloc(gsl_interp_linear, nr_sample_points), gsl_spline_free},
+       acc_f_integrated{gsl_interp_accel_alloc(), gsl_interp_accel_free},
+       acc_f_integrated_inverse{gsl_interp_accel_alloc(), gsl_interp_accel_free} {
+    gsl_spline_init(sp_f_integrated.get(), times_u_pts.data_start(), waper_f_integrated_pts.data_start(),
+                    nr_sample_points);
+    gsl_spline_init(sp_f_integrated_inverse.get(), waper_f_integrated_pts.data_start(), times_u_pts.data_start(),
+                    nr_sample_points);
+  }
 
-  warper_product_1d_simple_t &operator=(const warper_product_1d_simple_t &other) = default;
-
-  warper_product_1d_simple_t &operator=(warper_product_1d_simple_t &&other) noexcept // move assignment
-  {
-    std::swap(*this, other);
+  warper_product_1d_simple_interp_nearest_t &operator=(const warper_product_1d_simple_interp_nearest_t &o) {
+    warper_product_1d_simple_interp_nearest_t tmp(o);
+    std::swap(*this, tmp);
     return *this;
   }
 
-  warper_product_1d_simple_t(const warper_product_1d_simple_t &) = default;
-  warper_product_1d_simple_t(warper_product_1d_simple_t &&o) noexcept
-     : warper_product_1d_simple_nointerp_t(std::move(o)),
-       nr_sample_points(o.nr_sample_points),
-       times_u_pts(std::move(o.times_u_pts)),
-       waper_f_pts(std::move(o.waper_f_pts)),
-       waper_f_integrated_pts(std::move(o.waper_f_integrated_pts)),
-       acc_f_integrated(o.acc_f_integrated),
-       sp_f_integrated(o.sp_f_integrated),
-       acc_f_integrated_inverse(o.acc_f_integrated_inverse),
-       sp_f_integrated_inverse(o.sp_f_integrated_inverse) {
-    o.acc_f_integrated = nullptr;
-    o.sp_f_integrated = nullptr;
-    o.acc_f_integrated_inverse = nullptr;
-    o.sp_f_integrated_inverse = nullptr;
-  };
-
-  ~warper_product_1d_simple_t() {
-    gsl_spline_free(sp_f_integrated_inverse);
-    gsl_interp_accel_free(acc_f_integrated_inverse);
-
-    gsl_spline_free(sp_f_integrated);
-    gsl_interp_accel_free(acc_f_integrated);
-  }
-};
+}; // namespace keldy::warpers
 
 // ***************************************************************************************************************
 
 // Maker Functions:
 
-inline warper_product_1d_simple_nointerp_t make_product_1d_simple_exponential_nointerp(double domain_u_max,
-                                                                                       double w_scale) {
+inline warper_product_1d_simple_t make_product_1d_simple_exponential_nointerp(double domain_u_max, double w_scale) {
   return {[w_scale, domain_u_max](double t) -> double {
             long double norm = -std::expm1(-static_cast<long double>(domain_u_max) / w_scale);
             return std::exp(-t / w_scale) / (w_scale * norm);
@@ -298,8 +303,7 @@ inline warper_product_1d_simple_nointerp_t make_product_1d_simple_exponential_no
           domain_u_max};
 }
 
-inline warper_product_1d_simple_nointerp_t make_product_1d_simple_inverse_nointerp(double domain_u_max,
-                                                                                   double w_scale) {
+inline warper_product_1d_simple_t make_product_1d_simple_inverse_nointerp(double domain_u_max, double w_scale) {
   return {[w_scale, domain_u_max](double t) -> double {
             long double norm = std::log1p(static_cast<long double>(domain_u_max) / w_scale);
             return 1.0 / (norm * (w_scale + t));
@@ -315,8 +319,7 @@ inline warper_product_1d_simple_nointerp_t make_product_1d_simple_inverse_nointe
           domain_u_max};
 }
 
-inline warper_product_1d_simple_nointerp_t make_product_1d_simple_inverse_square_nointerp(double domain_u_max,
-                                                                                          double w_scale) {
+inline warper_product_1d_simple_t make_product_1d_simple_inverse_square_nointerp(double domain_u_max, double w_scale) {
   return {[w_scale, domain_u_max](double t) -> double {
             long double norm = static_cast<long double>(domain_u_max) / (w_scale + domain_u_max);
             return w_scale / ((w_scale + t) * (w_scale + t) * norm);
