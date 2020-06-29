@@ -6,7 +6,7 @@ from cpp2py.wrap_generator import *
 module = module_(full_name = "warpers", doc = r"", app_name = "keldy")
 
 # Imports
-module.add_imports(*['keldy.binner', 'keldy.common', 'keldy.warpers', 'pytriqs.gf'])
+module.add_imports(*['keldy.binner', 'keldy.common', 'pytriqs.gf'])
 
 # Add here all includes
 module.add_include("keldy/warpers/warpers.hpp")
