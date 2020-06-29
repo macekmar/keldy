@@ -301,7 +301,7 @@ class warper_product_1d_simple_interp_hybrid_t : public warper_product_1d_simple
      : warper_product_1d_simple_t{
         {}, // set f1 later due to normalization
         [this](double u) { return gsl_spline_eval(sp_f_integrated.get(), u, acc_f_integrated.get()); },
-        [this](double l) { return gsl_spline_eval(sp_f_integrated_inverse.get(), l, acc_f_integrated_inverse.get()) },
+        [this](double l) { return gsl_spline_eval(sp_f_integrated_inverse.get(), l, acc_f_integrated_inverse.get()); },
         domain_u_max_,
         false},
        nr_sample_points{nr_sample_points_},
