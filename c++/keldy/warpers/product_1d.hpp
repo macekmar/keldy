@@ -45,7 +45,8 @@ template <typename W>
                                                                            std::vector<double> const &li_vec) {
   auto xi_vec = li_vec;
   double jacobian_r = 1.0;
-  for (auto [i, xi] : itertools::enumerate(xi_vec)) {
+  for (auto i : itertools::range(xi_vec.size())) {
+    auto &xi = xi_vec[i];
     // f1 defined in ui, so evaluate jacobian_f after map
     xi = warpers_dims[i].ui_from_li(std::vector<double>{xi}).at(0);
     jacobian_r *= warpers_dims[i].jacobian_reverse(std::vector<double>{xi});
@@ -58,7 +59,8 @@ template <typename W>
                                                                            std::vector<double> const &ui_vec) {
   auto xi_vec = ui_vec;
   double jacobian_f = 1.0;
-  for (auto [i, xi] : itertools::enumerate(xi_vec)) {
+  for (auto i : itertools::range(xi_vec.size())) {
+    auto &xi = xi_vec[i];
     // f1 defined in ui, so evaluate jacobian_f before map
     jacobian_f *= warpers_dims[i].jacobian_forward(std::vector<double>{xi});
     xi = warpers_dims[i].li_from_ui(std::vector<double>{xi}).at(0);
@@ -70,7 +72,8 @@ template <typename W>
 [[nodiscard]] std::vector<double> warper_1d_ui_from_li(std::vector<W> const &warpers_dims,
                                                        std::vector<double> const &li_vec) {
   std::vector<double> result = li_vec;
-  for (auto [i, li] : itertools::enumerate(result)) {
+  for (auto i : itertools::range(result.size())) {
+    auto &li = result[i];
     li = warpers_dims[i].ui_from_li(std::vector<double>{li}).at(0);
   }
   return result;
@@ -80,7 +83,8 @@ template <typename W>
 [[nodiscard]] std::vector<double> warper_1d_li_from_ui(std::vector<W> const &warpers_dims,
                                                        std::vector<double> const &ui_vec) {
   auto result = ui_vec;
-  for (auto [i, ui] : itertools::enumerate(result)) {
+  for (auto i : itertools::range(result.size())) {
+    auto &ui = result[i];
     ui = warpers_dims[i].li_from_ui(std::vector<double>{ui}).at(0);
   }
   return result;
