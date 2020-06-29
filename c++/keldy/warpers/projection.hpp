@@ -102,6 +102,38 @@ inline array<double, 1> CPP2PY_IGNORE kernel_smoothing(array<double, 1> const &y
   return details::gsl_minimize(f, lower, sigma, upper, 1e-8, 0., 20).x;
 };
 
+/// for optimization debug purpose, returns a sampling of the cost function
+CPP2PY_IGNORE inline array<double, 1> optimize_sigma_landscape(array<double, 1> const &y, double const lower,
+                                                               double const upper, int const nr_sigmas) {
+  int const N = y.size();
+  array<double, 1> y_out(N);
+  array<double, 1> x(N);
+  for (int i = 0; i < N; ++i) {
+    x(i) = i;
+  }
+
+  int const H = std::max(std::min(int(3 * upper), N), 1);
+  int const K = 2 * H + 1;
+  array<double, 1> kernel(K);
+
+  auto f = [&x, &y, &kernel, &y_out, &H](double sigma) -> double {
+    for (int j = 0; j < kernel.size(); ++j) {
+      kernel(j) = gaussian(j, H, sigma);
+    }
+    kernel(H) = 0;
+    details::local_linear_reg(x, y, y_out, kernel);
+
+    return sum(pow(y_out - y, 2));
+  };
+
+  auto sigmas = array<double, 1>(nr_sigmas);
+  for (int i = 0; i < nr_sigmas; ++i) {
+    sigmas(i) = lower + i * (upper - lower) / (nr_sigmas - 1);
+  }
+
+  return map(f)(sigmas);
+};
+
 class warper_projection_t {
  private:
   int num_bins;
@@ -183,6 +215,13 @@ class warper_projection_t {
         if (xi[axis].get_bin_size() >= 2) {
           TRIQS_RUNTIME_ERROR << "delta too large";
         }
+
+        /// for debug:
+        //std::cout << "Xi:" << std::endl;
+        //std::cout << xi[axis].get_data() << std::endl << std::endl;
+        //std::cout << "Landscape:" << std::endl;
+        //std::cout << optimize_sigma_landscape(xi[axis].get_data(), 0.5, 1.0 / xi[axis].get_bin_size(), 100) << std::endl << std::endl;
+
         sigmas[axis] = optimize_sigma(xi[axis].get_data(), 0.5, sigmas[axis], 1.0 / xi[axis].get_bin_size());
 
         if (comm.rank() == 0) {
