@@ -293,8 +293,8 @@ class warper_product_1d_simple_interp_hybrid_t : public warper_product_1d_simple
 
  public:
   warper_product_1d_simple_interp_hybrid_t()
-     : sp_f_integrated{gsl_spline_alloc(gsl_interp_linear, nr_sample_points), gsl_spline_free},
-       sp_f_integrated_inverse{gsl_spline_alloc(gsl_interp_linear, nr_sample_points), gsl_spline_free},
+     : sp_f_integrated{gsl_spline_alloc(gsl_interp_steffen, nr_sample_points), gsl_spline_free},
+       sp_f_integrated_inverse{gsl_spline_alloc(gsl_interp_steffen, nr_sample_points), gsl_spline_free},
        acc_f_integrated{gsl_interp_accel_alloc(), gsl_interp_accel_free},
        acc_f_integrated_inverse{gsl_interp_accel_alloc(), gsl_interp_accel_free} {};
 
@@ -304,8 +304,8 @@ class warper_product_1d_simple_interp_hybrid_t : public warper_product_1d_simple
        nr_sample_points{nr_sample_points_},
        times_u_pts(nr_sample_points),
        waper_f_integrated_pts(nr_sample_points),
-       sp_f_integrated{gsl_spline_alloc(gsl_interp_linear, nr_sample_points), gsl_spline_free},
-       sp_f_integrated_inverse{gsl_spline_alloc(gsl_interp_linear, nr_sample_points), gsl_spline_free},
+       sp_f_integrated{gsl_spline_alloc(gsl_interp_steffen, nr_sample_points), gsl_spline_free},
+       sp_f_integrated_inverse{gsl_spline_alloc(gsl_interp_steffen, nr_sample_points), gsl_spline_free},
        acc_f_integrated{gsl_interp_accel_alloc(), gsl_interp_accel_free},
        acc_f_integrated_inverse{gsl_interp_accel_alloc(), gsl_interp_accel_free} {
 
@@ -321,20 +321,20 @@ class warper_product_1d_simple_interp_hybrid_t : public warper_product_1d_simple
     };
 
     // Just do naive linear interpolation on grid
+    double delta = (domain_u_max - domain_u_min) / (nr_sample_points - 1);
     //#pragma omp parallel for
     for (int i = 0; i < nr_sample_points; i++) {
-      times_u_pts[i] = domain_u_min + static_cast<double>(i) / (nr_sample_points - 1) * (domain_u_max - domain_u_min);
+      times_u_pts[i] = domain_u_min + delta * i;
     }
 
     waper_f_integrated_pts[0] = 0.0; // scale co-ordinates later
     // Implement Using Simpsons rule
-    double f_2 = f1_(times_u_pts[0]); // temp -- carry over
+    double f2 = f1_(times_u_pts[0]); // temp -- carry over
     for (int i = 1; i < nr_sample_points; i++) {
-      double f_0 = f_2;
-      double f_1 = f1_(0.5 * (times_u_pts[i - 1] + times_u_pts[i]));
-      f_2 = f1_(times_u_pts[i]);
-      waper_f_integrated_pts[i] =
-         waper_f_integrated_pts[i - 1] + (times_u_pts[i] - times_u_pts[i - 1]) / 6. * (f_0 + 4 * f_1 + f_2);
+      double f0 = f2;
+      double f1 = f1_(0.5 * (times_u_pts[i - 1] + times_u_pts[i]));
+      f2 = f1_(times_u_pts[i]);
+      waper_f_integrated_pts[i] = waper_f_integrated_pts[i - 1] + delta / 6. * (f0 + 4 * f1 + f2);
     }
 
     f_integrated_normalization = waper_f_integrated_pts[nr_sample_points - 1];
@@ -346,11 +346,8 @@ class warper_product_1d_simple_interp_hybrid_t : public warper_product_1d_simple
 
     // Ensure that wawaper_f_integrated_pts[i] == 1.0
 
-    std::cout << std::setprecision(16) << times_u_pts << std::endl;
-    std::cout << std::setprecision(16) << waper_f_integrated_pts << std::endl;
-
-    // long double total_normalization = codomain_l_max ;
-    f1 = [f_norm=this->f_integrated_normalization, f1_](double u) { return f1_(u) / f_norm; };
+    long double total_normalization = codomain_l_max / f_integrated_normalization;
+    f1 = [total_normalization, f1_](double u) { return f1_(u) * total_normalization; };
 
     gsl_spline_init(sp_f_integrated.get(), times_u_pts.data_start(), waper_f_integrated_pts.data_start(),
                     nr_sample_points);
@@ -367,8 +364,8 @@ class warper_product_1d_simple_interp_hybrid_t : public warper_product_1d_simple
        nr_sample_points{o.nr_sample_points},
        times_u_pts(o.times_u_pts),
        waper_f_integrated_pts(o.waper_f_integrated_pts),
-       sp_f_integrated{gsl_spline_alloc(gsl_interp_linear, nr_sample_points), gsl_spline_free},
-       sp_f_integrated_inverse{gsl_spline_alloc(gsl_interp_linear, nr_sample_points), gsl_spline_free},
+       sp_f_integrated{gsl_spline_alloc(gsl_interp_steffen, nr_sample_points), gsl_spline_free},
+       sp_f_integrated_inverse{gsl_spline_alloc(gsl_interp_steffen, nr_sample_points), gsl_spline_free},
        acc_f_integrated{gsl_interp_accel_alloc(), gsl_interp_accel_free},
        acc_f_integrated_inverse{gsl_interp_accel_alloc(), gsl_interp_accel_free} {
     gsl_spline_init(sp_f_integrated.get(), times_u_pts.data_start(), waper_f_integrated_pts.data_start(),
