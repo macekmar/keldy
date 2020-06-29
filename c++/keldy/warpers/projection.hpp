@@ -85,7 +85,7 @@ inline array<double, 1> CPP2PY_IGNORE kernel_smoothing(array<double, 1> const &y
     x(i) = i;
   }
 
-  int const H = std::max(std::min(int(3 * sigma), N), 1);
+  int const H = std::max(std::min(int(3 * upper), N), 1);
   int const K = 2 * H + 1;
   array<double, 1> kernel(K);
 
