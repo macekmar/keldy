@@ -39,7 +39,7 @@ namespace keldy::warpers {
 // varient is default constructable to hold value of first alternative (if that is default constructable)
 using warper_variant = std::variant<warper_identity_t, warper_plasma_uv_t, warper_product_1d_simple_interp_nearest_t,
                                     warper_product_1d_simple_t, warper_product_1d_t, warper_product_1d_interp_nearest_t,
-                                    warper_projection_t>;
+                                    warper_product_1d_interp_hybrid_t, warper_projection_t>;
 
 class warper_train_t {
  private:
@@ -47,7 +47,6 @@ class warper_train_t {
 
  public:
   warper_train_t() = default;
-  //warper_train_t& operator=(warper_train_t&) = delete;
 
   // Add warpers
   void emplace_back(warper_identity_t w) { warpers.emplace_back(w); }
@@ -56,6 +55,7 @@ class warper_train_t {
   void emplace_back(warper_product_1d_simple_interp_nearest_t w) { warpers.emplace_back(std::move(w)); }
   void emplace_back(warper_product_1d_t w) { warpers.emplace_back(std::move(w)); }
   void emplace_back(warper_product_1d_interp_nearest_t w) { warpers.emplace_back(std::move(w)); }
+  void emplace_back(warper_product_1d_interp_hybrid_t w) { warpers.emplace_back(std::move(w)); }
   void emplace_back(warper_projection_t w) { warpers.emplace_back(std::move(w)); }
 
   // Warper Vector

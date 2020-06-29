@@ -14,70 +14,9 @@ std::vector<T> operator/(std::vector<T> const vector, S const scalar) {
 
 using namespace keldy;
 using namespace keldy::warpers;
-
 using namespace triqs::arrays;
 
-/// --------------------------------------------------------
-
-TEST(SimpleProduct1DWarper, Default) { // NOLINT
-  double const t_max = 1.5;
-  auto warper = warper_product_1d_simple_interp_nearest_t([](double /**/) { return 1.0; }, t_max, 8);
-
-  basic_test_warper_at_order_1(warper, t_max);
-  basic_test_warper_multidim(warper, t_max);
-
-  function_test_warper(
-     warper, t_max, [](std::vector<double> const & /**/) -> double { return 1.; },
-     [t_max](std::vector<double> const &ui) -> std::vector<double> { return ui / t_max; },
-     [t_max](std::vector<double> const &li) -> double { return std::pow(t_max, li.size()); });
-}
-
-TEST(SimpleProduct1DWarper, IdentityConstructor1) { // NOLINT
-  double const t_max = 1.5;
-  auto const warper = warper_product_1d_simple_interp_nearest_t([](double /**/) -> double { return 1.; }, t_max, 1.0e2);
-
-  basic_test_warper_at_order_1(warper, t_max);
-  basic_test_warper_multidim(warper, t_max);
-
-  function_test_warper(
-     warper, t_max, [](std::vector<double> const /**/) -> double { return 1.; },
-     [t_max](std::vector<double> const &ui) -> std::vector<double> { return ui / t_max; },
-     [t_max](std::vector<double> const &li) -> double { return std::pow(t_max, li.size()); });
-}
-
-TEST(SimpleProduct1DWarper, ExponentialConstructor1) { // NOLINT
-  double const t_max = 5.;
-  auto const warper = warper_product_1d_simple_interp_nearest_t([](double u) -> double { return std::exp(-u / 2.); }, t_max, int(1e3));
-
-  basic_test_warper_at_order_1(warper, t_max, 1e-9);
-  basic_test_warper_multidim(warper, t_max, 1e-9);
-
-  function_test_warper(
-     warper, t_max,
-     [](std::vector<double> const &ui) -> double {
-       return std::exp(-std::accumulate(ui.cbegin(), ui.cend(), 0.) / 2.);
-     },
-     [t_max](std::vector<double> const &ui) -> std::vector<double> {
-       std::vector<double> li = {};
-       li.reserve(ui.size());
-       for (double u : ui) {
-         li.push_back((std::exp(-u / 2.) - 1.) / (std::exp(-t_max / 2.) - 1.));
-       }
-       return li;
-     },
-     [t_max](std::vector<double> const &li) -> double {
-       double product = 1.;
-       for (double l : li) {
-         product *= (std::exp(-t_max / 2.) - 1.) * l + 1.;
-       }
-       return std::pow(2. * (1. - std::exp(-t_max / 2.)), li.size()) / product;
-     },
-     1e-10, 1e-10, 1e-6);
-}
-
-// *******************************************************************************************
-
-TEST(SimpleProduct1DWarperNointerp, IdentityConstructor2) { // NOLINT
+TEST(SimpleProduct1DWarper, NointerpIdentityConstructor2) { // NOLINT
   double const t_max = 1.5;
   auto const warper = warper_product_1d_simple_t([t_max](double /**/) -> double { return 1. / t_max; },
                                                           [t_max](double u) -> double { return u / t_max; },
@@ -92,7 +31,7 @@ TEST(SimpleProduct1DWarperNointerp, IdentityConstructor2) { // NOLINT
      [t_max](std::vector<double> const &li) -> double { return std::pow(t_max, li.size()); });
 }
 
-TEST(SimpleProduct1DWarper, ExponentialConstructor2) { // NOLINT
+TEST(SimpleProduct1DWarper, NointerpExponentialConstructor) { // NOLINT
   double const t_max = 5.;
   auto const warper = warper_product_1d_simple_t(
      [t_max](double u) -> double { return -0.5 * std::exp(-u / 2.) / std::expm1(-t_max / 2.); },

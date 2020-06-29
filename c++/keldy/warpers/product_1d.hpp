@@ -193,8 +193,46 @@ class warper_product_1d_interp_nearest_t {
   }
 };
 
-// // *****
-// // Maker functions
+class warper_product_1d_interp_hybrid_t {
+ private:
+  std::vector<warper_product_1d_simple_interp_hybrid_t> warpers_dims{};
+
+ public:
+  warper_product_1d_interp_hybrid_t() = default;
+
+  int size() { return warpers_dims.size(); }
+  void emplace_back(warper_product_1d_simple_interp_hybrid_t w) { warpers_dims.emplace_back(std::move(w)); }
+
+  [[nodiscard]] std::pair<std::vector<double>, double> map_reverse(std::vector<double> const &li_vec) const {
+    return warper_1d_map_reverse(warpers_dims, li_vec);
+  }
+
+  [[nodiscard]] std::pair<std::vector<double>, double> map_forward(std::vector<double> const &ui_vec) const {
+    return warper_1d_map_forward(warpers_dims, ui_vec);
+  }
+
+  [[nodiscard]] std::vector<double> ui_from_li(std::vector<double> const &li_vec) const {
+    return warper_1d_ui_from_li(warpers_dims, li_vec);
+  }
+
+  [[nodiscard]] std::vector<double> li_from_ui(std::vector<double> const &ui_vec) const {
+    return warper_1d_li_from_ui(warpers_dims, ui_vec);
+  }
+
+  [[nodiscard]] double jacobian_reverse(std::vector<double> const &li_vec) const {
+    return warper_1d_jacobian_reverse(warpers_dims, li_vec);
+  }
+
+  [[nodiscard]] double jacobian_forward(std::vector<double> const &ui_vec) const {
+    return warper_1d_jacobian_forward(warpers_dims, ui_vec);
+  }
+
+  [[nodiscard]] double operator()(std::vector<double> const &ui_vec) const {
+    return warper_1d_evalutate(warpers_dims, ui_vec);
+  }
+};
+// ****************************************************************************
+// Maker functions
 
 inline warper_product_1d_t make_product_1d_inverse_cube_alternate(int order, double time, double warper_scale) {
   warper_product_1d_t result{};
@@ -208,9 +246,9 @@ inline warper_product_1d_t make_product_1d_inverse_cube_alternate(int order, dou
   return result;
 }
 
-inline warper_product_1d_interp_nearest_t make_product_1d_inverse_cube_alternate_interp(int order, double time,
-                                                                                        double warper_scale,
-                                                                                        int nr_sample_points_warper) {
+inline warper_product_1d_interp_nearest_t
+make_product_1d_inverse_cube_alternate_interp_nearest(int order, double time, double warper_scale,
+                                                      int nr_sample_points_warper) {
   warper_product_1d_interp_nearest_t result{};
 
   auto f1 = [warper_scale](double t) -> double { return warper_scale / (warper_scale + t); };
@@ -223,6 +261,26 @@ inline warper_product_1d_interp_nearest_t make_product_1d_inverse_cube_alternate
       result.emplace_back(warper_product_1d_simple_interp_nearest_t{f2, time, nr_sample_points_warper});
     } else {
       result.emplace_back(warper_product_1d_simple_interp_nearest_t{f1, time, nr_sample_points_warper});
+    }
+  }
+  return result;
+}
+
+inline warper_product_1d_interp_hybrid_t
+make_product_1d_inverse_cube_alternate_interp_hybrid(int order, double time, double warper_scale,
+                                                     int nr_sample_points_warper) {
+  warper_product_1d_interp_hybrid_t result{};
+
+  auto f1 = [warper_scale](double t) -> double { return warper_scale / (warper_scale + t); };
+  auto f2 = [warper_scale](double t) -> double {
+    return warper_scale * warper_scale * warper_scale / ((warper_scale + t) * (warper_scale + t) * (warper_scale + t));
+  };
+  std::vector<std::function<double(double)>> f_list = {};
+  for (int n = 1; n <= order; ++n) {
+    if (n % 2 == 0) {
+      result.emplace_back(warper_product_1d_simple_interp_hybrid_t{f2, time, nr_sample_points_warper});
+    } else {
+      result.emplace_back(warper_product_1d_simple_interp_hybrid_t{f1, time, nr_sample_points_warper});
     }
   }
   return result;

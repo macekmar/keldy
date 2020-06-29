@@ -65,16 +65,13 @@ class warper_product_1d_simple_t {
        f1_integrated(std::move(f1_integrated_)),
        f1_integrated_inverse(std::move(f1_integrated_inverse_)),
        domain_u_max(domain_u_max_) {
-
-    // Checks:
+    // Basic Check:
     if (!(domain_u_min < domain_u_max)) {
       TRIQS_RUNTIME_ERROR << "coord_domain_u coordinates must be ordered.";
     }
 
     if (do_domain_checks) {
-
       double eps = 1e-12;
-
       bool domain_match = (std::abs(f1_integrated(domain_u_min) - codomain_l_min) < eps)
          && (std::abs(f1_integrated(domain_u_max) - codomain_l_max) < eps)
          && (std::abs(f1_integrated_inverse(codomain_l_min) - domain_u_min) < eps)
@@ -91,7 +88,6 @@ class warper_product_1d_simple_t {
                             << "* std::abs(f1_integrated_inverse(codomain_l_max) - domain_u_max): "
                             << (std::abs(f1_integrated_inverse(codomain_l_max) - domain_u_max)) << "\n";
       }
-
       // f1 > 0 : for Jacobian consistancy
       // f1_integrated & f1_integrated_inverse should be monotonous
       // f1_integrated & f1_integrated_inverse are inverses
@@ -280,8 +276,113 @@ class warper_product_1d_simple_interp_nearest_t : public warper_product_1d_simpl
     std::swap(*this, tmp);
     return *this;
   }
+};
 
-}; // namespace keldy::warpers
+class warper_product_1d_simple_interp_hybrid_t : public warper_product_1d_simple_t {
+ private:
+  int nr_sample_points = 0;
+
+  nda::vector<double> times_u_pts{};
+  nda::vector<double> waper_f_integrated_pts{};
+
+  std::unique_ptr<gsl_spline, decltype(&gsl_spline_free)> sp_f_integrated;
+  std::unique_ptr<gsl_spline, decltype(&gsl_spline_free)> sp_f_integrated_inverse;
+
+  std::unique_ptr<gsl_interp_accel, decltype(&gsl_interp_accel_free)> acc_f_integrated;
+  std::unique_ptr<gsl_interp_accel, decltype(&gsl_interp_accel_free)> acc_f_integrated_inverse;
+
+ public:
+  warper_product_1d_simple_interp_hybrid_t()
+     : sp_f_integrated{gsl_spline_alloc(gsl_interp_linear, nr_sample_points), gsl_spline_free},
+       sp_f_integrated_inverse{gsl_spline_alloc(gsl_interp_linear, nr_sample_points), gsl_spline_free},
+       acc_f_integrated{gsl_interp_accel_alloc(), gsl_interp_accel_free},
+       acc_f_integrated_inverse{gsl_interp_accel_alloc(), gsl_interp_accel_free} {};
+
+  warper_product_1d_simple_interp_hybrid_t(std::function<double(double)> const &f1_, double domain_u_max_,
+                                           int nr_sample_points_)
+     : warper_product_1d_simple_t{}, // set later due to normalization
+       nr_sample_points{nr_sample_points_},
+       times_u_pts(nr_sample_points),
+       waper_f_integrated_pts(nr_sample_points),
+       sp_f_integrated{gsl_spline_alloc(gsl_interp_linear, nr_sample_points), gsl_spline_free},
+       sp_f_integrated_inverse{gsl_spline_alloc(gsl_interp_linear, nr_sample_points), gsl_spline_free},
+       acc_f_integrated{gsl_interp_accel_alloc(), gsl_interp_accel_free},
+       acc_f_integrated_inverse{gsl_interp_accel_alloc(), gsl_interp_accel_free} {
+
+    if (!(nr_sample_points >= 3)) {
+      TRIQS_RUNTIME_ERROR << "Expect nr_sample_points to be >= 3. Given was " << nr_sample_points;
+    }
+
+    domain_u_max = domain_u_max_;
+
+    f1_integrated = [this](double u) { return gsl_spline_eval(sp_f_integrated.get(), u, acc_f_integrated.get()); };
+    f1_integrated_inverse = [this](double l) {
+      return gsl_spline_eval(sp_f_integrated_inverse.get(), l, acc_f_integrated_inverse.get());
+    };
+
+    // Just do naive linear interpolation on grid
+    //#pragma omp parallel for
+    for (int i = 0; i < nr_sample_points; i++) {
+      times_u_pts[i] = domain_u_min + static_cast<double>(i) / (nr_sample_points - 1) * (domain_u_max - domain_u_min);
+    }
+
+    waper_f_integrated_pts[0] = 0.0; // scale co-ordinates later
+    // Implement Using Simpsons rule
+    double f_2 = f1_(times_u_pts[0]); // temp -- carry over
+    for (int i = 1; i < nr_sample_points; i++) {
+      double f_0 = f_2;
+      double f_1 = f1_(0.5 * (times_u_pts[i - 1] + times_u_pts[i]));
+      f_2 = f1_(times_u_pts[i]);
+      waper_f_integrated_pts[i] =
+         waper_f_integrated_pts[i - 1] + (times_u_pts[i] - times_u_pts[i - 1]) / 6. * (f_0 + 4 * f_1 + f_2);
+    }
+
+    f_integrated_normalization = waper_f_integrated_pts[nr_sample_points - 1];
+
+    //#pragma omp parallel for
+    for (int i = 0; i < nr_sample_points; i++) {
+      waper_f_integrated_pts[i] = (waper_f_integrated_pts[i] / f_integrated_normalization) * codomain_l_max;
+    }
+
+    // Ensure that wawaper_f_integrated_pts[i] == 1.0
+
+    std::cout << std::setprecision(16) << times_u_pts << std::endl;
+    std::cout << std::setprecision(16) << waper_f_integrated_pts << std::endl;
+
+    // long double total_normalization = codomain_l_max ;
+    f1 = [f_norm=this->f_integrated_normalization, f1_](double u) { return f1_(u) / f_norm; };
+
+    gsl_spline_init(sp_f_integrated.get(), times_u_pts.data_start(), waper_f_integrated_pts.data_start(),
+                    nr_sample_points);
+    gsl_spline_init(sp_f_integrated_inverse.get(), waper_f_integrated_pts.data_start(), times_u_pts.data_start(),
+                    nr_sample_points);
+  }
+
+  // Need to deep-copy for python layer
+  warper_product_1d_simple_interp_hybrid_t(const warper_product_1d_simple_interp_hybrid_t &o)
+     : warper_product_1d_simple_t{
+        o.f1, [this](double u) { return gsl_spline_eval(sp_f_integrated.get(), u, acc_f_integrated.get()); },
+        [this](double l) { return gsl_spline_eval(sp_f_integrated_inverse.get(), l, acc_f_integrated_inverse.get()); },
+        o.domain_u_max, false},
+       nr_sample_points{o.nr_sample_points},
+       times_u_pts(o.times_u_pts),
+       waper_f_integrated_pts(o.waper_f_integrated_pts),
+       sp_f_integrated{gsl_spline_alloc(gsl_interp_linear, nr_sample_points), gsl_spline_free},
+       sp_f_integrated_inverse{gsl_spline_alloc(gsl_interp_linear, nr_sample_points), gsl_spline_free},
+       acc_f_integrated{gsl_interp_accel_alloc(), gsl_interp_accel_free},
+       acc_f_integrated_inverse{gsl_interp_accel_alloc(), gsl_interp_accel_free} {
+    gsl_spline_init(sp_f_integrated.get(), times_u_pts.data_start(), waper_f_integrated_pts.data_start(),
+                    nr_sample_points);
+    gsl_spline_init(sp_f_integrated_inverse.get(), waper_f_integrated_pts.data_start(), times_u_pts.data_start(),
+                    nr_sample_points);
+  }
+
+  warper_product_1d_simple_interp_hybrid_t &operator=(const warper_product_1d_simple_interp_hybrid_t &o) {
+    warper_product_1d_simple_interp_hybrid_t tmp(o);
+    std::swap(*this, tmp);
+    return *this;
+  }
+};
 
 // ***************************************************************************************************************
 

@@ -60,7 +60,8 @@ template <typename W>
 inline void basic_test_warper_multidim(W const &warper, double const t_max, double const accuracy = 1e-10) {
   EXPECT_GT(t_max, 0.);
   std::vector<double> ui = {};
-  std::vector<double> li, li_plus = {};
+  std::vector<double> li = {};
+  std::vector<double> li_plus = {};
 
   /// boundaries are almost equal
   expect_iterable_double_eq(warper.li_from_ui({0., 0., 0., 0.}), {0., 0., 0., 0.});
