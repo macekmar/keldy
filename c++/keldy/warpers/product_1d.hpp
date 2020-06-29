@@ -34,6 +34,8 @@
 #include <numeric>
 #include <triqs/gfs.hpp>
 
+
+
 namespace keldy::warpers {
 
 using gf_t = triqs::gfs::gf<triqs::gfs::retime, triqs::gfs::scalar_real_valued>;
@@ -45,11 +47,12 @@ template <typename W>
                                                                            std::vector<double> const &li_vec) {
   auto xi_vec = li_vec;
   double jacobian_r = 1.0;
-  for (auto i : itertools::range(xi_vec.size())) {
+  
+  for (int i = 0; i < xi_vec.size(); i++) {
     auto &xi = xi_vec[i];
-    // f1 defined in ui, so evaluate jacobian_f after map
-    xi = warpers_dims[i].ui_from_li(std::vector<double>{xi}).at(0);
-    jacobian_r *= warpers_dims[i].jacobian_reverse(std::vector<double>{xi});
+    auto [xi_vec_1, jac_r_1] = warpers_dims[i].map_reverse(std::vector<double>{xi});
+    xi = xi_vec_1.at(0);
+    jacobian_r *= jac_r_1;
   }
   return std::make_pair(xi_vec, jacobian_r);
 }
@@ -59,11 +62,11 @@ template <typename W>
                                                                            std::vector<double> const &ui_vec) {
   auto xi_vec = ui_vec;
   double jacobian_f = 1.0;
-  for (auto i : itertools::range(xi_vec.size())) {
+  for (int i = 0; i < xi_vec.size(); i++) {
     auto &xi = xi_vec[i];
-    // f1 defined in ui, so evaluate jacobian_f before map
-    jacobian_f *= warpers_dims[i].jacobian_forward(std::vector<double>{xi});
-    xi = warpers_dims[i].li_from_ui(std::vector<double>{xi}).at(0);
+    auto [xi_vec_1, jac_f_1] = warpers_dims[i].map_forward(std::vector<double>{xi});
+    xi = xi_vec_1.at(0);
+    jacobian_f *= jac_f_1;
   }
   return std::make_pair(xi_vec, jacobian_f);
 }
@@ -72,7 +75,7 @@ template <typename W>
 [[nodiscard]] std::vector<double> warper_1d_ui_from_li(std::vector<W> const &warpers_dims,
                                                        std::vector<double> const &li_vec) {
   std::vector<double> result = li_vec;
-  for (auto i : itertools::range(result.size())) {
+  for (int i = 0; i < result.size(); i++) {
     auto &li = result[i];
     li = warpers_dims[i].ui_from_li(std::vector<double>{li}).at(0);
   }
@@ -83,7 +86,7 @@ template <typename W>
 [[nodiscard]] std::vector<double> warper_1d_li_from_ui(std::vector<W> const &warpers_dims,
                                                        std::vector<double> const &ui_vec) {
   auto result = ui_vec;
-  for (auto i : itertools::range(result.size())) {
+  for (int i = 0; i < result.size(); i++) {
     auto &ui = result[i];
     ui = warpers_dims[i].li_from_ui(std::vector<double>{ui}).at(0);
   }
