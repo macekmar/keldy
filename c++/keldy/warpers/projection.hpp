@@ -76,9 +76,10 @@ inline array<double, 1> CPP2PY_IGNORE kernel_smoothing(array<double, 1> const &y
 }
 
 // lower, sigma and upper are in unit of time step
-[[nodiscard]] CPP2PY_IGNORE inline double optimize_sigma(array<double, 1> const &y, double const lower,
-                                                         double const sigma, double const upper) {
+[[nodiscard]] CPP2PY_IGNORE inline double optimize_sigma(array<double, 1> const &y, double const sigma,
+                                                         double const upper) {
   int const N = y.size();
+  double const sigma_min = 0.3; // narrow gaussians lead to unstable linear fit
   array<double, 1> y_out(N);
   array<double, 1> x(N);
   for (int i = 0; i < N; ++i) {
@@ -89,23 +90,32 @@ inline array<double, 1> CPP2PY_IGNORE kernel_smoothing(array<double, 1> const &y
   int const K = 2 * H + 1;
   array<double, 1> kernel(K);
 
-  auto f = [&x, &y, &kernel, &y_out, &H](double sigma) -> double {
+  /// cost function is symetric in sigma and the minimum is looked for between
+  //-upper and +upper in order to make sure the min can be bound even when
+  //projection is noiseless.
+  auto f = [&x, &y, &kernel, &y_out, &H, sigma_min](double sigma) -> double {
+    sigma = std::max(std::abs(sigma), sigma_min);
+
     for (int j = 0; j < kernel.size(); ++j) {
       kernel(j) = gaussian(j, H, sigma);
     }
     kernel(H) = 0;
+    kernel() /= kernel(H + 1);
+
     details::local_linear_reg(x, y, y_out, kernel);
 
     return sum(pow(y_out - y, 2));
   };
 
-  return details::gsl_minimize(f, lower, sigma, upper, 1e-8, 0., 20).x;
+  auto const out = details::gsl_minimize(f, -upper, sigma, upper, 1e-8, 0., 20).x;
+  return std::max(std::abs(out), sigma_min);
 };
 
 /// for optimization debug purpose, returns a sampling of the cost function
 CPP2PY_IGNORE inline array<double, 1> optimize_sigma_landscape(array<double, 1> const &y, double const lower,
                                                                double const upper, int const nr_sigmas) {
   int const N = y.size();
+  double const sigma_min = 0.3;
   array<double, 1> y_out(N);
   array<double, 1> x(N);
   for (int i = 0; i < N; ++i) {
@@ -116,11 +126,15 @@ CPP2PY_IGNORE inline array<double, 1> optimize_sigma_landscape(array<double, 1> 
   int const K = 2 * H + 1;
   array<double, 1> kernel(K);
 
-  auto f = [&x, &y, &kernel, &y_out, &H](double sigma) -> double {
+  auto f = [&x, &y, &kernel, &y_out, &H, sigma_min](double sigma) -> double {
+    sigma = std::max(std::abs(sigma), sigma_min);
+
     for (int j = 0; j < kernel.size(); ++j) {
       kernel(j) = gaussian(j, H, sigma);
     }
     kernel(H) = 0;
+    kernel() /= kernel(H + 1);
+
     details::local_linear_reg(x, y, y_out, kernel);
 
     return sum(pow(y_out - y, 2));
@@ -222,7 +236,7 @@ class warper_projection_t {
         //std::cout << "Landscape:" << std::endl;
         //std::cout << optimize_sigma_landscape(xi[axis].get_data(), 0.5, 1.0 / xi[axis].get_bin_size(), 100) << std::endl << std::endl;
 
-        sigmas[axis] = optimize_sigma(xi[axis].get_data(), 0.5, sigmas[axis], 1.0 / xi[axis].get_bin_size());
+        sigmas[axis] = optimize_sigma(xi[axis].get_data(), sigmas[axis], 1.0 / xi[axis].get_bin_size());
 
         if (comm.rank() == 0) {
           std::cout << "Optimal sigma = " << sigmas[axis] * xi[axis].get_bin_size() << " (axis " << axis << ")"
