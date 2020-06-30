@@ -1,17 +1,63 @@
+#include <gtest/gtest.h>
 #include <keldy/qrng.hpp>
 #include <triqs/test_tools/gfs.hpp>
 
-// using namespace keldy;
-// using namespace keldy::anderson_re;
+using namespace keldy;
 
-TEST(Test1, Test1) { // NOLINT
+TEST(RNGConstructors, SobolUnshifted) { // NOLINT
+  int dimension = 3;
+  int rng_state_seed = 0;
+  auto rng = sobol(dimension, rng_state_seed);
 
-  // model_param_t in_param;
-  // model my_model(in_param);
-  // std::cout << my_model.g0_lesser.mesh() << std::endl;
-  // EXPECT_EQ(my_model.g0_lesser.mesh().size(), in_param.nr_time_points_gf);
+  auto output = rng();
 
-  // EXPECT_EQ(my_model.g0_lesser.mesh().size(), in_param.nr_time_points_gf);
+  EXPECT_EQ(output.size(), dimension);
+  for (auto o : output) {
+    std::cout << o << ",";
+  }
+  std::cout << std::endl;
+}
+
+TEST(RNGConstructors, MT) { // NOLINT
+  int dimension = 3;
+  int rng_state_seed = 0;
+  auto rng = boost_rng_wrapper_t<boost::random::mt19937_64>(dimension, rng_state_seed);
+
+  auto output = rng();
+
+  EXPECT_EQ(output.size(), dimension);
+  for (auto o : output) {
+    std::cout << o << ",";
+  }
+  std::cout << std::endl;
+}
+
+TEST(RNGConstructors, Randlux) { // NOLINT
+  int dimension = 3;
+  int rng_state_seed = 0;
+  auto rng = boost_rng_wrapper_t<boost::random::ranlux48>(dimension, rng_state_seed);
+
+  auto output = rng();
+
+  EXPECT_EQ(output.size(), dimension);
+  for (auto o : output) {
+    std::cout << o << ",";
+  }
+  std::cout << std::endl;
+}
+
+TEST(RNGConstructors, Taus) { // NOLINT
+  int dimension = 3;
+  int rng_state_seed = 0;
+  auto rng = boost_rng_wrapper_t<boost::random::taus88>(dimension, rng_state_seed);
+
+  auto output = rng();
+
+  EXPECT_EQ(output.size(), dimension);
+  for (auto o : output) {
+    std::cout << o << ",";
+  }
+  std::cout << std::endl;
 }
 
 MAKE_MAIN; // NOLINT

@@ -23,7 +23,14 @@
 #pragma once
 
 #include "common.hpp"
+
 #include "qrng_details/digitalseq_b2g.hpp"
+
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/ranlux.hpp>
+#include <boost/random/uniform_01.hpp>
+#include <boost/random/taus88.hpp>
+
 #include <triqs/utility/exceptions.hpp>
 #include <random>
 #include <algorithm>
@@ -106,6 +113,31 @@ class sobol {
   qmc::digitalseq_b2g<double, std::uint32_t> generator;
 };
 
-// Harmonic Generator
+template <typename G>
+class boost_rng_wrapper_t {
+ private:
+  int dimension = 1;
+  boost::random::uniform_01<double> distribution{};
+  G generator;
+
+ public:
+  boost_rng_wrapper_t(int dimension_, int seed) : dimension(dimension_), generator{seed} {}
+
+  std::vector<double> operator()() {
+    std::vector<double> out(dimension);
+    for (int i = 0; i < dimension; i++) {
+      out.at(i) = distribution(generator);
+    }
+    return out;
+  }
+
+  void seed(int i) { generator.seed(i); }
+
+  void discard(int j) { generator.discard(j); }
+};
+
+template class boost_rng_wrapper_t<boost::random::mt19937_64>;
+template class boost_rng_wrapper_t<boost::random::ranlux48>;
+template class boost_rng_wrapper_t<boost::random::taus88>;
 
 } // namespace keldy

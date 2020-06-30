@@ -97,6 +97,12 @@ class integrator {
       rng = sobol(dimension, rng_state_seed);
     } else if (rng_name == "sobol") {
       rng = sobol(dimension, rng_state_seed, do_shift, do_scramble, rng_seed_shift);
+    } else if (rng_name == "mt19937_64") {
+      rng = boost_rng_wrapper_t<boost::random::mt19937_64>(dimension, rng_state_seed);
+    } else if (rng_name == "ranlux48") {
+      rng = boost_rng_wrapper_t<boost::random::ranlux48>(dimension, rng_state_seed);
+    } else if (rng_name == "taus88") {
+      rng = boost_rng_wrapper_t<boost::random::taus88>(dimension, rng_state_seed);
     } else {
       TRIQS_RUNTIME_ERROR << "No other rng available.";
     }
