@@ -95,17 +95,30 @@ inline void basic_test_warper_multidim(W const &warper, double const t_max, doub
 template <typename W>
 inline void function_test_warper(W const &warper, double const t_max, warper_func_t const &f,
                                  warper_map_t const &li_from_ui_ref, warper_func_t const &jacobian_ref,
-                                 double const accuracy_f = 1e-10, double const accuracy_map = 1e-10,
-                                 double const accuracy_jac = 1e-10) {
+                                 double accuracy_f = 1e-10, double accuracy_map = 1e-10, double accuracy_jac = 1e-10,
+                                 bool use_accuracy_relative = false) {
   std::vector<double> li = {};
 
   auto do_test = [&](std::vector<double> const ui) -> void {
     std::vector<double> t_max_vec(ui.size(), t_max);
 
-    EXPECT_NEAR(warper.jacobian_forward(ui) / warper.jacobian_forward(t_max_vec), f(ui) / f(t_max_vec), accuracy_f);
-    EXPECT_TRUE(are_iterable_near(warper.li_from_ui(ui), li_from_ui_ref(ui), accuracy_map));
-
     li = li_from_ui_ref(ui);
+
+    std::vector<double> accuracy_map_vec(li.size(), accuracy_map);
+
+    if (use_accuracy_relative) {
+      accuracy_f *= warper.jacobian_forward(ui) / warper.jacobian_forward(t_max_vec);
+      for (int i = 0; i < li.size(); i++) {
+        if (li.at(i) != 0.0) {
+          accuracy_map_vec.at(i) *= li.at(i);
+        }
+      }
+      accuracy_jac *= warper.jacobian_reverse(li);
+    }
+
+    EXPECT_NEAR(warper.jacobian_forward(ui) / warper.jacobian_forward(t_max_vec), f(ui) / f(t_max_vec), accuracy_f);
+    EXPECT_TRUE(are_iterable_near(warper.li_from_ui(ui), li_from_ui_ref(ui), accuracy_map_vec));
+
     EXPECT_NEAR(warper.jacobian_reverse(li), jacobian_ref(li), accuracy_jac);
     // EXPECT_NEAR(warper.jacobian_forward(li), 1.0 / jacobian_ref(li), accuracy_jac);
     EXPECT_GT(warper.jacobian_reverse(li), 0.); // has to be != 0.

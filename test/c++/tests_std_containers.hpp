@@ -66,6 +66,33 @@ bool are_iterable_near(T const &a, T const &b, double abs_tol) {
   return true;
 };
 
+template <typename T>
+bool are_iterable_near(T const &a, T const &b, std::vector<double> const & abs_tol) {
+  auto size_a = get_iterable_size(a);
+  auto size_b = get_iterable_size(b);
+  auto size_c = get_iterable_size(abs_tol);
+  if (size_a == size_b) {
+    if (size_c != size_a) {
+      std::cout << "Vector abs_tol error is not size compatible with a / b" << std::endl;
+      return false;
+    }
+    auto i = a.cbegin();
+    auto j = b.cbegin();
+    auto k = abs_tol.cbegin();
+    for (; i < a.cend(); ++i, ++j, ++k) {
+      if (std::abs(*i - *j) >= *k) {
+        std::cout << "All elements are not close, e.g.: " << *i << " - " << *j << " = " << *i - *j << " >= " << *k
+                  << std::endl;
+        return false;
+      }
+    }
+  } else {
+    std::cout << "Iterables have different sizes: " << size_a << " != " << size_b << std::endl;
+    return false;
+  }
+  return true;
+};
+
 /* Check element-wize almost equality
  * TODO: in case of failure, line number refers to this file, which is pointless
  */

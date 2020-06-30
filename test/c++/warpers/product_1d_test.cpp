@@ -98,7 +98,61 @@ TEST(Product1DWarper, AlternateInverseAndCube) { // NOLINT
     return output;
   };
 
-  function_test_warper(warper, t_max, f, li_from_ui, jac, 1e-3, 1e-3, 1e-3);
+  function_test_warper(warper, t_max, f, li_from_ui, jac, 1e-5, 1e-10, 1e-5, true);
+  // errors are ~ 1/delta, 1/delta^2, 1/delta
+}
+
+TEST(Product1DWarper, AlternateInverseAndCubeHybrid) { // NOLINT
+  double const t_max = 5.;
+  auto f1 = [](double u) -> double { return 1. / (2. + u); };
+  auto f2 = [](double u) -> double { return 1. / ((3. + u) * (3. + u) * (3. + u)); };
+
+  auto warper = warper_product_1d_interp_hybrid_t{};
+  warper.emplace_back({f1, t_max, int(1e5)});
+  warper.emplace_back({f2, t_max, int(1e5)});
+  warper.emplace_back({f1, t_max, int(1e5)});
+  warper.emplace_back({f2, t_max, int(1e5)});
+
+  basic_test_warper_at_order_1(warper, t_max, 1e-9);
+  basic_test_warper_multidim(warper, t_max, 1e-9);
+
+  auto f = [&f1, &f2](std::vector<double> const ui) -> double {
+    double output = 1.;
+    for (size_t i = 0; i < ui.size(); ++i) {
+      output *= (i % 2 == 0) ? f1(ui[i]) : f2(ui[i]);
+    }
+    return output;
+  };
+
+  double const norm1 = std::log(1 + t_max / 2.);
+  double const norm2 = 1. / ((3. + t_max) * (3. + t_max)) - 1. / 9.;
+
+  auto li_from_ui = [norm1, norm2](std::vector<double> const ui) {
+    std::vector<double> output = {};
+    for (size_t i = 0; i < ui.size(); ++i) {
+      if (i % 2 == 0) {
+        output.push_back(std::log(1 + ui[i] / 2.) / norm1);
+      } else {
+        output.push_back((1. / ((3. + ui[i]) * (3. + ui[i])) - 1. / 9.) / norm2);
+      }
+    }
+    return output;
+  };
+
+  auto jac = [norm1, norm2](std::vector<double> li) -> double {
+    double output = 1.;
+    for (size_t i = 0; i < li.size(); ++i) {
+      if (i % 2 == 0) {
+        output *= 2. * norm1 * std::exp(li[i] * norm1);
+      } else {
+        output *= -norm2 / std::pow(li[i] * norm2 + 1. / 9., 1.5) / 2.;
+      }
+    }
+    return output;
+  };
+
+  function_test_warper(warper, t_max, f, li_from_ui, jac, 1e-14, 1e-11, 1e-11, true);
+  // errors are ~ 1/delta, 1/delta^2, 1/delta
 }
 
 MAKE_MAIN; // NOLINT
