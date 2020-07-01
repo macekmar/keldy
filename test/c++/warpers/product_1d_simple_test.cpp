@@ -19,8 +19,8 @@ using namespace triqs::arrays;
 TEST(SimpleProduct1DWarper, NointerpIdentityConstructor2) { // NOLINT
   double const t_max = 1.5;
   auto const warper = warper_product_1d_simple_t([t_max](double /**/) -> double { return 1. / t_max; },
-                                                          [t_max](double u) -> double { return u / t_max; },
-                                                          [t_max](double l) -> double { return t_max * l; }, t_max);
+                                                 [t_max](double u) -> double { return u / t_max; },
+                                                 [t_max](double l) -> double { return t_max * l; }, t_max);
 
   basic_test_warper_at_order_1(warper, t_max);
   basic_test_warper_multidim(warper, t_max);

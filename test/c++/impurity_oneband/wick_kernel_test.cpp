@@ -121,7 +121,7 @@ TEST(ComputeObs, Initialize2) { // NOLINT
 
 TEST(ComputeObs, Initialize3) { // NOLINT
 
-// todo: test something
+  // todo: test something
 
   // model_param_t params;
   // compute_gf_kernel computer(params, 10.0, 4);

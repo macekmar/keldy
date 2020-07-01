@@ -47,7 +47,8 @@ TEST(SimpleProduct1DWarper, InterpNearest_IdentityConstructor) { // NOLINT
 
 TEST(SimpleProduct1DWarper, InterpNearest_ExponentialConstructor) { // NOLINT
   double const t_max = 5.;
-  auto const warper = warper_product_1d_simple_interp_nearest_t([](double u) -> double { return std::exp(-u / 2.); }, t_max, int(1e3));
+  auto const warper =
+     warper_product_1d_simple_interp_nearest_t([](double u) -> double { return std::exp(-u / 2.); }, t_max, int(1e3));
 
   basic_test_warper_at_order_1(warper, t_max, 1e-9);
   basic_test_warper_multidim(warper, t_max, 1e-9);
@@ -73,9 +74,8 @@ TEST(SimpleProduct1DWarper, InterpNearest_ExponentialConstructor) { // NOLINT
        return std::pow(2. * (1. - std::exp(-t_max / 2.)), li.size()) / product;
      },
      1e-3, 1e-6, 1.1e-3, true);
-     // errors are ~ 1/delta, 1/delta^2, 1/delta
+  // errors are ~ 1/delta, 1/delta^2, 1/delta
 }
-
 
 /// --------------------------------------------------------
 
@@ -107,7 +107,8 @@ TEST(SimpleProduct1DWarper, InterpHybrid_IdentityConstructor) { // NOLINT
 
 TEST(SimpleProduct1DWarper, InterpHybrid_ExponentialConstructor) { // NOLINT
   double const t_max = 5.;
-  auto const warper = warper_product_1d_simple_interp_hybrid_t([](double u) -> double { return std::exp(-u / 2.); }, t_max, 5 * int(1e3));
+  auto const warper = warper_product_1d_simple_interp_hybrid_t([](double u) -> double { return std::exp(-u / 2.); },
+                                                               t_max, 5 * int(1e3));
 
   basic_test_warper_at_order_1(warper, t_max, 1e-9);
   basic_test_warper_multidim(warper, t_max, 1e-9);
@@ -130,7 +131,7 @@ TEST(SimpleProduct1DWarper, InterpHybrid_ExponentialConstructor) { // NOLINT
        for (double l : li) {
          product *= std::expm1(-t_max / 2.) * l + 1.;
        }
-       return std::pow(- 2. * std::expm1(-t_max / 2.), li.size()) / product;
+       return std::pow(-2. * std::expm1(-t_max / 2.), li.size()) / product;
      },
      1e-10, 1e-10, 1e-6);
 }

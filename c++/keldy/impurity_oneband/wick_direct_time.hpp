@@ -32,7 +32,6 @@
 
 namespace keldy::impurity_oneband {
 
-
 class integrand_g_direct_time {
   g0_keldysh_contour_t g0;
   gf_index_t external_A;

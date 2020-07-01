@@ -7,7 +7,7 @@ using namespace keldy::impurity_oneband;
 
 TEST(integrand_direct, domain_checking) { // NOLINT
   model_param_t params;
-  params.time_max = 10.0; 
+  params.time_max = 10.0;
   params.nr_time_points_gf = 100;
   params.bath_type = "flatband";
   params.ft_method = "fft";

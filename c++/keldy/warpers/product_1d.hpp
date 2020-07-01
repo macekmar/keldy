@@ -34,8 +34,6 @@
 #include <numeric>
 #include <triqs/gfs.hpp>
 
-
-
 namespace keldy::warpers {
 
 using gf_t = triqs::gfs::gf<triqs::gfs::retime, triqs::gfs::scalar_real_valued>;
@@ -47,7 +45,7 @@ template <typename W>
                                                                            std::vector<double> const &li_vec) {
   auto xi_vec = li_vec;
   double jacobian_r = 1.0;
-  
+
   for (int i = 0; i < xi_vec.size(); i++) {
     auto &xi = xi_vec[i];
     auto [xi_vec_1, jac_r_1] = warpers_dims[i].map_reverse(std::vector<double>{xi});

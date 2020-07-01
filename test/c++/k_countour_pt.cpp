@@ -109,7 +109,8 @@ TEST(contour_pt_test, compare_3way_timeorder) { // NOLINT
       contour_pt_t d{t0, backward, 0};
       EXPECT_TRUE(compare_3way(c, d) > 0);
       EXPECT_TRUE(compare_3way(d, c) < 0);
-    }  }
+    }
+  }
 }
 
 MAKE_MAIN; // NOLINT

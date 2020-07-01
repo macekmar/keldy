@@ -67,7 +67,7 @@ bool are_iterable_near(T const &a, T const &b, double abs_tol) {
 };
 
 template <typename T>
-bool are_iterable_near(T const &a, T const &b, std::vector<double> const & abs_tol) {
+bool are_iterable_near(T const &a, T const &b, std::vector<double> const &abs_tol) {
   auto size_a = get_iterable_size(a);
   auto size_b = get_iterable_size(b);
   auto size_c = get_iterable_size(abs_tol);
