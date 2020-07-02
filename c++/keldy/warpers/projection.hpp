@@ -27,7 +27,6 @@
 #include "warpers_common.hpp"
 #include "product_1d_simple.hpp"
 #include "../interfaces/gsl_fit_linear_wrap.hpp"
-#include "../interfaces/gsl_filter_gaussian_wrap.hpp"
 #include "../interfaces/gsl_interp_wrap.hpp"
 #include "../interfaces/gsl_minimize.hpp"
 #include "../qrng.hpp"
