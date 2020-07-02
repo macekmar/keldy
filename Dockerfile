@@ -6,10 +6,10 @@ COPY requirements.txt /src/$APPNAME/requirements.txt
 RUN pip install -r /src/$APPNAME/requirements.txt
 
 ADD https://ftp.gnu.org/gnu/gsl/gsl-2.6.tar.gz /tmp/
-RUN cd /tmp && tar xf gsl-2.6.tar.gz && cd gsl-2.6 && \
-      ./configure --prefix=/opt/gsl-2.6 && make -j${NTHREAD} && make install && \
+RUN cd /tmp && tar -xf gsl-2.6.tar.gz && cd gsl-2.6 && \
+      ./configure --prefix=/usr/local && make -j${NTHREAD} && make install && \
       cd /tmp && rm -rf /tmp/gsl-2.6*
-ENV GSL_ROOT=/opt/gsl-2.6  
+ENV GSL_ROOT=/usr/local  
 
 COPY --chown=build . $SRC/$APPNAME
 WORKDIR $BUILD/$APPNAME
