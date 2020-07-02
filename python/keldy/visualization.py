@@ -3,7 +3,10 @@ Utility functions for visualization of the integrand and/or warper.
 """
 
 import numpy as _np
-from matplotlib import pyplot as _plt
+import matplotlib as _matplotlib
+_matplotlib.use('Agg')
+import matplotlib.pyplot as _plt
+
 from . import warpers as _warpers
 
 def _gray_code(n):
