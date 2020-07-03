@@ -22,23 +22,23 @@ using warper_func_t = std::function<double(std::vector<double>)>;
 using warper_map_t = std::function<std::vector<double>(std::vector<double>)>;
 
 template <typename W>
-inline void basic_test_warper_at_order_1(W const &warper, double const t_max, double const accuracy = 1e-10) {
+inline void basic_test_warper_at_order_1(W const &warper, double const t_max, double const accuracy) {
   EXPECT_GT(t_max, 0.);
 
   /// boundaries are almost equal
-  EXPECT_DOUBLE_EQ(warper.li_from_ui({0.})[0], 0.);
-  EXPECT_DOUBLE_EQ(warper.li_from_ui({t_max})[0], 1.);
-  EXPECT_DOUBLE_EQ(warper.ui_from_li({0.})[0], 0.);
-  EXPECT_DOUBLE_EQ(warper.ui_from_li({1.})[0], t_max);
+  EXPECT_NEAR(warper.li_from_ui({0.})[0], 0., accuracy);
+  EXPECT_NEAR(warper.li_from_ui({t_max})[0], 1., accuracy);
+  EXPECT_NEAR(warper.ui_from_li({0.})[0], 0., accuracy);
+  EXPECT_NEAR(warper.ui_from_li({1.})[0], t_max, accuracy);
 
   /// boundaries are respected
   for (double u : {0., 0.01 * t_max, 0.5 * t_max, 0.99 * t_max, t_max}) {
-    EXPECT_GE(warper.li_from_ui({u})[0], 0.);
-    EXPECT_LE(warper.li_from_ui({u})[0], 1.);
+    EXPECT_GE(warper.li_from_ui({u})[0], -accuracy);
+    EXPECT_LE(warper.li_from_ui({u})[0] - 1., accuracy);
   }
   for (double l : {0., 0.01, 0.5, 0.99, 1.}) {
-    EXPECT_GE(warper.ui_from_li({l})[0], 0.);
-    EXPECT_LE(warper.ui_from_li({l})[0], t_max);
+    EXPECT_GE(warper.ui_from_li({l})[0], -accuracy);
+    EXPECT_LE(warper.ui_from_li({l})[0] - t_max, accuracy);
   }
 
   /// difference in l is resolved in u (i.e. non-flatness of the l(u) curve)
@@ -57,21 +57,21 @@ inline void basic_test_warper_at_order_1(W const &warper, double const t_max, do
 };
 
 template <typename W>
-inline void basic_test_warper_multidim(W const &warper, double const t_max, double const accuracy = 1e-10) {
+inline void basic_test_warper_multidim(W const &warper, double const t_max, double const accuracy) {
   EXPECT_GT(t_max, 0.);
   std::vector<double> ui = {};
   std::vector<double> li = {};
   std::vector<double> li_plus = {};
 
   /// boundaries are almost equal
-  expect_iterable_double_eq(warper.li_from_ui({0., 0., 0., 0.}), {0., 0., 0., 0.});
-  expect_iterable_double_eq(warper.ui_from_li({0., 0., 0., 0.}), {0., 0., 0., 0.});
-  expect_iterable_double_eq(warper.li_from_ui({t_max, t_max, t_max, t_max}), {1., 1., 1., 1.});
-  expect_iterable_double_eq(warper.ui_from_li({1., 1., 1., 1.}), {t_max, t_max, t_max, t_max});
+  EXPECT_TRUE(are_iterable_near(warper.li_from_ui({0., 0., 0., 0.}), {0., 0., 0., 0.}, accuracy));
+  EXPECT_TRUE(are_iterable_near(warper.ui_from_li({0., 0., 0., 0.}), {0., 0., 0., 0.}, accuracy));
+  EXPECT_TRUE(are_iterable_near(warper.li_from_ui({t_max, t_max, t_max, t_max}), {1., 1., 1., 1.}, accuracy));
+  EXPECT_TRUE(are_iterable_near(warper.ui_from_li({1., 1., 1., 1.}), {t_max, t_max, t_max, t_max}, accuracy));
 
   /// boundaries are respected
   ui = {0.7 * t_max, t_max, 0.3 * t_max, 0.};
-  EXPECT_TRUE(vector_is_bounded(warper.li_from_ui(ui), 0., 1.));
+  EXPECT_TRUE(vector_is_bounded(warper.li_from_ui(ui), -accuracy, 1. + accuracy));
 
   /// difference in l is resolved in u (i.e. non-flatness of the l(u) curve)
   for (double l : {0.0001, 0.01, 0.5, 0.99, 0.9999}) {

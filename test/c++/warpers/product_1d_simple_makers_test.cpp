@@ -9,18 +9,45 @@ TEST(SimpleProduct1DWarperMaker, Exponential) { // NOLINT
   auto warper_1 = make_product_1d_simple_exponential_nointerp(10.0, 1.5);
   auto warper_2 = make_product_1d_simple_exponential_nointerp(1.0, 1.8);
   auto warper_3 = make_product_1d_simple_exponential_nointerp(20.0, 1.1);
+
+  double const tol = 1e-9;
+  basic_test_warper_at_order_1(warper_1, 10.0, tol);
+  basic_test_warper_at_order_1(warper_2, 1.0, tol);
+  basic_test_warper_at_order_1(warper_3, 20.0, tol);
+
+  basic_test_warper_multidim(warper_1, 10.0, tol);
+  basic_test_warper_multidim(warper_2, 1.0, tol);
+  basic_test_warper_multidim(warper_3, 20.0, tol);
 }
 
 TEST(SimpleProduct1DWarperMaker, Inverse) { // NOLINT
   auto warper_1 = make_product_1d_simple_inverse_nointerp(10.0, 1.5);
   auto warper_2 = make_product_1d_simple_inverse_nointerp(1.0, 1.8);
   auto warper_3 = make_product_1d_simple_inverse_nointerp(20.0, 1.1);
+
+  double const tol = 1e-13;
+  basic_test_warper_at_order_1(warper_1, 10.0, tol);
+  basic_test_warper_at_order_1(warper_2, 1.0, tol);
+  basic_test_warper_at_order_1(warper_3, 20.0, tol);
+
+  basic_test_warper_multidim(warper_1, 10.0, tol);
+  basic_test_warper_multidim(warper_2, 1.0, tol);
+  basic_test_warper_multidim(warper_3, 20.0, tol);
 }
 
 TEST(SimpleProduct1DWarperMaker, InverseSquare) { // NOLINT
   auto warper_1 = make_product_1d_simple_inverse_square_nointerp(10.0, 1.5);
   auto warper_2 = make_product_1d_simple_inverse_square_nointerp(1.0, 1.8);
   auto warper_3 = make_product_1d_simple_inverse_square_nointerp(20.0, 1.1);
+
+  double const tol = 1e-13;
+  basic_test_warper_at_order_1(warper_1, 10.0, tol);
+  basic_test_warper_at_order_1(warper_2, 1.0, tol);
+  basic_test_warper_at_order_1(warper_3, 20.0, tol);
+
+  basic_test_warper_multidim(warper_1, 10.0, tol);
+  basic_test_warper_multidim(warper_2, 1.0, tol);
+  basic_test_warper_multidim(warper_3, 20.0, tol);
 }
 
 MAKE_MAIN; // NOLINT

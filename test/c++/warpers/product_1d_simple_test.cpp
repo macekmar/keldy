@@ -22,8 +22,8 @@ TEST(SimpleProduct1DWarper, NointerpIdentityConstructor2) { // NOLINT
                                                  [t_max](double u) -> double { return u / t_max; },
                                                  [t_max](double l) -> double { return t_max * l; }, t_max);
 
-  basic_test_warper_at_order_1(warper, t_max);
-  basic_test_warper_multidim(warper, t_max);
+  basic_test_warper_at_order_1(warper, t_max, 1e-14);
+  basic_test_warper_multidim(warper, t_max, 1e-14);
 
   function_test_warper(
      warper, t_max, [](std::vector<double> const & /**/) -> double { return 1.; },

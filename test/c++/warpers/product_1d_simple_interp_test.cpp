@@ -23,8 +23,8 @@ TEST(SimpleProduct1DWarper, InterpNearest_Default) { // NOLINT
   double const t_max = 1.5;
   auto warper = warper_product_1d_simple_interp_nearest_t([](double /**/) { return 1.0; }, t_max, 8);
 
-  basic_test_warper_at_order_1(warper, t_max);
-  basic_test_warper_multidim(warper, t_max);
+  basic_test_warper_at_order_1(warper, t_max, 1e-10);
+  basic_test_warper_multidim(warper, t_max, 1e-10);
 
   function_test_warper(
      warper, t_max, [](std::vector<double> const & /**/) -> double { return 1.; },
@@ -36,8 +36,8 @@ TEST(SimpleProduct1DWarper, InterpNearest_IdentityConstructor) { // NOLINT
   double const t_max = 1.5;
   auto const warper = warper_product_1d_simple_interp_nearest_t([](double /**/) -> double { return 1.; }, t_max, 1.0e2);
 
-  basic_test_warper_at_order_1(warper, t_max);
-  basic_test_warper_multidim(warper, t_max);
+  basic_test_warper_at_order_1(warper, t_max, 1e-10);
+  basic_test_warper_multidim(warper, t_max, 1e-10);
 
   function_test_warper(
      warper, t_max, [](std::vector<double> const /**/) -> double { return 1.; },
@@ -83,8 +83,8 @@ TEST(SimpleProduct1DWarper, InterpHybrid_Default) { // NOLINT
   double const t_max = 1.5;
   auto warper = warper_product_1d_simple_interp_hybrid_t([](double /**/) { return 1.0; }, t_max, 8);
 
-  basic_test_warper_at_order_1(warper, t_max);
-  basic_test_warper_multidim(warper, t_max);
+  basic_test_warper_at_order_1(warper, t_max, 1e-10);
+  basic_test_warper_multidim(warper, t_max, 1e-10);
 
   function_test_warper(
      warper, t_max, [](std::vector<double> const & /**/) -> double { return 1.; },
@@ -96,8 +96,8 @@ TEST(SimpleProduct1DWarper, InterpHybrid_IdentityConstructor) { // NOLINT
   double const t_max = 1.5;
   auto const warper = warper_product_1d_simple_interp_hybrid_t([](double /**/) -> double { return 1.; }, t_max, 1.0e2);
 
-  basic_test_warper_at_order_1(warper, t_max);
-  basic_test_warper_multidim(warper, t_max);
+  basic_test_warper_at_order_1(warper, t_max, 1e-10);
+  basic_test_warper_multidim(warper, t_max, 1e-10);
 
   function_test_warper(
      warper, t_max, [](std::vector<double> const /**/) -> double { return 1.; },

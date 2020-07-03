@@ -27,7 +27,7 @@ TEST(Product1DWarper, Default) { // NOLINT
   warper.emplace_back({const_function, t_max, 8});
 
   /// only order 1 exists
-  basic_test_warper_at_order_1(warper, t_max);
+  basic_test_warper_at_order_1(warper, t_max, 1e-14);
 }
 
 TEST(Product1DWarper, Identity) { // NOLINT
@@ -40,8 +40,8 @@ TEST(Product1DWarper, Identity) { // NOLINT
   warper.emplace_back({cst, t_max, int(1e2)});
   warper.emplace_back({cst, t_max, int(1e2)});
 
-  basic_test_warper_at_order_1(warper, t_max);
-  basic_test_warper_multidim(warper, t_max);
+  basic_test_warper_at_order_1(warper, t_max, 1e-14);
+  basic_test_warper_multidim(warper, t_max, 1e-14);
 
   function_test_warper(
      warper, t_max, [](std::vector<double> const ui) -> double { return 1.; },
