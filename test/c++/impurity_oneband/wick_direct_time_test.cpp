@@ -10,6 +10,11 @@
 using namespace keldy;
 using namespace keldy::impurity_oneband;
 
+// Complex Double equal
+#define EXPECT_DCOMPLEX_COORD_EQ(a, b)                                                                                 \
+  EXPECT_DOUBLE_EQ((a).real(), (b).real());                                                                            \
+  EXPECT_DOUBLE_EQ((a).imag(), (b).imag())
+
 TEST(integrand_direct_time, time) { // NOLINT
   model_param_t params;
   params.time_max = 10.0;
@@ -46,7 +51,7 @@ TEST(integrand_direct_time, consistency) { // NOLINT
   std::vector<double> time_vec = {2.5, 1.2};
   binner::sparse_binner_t<1> res = integrand(time_vec).first;
   EXPECT_EQ(res.data.size(), 1);
-  EXPECT_EQ(res.data[0].second, integrand_direct(time_vec).first);
+  EXPECT_DCOMPLEX_COORD_EQ(res.data[0].second, integrand_direct(time_vec).first);
 }
 
 TEST(integration_direct_time, consistency) { // NOLINT
@@ -70,7 +75,7 @@ TEST(integration_direct_time, consistency) { // NOLINT
   std::cout << result_direct << std::endl;
   std::cout << result.get_data() << std::endl;
 
-  EXPECT_COMPLEX_NEAR(sum(result.get_data()), result_direct);
+  EXPECT_DCOMPLEX_COORD_EQ(sum(result.get_data()), result_direct);
 }
 
 MAKE_MAIN; // NOLINT
