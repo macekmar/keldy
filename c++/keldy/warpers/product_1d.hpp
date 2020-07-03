@@ -243,9 +243,9 @@ inline warper_product_1d_t make_product_1d_inverse_cube_alternate(int order, dou
   warper_product_1d_t result{};
   for (int n = 1; n <= order; ++n) {
     if (n % 2 == 0) {
-      result.emplace_back(make_product_1d_simple_inverse_nointerp(time, warper_scale));
+      result.emplace_back(make_product_1d_simple_inverse_power(3, time, warper_scale));
     } else {
-      result.emplace_back(make_product_1d_simple_inverse_square_nointerp(time, warper_scale));
+      result.emplace_back(make_product_1d_simple_inverse(time, warper_scale));
     }
   }
   return result;

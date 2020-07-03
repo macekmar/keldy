@@ -420,11 +420,13 @@ module.add_function ("std::vector<double> keldy::warpers::vi_from_ui (double t_m
 
 module.add_function ("std::vector<double> keldy::warpers::ui_from_vi (double t_max, std::vector<double> v_times)", doc = r"""""")
 
-module.add_function ("keldy::warpers::warper_product_1d_simple_t keldy::warpers::make_product_1d_simple_exponential_nointerp (double domain_u_max, double w_scale)", doc = r"""""")
+module.add_function ("keldy::warpers::warper_product_1d_simple_t keldy::warpers::make_product_1d_simple_exponential (double domain_u_max, double w_scale)", doc = r"""""")
 
-module.add_function ("keldy::warpers::warper_product_1d_simple_t keldy::warpers::make_product_1d_simple_inverse_nointerp (double domain_u_max, double w_scale)", doc = r"""""")
+module.add_function ("keldy::warpers::warper_product_1d_simple_t keldy::warpers::make_product_1d_simple_inverse (double domain_u_max, double w_scale)", doc = r"""""")
 
-module.add_function ("keldy::warpers::warper_product_1d_simple_t keldy::warpers::make_product_1d_simple_inverse_square_nointerp (double domain_u_max, double w_scale)", doc = r"""""")
+module.add_function ("keldy::warpers::warper_product_1d_simple_t keldy::warpers::make_product_1d_simple_inverse_square (double domain_u_max, double w_scale)", doc = r"""""")
+
+module.add_function ("keldy::warpers::warper_product_1d_simple_t keldy::warpers::make_product_1d_simple_inverse_power (int power, double domain_u_max, double w_scale)", doc = r"""""")
 
 module.add_function ("keldy::warpers::warper_product_1d_t keldy::warpers::make_product_1d_inverse_cube_alternate (int order, double time, double warper_scale)", doc = r"""""")
 

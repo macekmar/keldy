@@ -53,7 +53,7 @@ TEST(WarperTrain, ConstructionAddingWarpers) { // NOLINT
 
   // construct exponential warper
   double warper_scale = 1.0;
-  w.emplace_back(make_product_1d_simple_exponential_nointerp(t_max, warper_scale));
+  w.emplace_back(make_product_1d_simple_exponential(t_max, warper_scale));
 
   // Make tests
 }

@@ -379,7 +379,7 @@ class warper_product_1d_simple_interp_hybrid_t : public warper_product_1d_simple
 
 // Maker Functions:
 
-inline warper_product_1d_simple_t make_product_1d_simple_exponential_nointerp(double domain_u_max, double w_scale) {
+inline warper_product_1d_simple_t make_product_1d_simple_exponential(double domain_u_max, double w_scale) {
   return {[w_scale, domain_u_max](double t) -> double {
             long double norm = -std::expm1(-static_cast<long double>(domain_u_max) / w_scale);
             return std::exp(-t / w_scale) / (w_scale * norm);
@@ -395,7 +395,7 @@ inline warper_product_1d_simple_t make_product_1d_simple_exponential_nointerp(do
           domain_u_max};
 }
 
-inline warper_product_1d_simple_t make_product_1d_simple_inverse_nointerp(double domain_u_max, double w_scale) {
+inline warper_product_1d_simple_t make_product_1d_simple_inverse(double domain_u_max, double w_scale) {
   return {[w_scale, domain_u_max](double t) -> double {
             long double norm = std::log1p(static_cast<long double>(domain_u_max) / w_scale);
             return 1.0 / (norm * (w_scale + t));
@@ -411,7 +411,7 @@ inline warper_product_1d_simple_t make_product_1d_simple_inverse_nointerp(double
           domain_u_max};
 }
 
-inline warper_product_1d_simple_t make_product_1d_simple_inverse_square_nointerp(double domain_u_max, double w_scale) {
+inline warper_product_1d_simple_t make_product_1d_simple_inverse_square(double domain_u_max, double w_scale) {
   return {[w_scale, domain_u_max](double t) -> double {
             long double norm = static_cast<long double>(domain_u_max) / (w_scale + domain_u_max);
             return w_scale / ((w_scale + t) * (w_scale + t) * norm);
@@ -423,6 +423,28 @@ inline warper_product_1d_simple_t make_product_1d_simple_inverse_square_nointerp
           [w_scale, domain_u_max](double l) -> double {
             long double norm = static_cast<long double>(domain_u_max) / (w_scale + domain_u_max);
             return norm * l * w_scale / (1.0 - norm * l);
+          },
+          domain_u_max};
+}
+
+inline warper_product_1d_simple_t make_product_1d_simple_inverse_power(int power, double domain_u_max, double w_scale) {
+  if (power == 1) {
+    return make_product_1d_simple_inverse(domain_u_max, w_scale);
+  }
+  auto u_max = static_cast<long double>(domain_u_max);
+  return {[power, w_scale, u_max](double t) -> double {
+            long double norm =
+               (power - 1) * std::pow(u_max + w_scale, power - 1) / (std::pow(u_max / w_scale + 1, power - 1) - 1);
+            return norm / (w_scale + t);
+          },
+          [power, w_scale, u_max](double t) -> double {
+            long double norm = std::pow(u_max + w_scale, power - 1) / (std::pow(u_max / w_scale + 1, power - 1) - 1);
+            return norm * (std::pow(t / w_scale + 1, power - 1) - 1) / std::pow(t + w_scale, power - 1);
+          },
+          [power, w_scale, u_max](double l) -> double {
+            long double denom =
+               std::pow(1 + l * (std::pow(w_scale / (u_max + w_scale), power - 1) - 1), 1.0 / (power - 1.0));
+            return w_scale * (1 - denom) / denom;
           },
           domain_u_max};
 }
