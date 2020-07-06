@@ -33,6 +33,7 @@
 
 #include <variant>
 #include <vector>
+#include <utility>
 
 namespace keldy::warpers {
 
@@ -49,14 +50,17 @@ class warper_train_t {
   warper_train_t() = default;
 
   // Add warpers
-  void emplace_back(warper_identity_t w) { warpers.emplace_back(w); }
-  void emplace_back(warper_plasma_uv_t w) { warpers.emplace_back(w); }
-  void emplace_back(warper_product_1d_simple_t w) { warpers.emplace_back(std::move(w)); }
-  void emplace_back(warper_product_1d_simple_interp_nearest_t w) { warpers.emplace_back(std::move(w)); }
-  void emplace_back(warper_product_1d_t w) { warpers.emplace_back(std::move(w)); }
-  void emplace_back(warper_product_1d_interp_nearest_t w) { warpers.emplace_back(std::move(w)); }
-  void emplace_back(warper_product_1d_interp_hybrid_t w) { warpers.emplace_back(std::move(w)); }
-  void emplace_back(warper_projection_t w) { warpers.emplace_back(std::move(w)); }
+  void emplace_back(warper_identity_t& w) { warpers.emplace_back(w); }
+  void emplace_back(warper_plasma_uv_t& w) { warpers.emplace_back(w); }
+  void emplace_back(warper_product_1d_simple_t& w) { warpers.emplace_back(w); }
+  void emplace_back(warper_product_1d_simple_interp_nearest_t& w) { warpers.emplace_back(w); }
+  void emplace_back(warper_product_1d_t& w) { warpers.emplace_back(w); }
+  void emplace_back(warper_product_1d_interp_nearest_t& w) { warpers.emplace_back(w); }
+  void emplace_back(warper_product_1d_interp_hybrid_t& w) { warpers.emplace_back(w); }
+  void emplace_back(warper_projection_t& w) { warpers.emplace_back(w); }
+
+  template<typename W>
+  void emplace_back(W &&w) { warpers.emplace_back(std::move(w)); }
 
   // Warper Vector
   void clear() { warpers.clear(); }

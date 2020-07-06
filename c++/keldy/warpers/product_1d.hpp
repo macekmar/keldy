@@ -128,7 +128,8 @@ class warper_product_1d_t {
   warper_product_1d_t() = default;
 
   int size() { return warpers_dims.size(); }
-  void emplace_back(warper_product_1d_simple_t w) { warpers_dims.emplace_back(std::move(w)); }
+  void emplace_back(warper_product_1d_simple_t& w) { warpers_dims.emplace_back(std::move(w)); }
+  void emplace_back(warper_product_1d_simple_t&& w) { warpers_dims.emplace_back(std::move(w)); }
 
   [[nodiscard]] std::pair<std::vector<double>, double> map_reverse(std::vector<double> const &li_vec) const {
     return warper_1d_map_reverse(warpers_dims, li_vec);
@@ -167,7 +168,8 @@ class warper_product_1d_interp_nearest_t {
   warper_product_1d_interp_nearest_t() = default;
 
   int size() { return warpers_dims.size(); }
-  void emplace_back(warper_product_1d_simple_interp_nearest_t w) { warpers_dims.emplace_back(std::move(w)); }
+  void emplace_back(warper_product_1d_simple_interp_nearest_t &w) { warpers_dims.emplace_back(std::move(w)); }
+  void emplace_back(warper_product_1d_simple_interp_nearest_t &&w) { warpers_dims.emplace_back(std::move(w)); }
 
   [[nodiscard]] std::pair<std::vector<double>, double> map_reverse(std::vector<double> const &li_vec) const {
     return warper_1d_map_reverse(warpers_dims, li_vec);
@@ -206,7 +208,8 @@ class warper_product_1d_interp_hybrid_t {
   warper_product_1d_interp_hybrid_t() = default;
 
   int size() { return warpers_dims.size(); }
-  void emplace_back(warper_product_1d_simple_interp_hybrid_t w) { warpers_dims.emplace_back(std::move(w)); }
+  void emplace_back(warper_product_1d_simple_interp_hybrid_t &w) { warpers_dims.emplace_back(std::move(w)); }
+  void emplace_back(warper_product_1d_simple_interp_hybrid_t &&w) { warpers_dims.emplace_back(std::move(w)); }
 
   [[nodiscard]] std::pair<std::vector<double>, double> map_reverse(std::vector<double> const &li_vec) const {
     return warper_1d_map_reverse(warpers_dims, li_vec);
