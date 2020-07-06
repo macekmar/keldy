@@ -1,5 +1,6 @@
 #include "keldy/warpers/plasma_uv.hpp"
 #include "keldy/warpers/product_1d_simple.hpp"
+#include <gtest/gtest.h>
 #include <keldy/common.hpp>
 #include <keldy/impurity_oneband/compute_obs.hpp>
 #include <keldy/impurity_oneband/wick_direct_time.hpp>
@@ -51,7 +52,10 @@ TEST(integrand_direct_time, consistency) { // NOLINT
   std::vector<double> time_vec = {2.5, 1.2};
   binner::sparse_binner_t<1> res = integrand(time_vec).first;
   EXPECT_EQ(res.data.size(), 1);
-  EXPECT_DCOMPLEX_COORD_EQ(res.data[0].second, integrand_direct(time_vec).first);
+  auto integrand_direct_out = integrand_direct(time_vec).first;
+
+  EXPECT_DOUBLE_EQ(res.data[0].second.real(), integrand_direct_out.real());
+  EXPECT_DOUBLE_EQ(res.data[0].second.imag(), integrand_direct_out.imag());
 }
 
 TEST(integration_direct_time, consistency) { // NOLINT
@@ -75,7 +79,10 @@ TEST(integration_direct_time, consistency) { // NOLINT
   std::cout << result_direct << std::endl;
   std::cout << result.get_data() << std::endl;
 
-  EXPECT_DCOMPLEX_COORD_EQ(sum(result.get_data()), result_direct);
+  auto integrand_summed = sum(result.get_data());
+
+  EXPECT_DOUBLE_EQ(integrand_summed.real(), result_direct.real());
+  EXPECT_DOUBLE_EQ(integrand_summed.imag(), result_direct.imag());
 }
 
 MAKE_MAIN; // NOLINT
