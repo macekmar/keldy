@@ -31,6 +31,7 @@
 #include <itertools/omp_chunk.hpp>
 #include <numeric>
 #include <triqs/gfs.hpp>
+#include <memory>
 #include <triqs/utility/exceptions.hpp>
 #include <triqs/utility/macros.hpp>
 #include <gsl/gsl_interp.h>
@@ -41,7 +42,7 @@ namespace keldy::warpers {
 using gf_t = triqs::gfs::gf<triqs::gfs::retime, triqs::gfs::scalar_real_valued>;
 
 class warper_product_1d_simple_t {
- protected:
+ private:
   double f1_integrated_normalization = 1.0;
 
   std::function<double(double)> f1 = [](double /*u*/) { return 1.0; };
@@ -102,6 +103,8 @@ class warper_product_1d_simple_t {
       }
     }
   }
+
+  // ****************************************
 
   [[nodiscard]] std::pair<std::vector<double>, double> map_reverse(std::vector<double> const &li_vec) const {
     auto xi_vec = li_vec;
@@ -168,21 +171,42 @@ class warper_product_1d_simple_t {
 
 namespace nda = triqs::arrays;
 
-class warper_product_1d_simple_interp_nearest_t : public warper_product_1d_simple_t {
+class warper_product_1d_simple_interp_nearest_t {
  private:
+  double f1_integrated_normalization = 1.0;
+
+  constexpr static double domain_u_min = 0.0; // alwyas start at 0.0
+  double domain_u_max = 1.0;                  // "t_max"
+
+  constexpr static double codomain_l_min = 0.0;
+  constexpr static double codomain_l_max = 1.0;
+
   int nr_sample_points = 0;
 
   nda::vector<double> times_u_pts{};
   nda::vector<double> f1_pts{};
   nda::vector<double> f1_integrated_pts{};
 
+  std::shared_ptr<gsl_spline> sp_f_integrated;
+  std::shared_ptr<gsl_spline> sp_f_integrated_inverse;
+
+  std::shared_ptr<gsl_interp_accel> acc_f_integrated;
+  std::shared_ptr<gsl_interp_accel> acc_f_integrated_inverse;
+
   // f is constant interpolated to nearest downward: this piggy-backs on the acc lookup for f_integrated
+  double f1(double u) const {
+    auto i = gsl_interp_accel_find(acc_f_integrated.get(), times_u_pts.data_start(), nr_sample_points, u);
+    if (i == times_u_pts.size() - 1) {
+      return f1_pts[i];
+    };
+    return 0.5 * (f1_pts[i] + f1_pts[i + 1]);
+  }
 
-  std::unique_ptr<gsl_spline, decltype(&gsl_spline_free)> sp_f_integrated;
-  std::unique_ptr<gsl_spline, decltype(&gsl_spline_free)> sp_f_integrated_inverse;
+  double f1_integrated(double u) const { return gsl_spline_eval(sp_f_integrated.get(), u, acc_f_integrated.get()); }
 
-  std::unique_ptr<gsl_interp_accel, decltype(&gsl_interp_accel_free)> acc_f_integrated;
-  std::unique_ptr<gsl_interp_accel, decltype(&gsl_interp_accel_free)> acc_f_integrated_inverse;
+  double f1_integrated_inverse(double l) const {
+    return gsl_spline_eval(sp_f_integrated_inverse.get(), l, acc_f_integrated_inverse.get());
+  }
 
  public:
   warper_product_1d_simple_interp_nearest_t()
@@ -193,17 +217,7 @@ class warper_product_1d_simple_interp_nearest_t : public warper_product_1d_simpl
 
   warper_product_1d_simple_interp_nearest_t(std::function<double(double)> const &f1_, double domain_u_max_,
                                             int nr_sample_points_)
-     : warper_product_1d_simple_t{
-        [this](double u) {
-          auto i = gsl_interp_accel_find(acc_f_integrated.get(), times_u_pts.data_start(), nr_sample_points, u);
-          if (i == times_u_pts.size() - 1) {
-            return f1_pts[i];
-          };
-          return 0.5 * (f1_pts[i] + f1_pts[i + 1]);
-        },
-        [this](double u) { return gsl_spline_eval(sp_f_integrated.get(), u, acc_f_integrated.get()); },
-        [this](double l) { return gsl_spline_eval(sp_f_integrated_inverse.get(), l, acc_f_integrated_inverse.get()); },
-        domain_u_max_, false},
+     : domain_u_max{domain_u_max_},
        nr_sample_points{nr_sample_points_},
        times_u_pts(nr_sample_points),
        f1_pts(nr_sample_points),
@@ -243,51 +257,97 @@ class warper_product_1d_simple_interp_nearest_t : public warper_product_1d_simpl
                     nr_sample_points);
   }
 
-  // Need to deep-copy for python layer
-  warper_product_1d_simple_interp_nearest_t(const warper_product_1d_simple_interp_nearest_t &o)
-     : warper_product_1d_simple_t{
-        [this](double u) {
-          auto i = gsl_interp_accel_find(acc_f_integrated.get(), times_u_pts.data_start(), nr_sample_points, u);
-          if (i == times_u_pts.size() - 1) {
-            return f1_pts[i];
-          };
-          return 0.5 * (f1_pts[i] + f1_pts[i + 1]);
-        },
-        [this](double u) { return gsl_spline_eval(sp_f_integrated.get(), u, acc_f_integrated.get()); },
-        [this](double l) { return gsl_spline_eval(sp_f_integrated_inverse.get(), l, acc_f_integrated_inverse.get()); },
-        o.domain_u_max, false},
-       nr_sample_points{o.nr_sample_points},
-       times_u_pts(o.times_u_pts),
-       f1_pts(o.f1_pts),
-       f1_integrated_pts(o.f1_integrated_pts),
-       sp_f_integrated{gsl_spline_alloc(gsl_interp_linear, nr_sample_points), gsl_spline_free},
-       sp_f_integrated_inverse{gsl_spline_alloc(gsl_interp_linear, nr_sample_points), gsl_spline_free},
-       acc_f_integrated{gsl_interp_accel_alloc(), gsl_interp_accel_free},
-       acc_f_integrated_inverse{gsl_interp_accel_alloc(), gsl_interp_accel_free} {
-    gsl_spline_init(sp_f_integrated.get(), times_u_pts.data_start(), f1_integrated_pts.data_start(), nr_sample_points);
-    gsl_spline_init(sp_f_integrated_inverse.get(), f1_integrated_pts.data_start(), times_u_pts.data_start(),
-                    nr_sample_points);
+  // ****************************************
+
+  [[nodiscard]] std::pair<std::vector<double>, double> map_reverse(std::vector<double> const &li_vec) const {
+    auto xi_vec = li_vec;
+    double jacobian_r = 1.0;
+    for (auto &xi : xi_vec) {
+      xi = f1_integrated_inverse(xi);
+      jacobian_r *= 1.0 / f1(xi); // f1 defined in ui, so evaluate after map
+    }
+    return std::make_pair(xi_vec, jacobian_r);
   }
 
-  warper_product_1d_simple_interp_nearest_t &operator=(const warper_product_1d_simple_interp_nearest_t &o) {
-    warper_product_1d_simple_interp_nearest_t tmp(o);
-    std::swap(*this, tmp);
-    return *this;
+  [[nodiscard]] std::pair<std::vector<double>, double> map_forward(std::vector<double> const &ui_vec) const {
+    auto xi_vec = ui_vec;
+    double jacobian_f = 1.0;
+    for (auto &xi : xi_vec) {
+      jacobian_f *= f1(xi); // f1 defined in ui, so evaluate before map
+      xi = f1_integrated_inverse(xi);
+    }
+    return std::make_pair(xi_vec, jacobian_f);
+  }
+
+  [[nodiscard]] std::vector<double> ui_from_li(std::vector<double> const &li_vec) const {
+    std::vector<double> ui_vec = li_vec;
+    for (auto &ui : ui_vec) {
+      ui = f1_integrated_inverse(ui);
+    }
+    return ui_vec;
+  }
+
+  [[nodiscard]] std::vector<double> li_from_ui(std::vector<double> const &ui_vec) const {
+    std::vector<double> li_vec = ui_vec;
+    for (auto &li : li_vec) {
+      li = f1_integrated(li);
+    }
+    return li_vec;
+  }
+
+  [[nodiscard]] double jacobian_reverse(std::vector<double> const &li_vec) const {
+    double result = 1.0;
+    for (auto const &li : li_vec) {
+      result *= 1.0 / f1(f1_integrated_inverse(li));
+    }
+    return result;
+  }
+
+  [[nodiscard]] double jacobian_forward(std::vector<double> const &ui_vec) const {
+    double result = 1.0;
+    for (auto const &ui : ui_vec) {
+      result *= f1(ui);
+    }
+    return result;
+  }
+
+  [[nodiscard]] double operator()(std::vector<double> const &ui_vec) const {
+    double result = 1.0;
+    for (auto const &ui : ui_vec) {
+      result *= f1(ui) / f1_integrated_normalization;
+    }
+    return result;
   }
 };
 
-class warper_product_1d_simple_interp_hybrid_t : public warper_product_1d_simple_t {
+class warper_product_1d_simple_interp_hybrid_t {
  private:
+  double f1_integrated_normalization = 1.0;
+
+  constexpr static double domain_u_min = 0.0; // alwyas start at 0.0
+  double domain_u_max = 1.0;                  // "t_max"
+
+  constexpr static double codomain_l_min = 0.0;
+  constexpr static double codomain_l_max = 1.0;
+
   int nr_sample_points = 0;
 
   nda::vector<double> times_u_pts{};
   nda::vector<double> f1_integrated_pts{};
 
-  std::unique_ptr<gsl_spline, decltype(&gsl_spline_free)> sp_f_integrated;
-  std::unique_ptr<gsl_spline, decltype(&gsl_spline_free)> sp_f_integrated_inverse;
+  std::shared_ptr<gsl_spline> sp_f_integrated;
+  std::shared_ptr<gsl_spline> sp_f_integrated_inverse;
 
-  std::unique_ptr<gsl_interp_accel, decltype(&gsl_interp_accel_free)> acc_f_integrated;
-  std::unique_ptr<gsl_interp_accel, decltype(&gsl_interp_accel_free)> acc_f_integrated_inverse;
+  std::shared_ptr<gsl_interp_accel> acc_f_integrated;
+  std::shared_ptr<gsl_interp_accel> acc_f_integrated_inverse;
+
+  std::function<double(double)> f1 = [](double u [[maybe_unused]]) { return 1.0; };
+
+  double f1_integrated(double u) const { return gsl_spline_eval(sp_f_integrated.get(), u, acc_f_integrated.get()); }
+
+  double f1_integrated_inverse(double l) const {
+    return gsl_spline_eval(sp_f_integrated_inverse.get(), l, acc_f_integrated_inverse.get());
+  }
 
  public:
   warper_product_1d_simple_interp_hybrid_t()
@@ -298,12 +358,7 @@ class warper_product_1d_simple_interp_hybrid_t : public warper_product_1d_simple
 
   warper_product_1d_simple_interp_hybrid_t(std::function<double(double)> const &f1_, double domain_u_max_,
                                            int nr_sample_points_)
-     : warper_product_1d_simple_t{
-        {}, // set f1 later due to normalization
-        [this](double u) { return gsl_spline_eval(sp_f_integrated.get(), u, acc_f_integrated.get()); },
-        [this](double l) { return gsl_spline_eval(sp_f_integrated_inverse.get(), l, acc_f_integrated_inverse.get()); },
-        domain_u_max_,
-        false},
+     : domain_u_max{domain_u_max_},
        nr_sample_points{nr_sample_points_},
        times_u_pts(nr_sample_points),
        f1_integrated_pts(nr_sample_points),
@@ -350,28 +405,66 @@ class warper_product_1d_simple_interp_hybrid_t : public warper_product_1d_simple
                     nr_sample_points);
   }
 
-  // Need to deep-copy for python layer
-  warper_product_1d_simple_interp_hybrid_t(const warper_product_1d_simple_interp_hybrid_t &o)
-     : warper_product_1d_simple_t{
-        o.f1, [this](double u) { return gsl_spline_eval(sp_f_integrated.get(), u, acc_f_integrated.get()); },
-        [this](double l) { return gsl_spline_eval(sp_f_integrated_inverse.get(), l, acc_f_integrated_inverse.get()); },
-        o.domain_u_max, false},
-       nr_sample_points{o.nr_sample_points},
-       times_u_pts(o.times_u_pts),
-       f1_integrated_pts(o.f1_integrated_pts),
-       sp_f_integrated{gsl_spline_alloc(gsl_interp_steffen, nr_sample_points), gsl_spline_free},
-       sp_f_integrated_inverse{gsl_spline_alloc(gsl_interp_steffen, nr_sample_points), gsl_spline_free},
-       acc_f_integrated{gsl_interp_accel_alloc(), gsl_interp_accel_free},
-       acc_f_integrated_inverse{gsl_interp_accel_alloc(), gsl_interp_accel_free} {
-    gsl_spline_init(sp_f_integrated.get(), times_u_pts.data_start(), f1_integrated_pts.data_start(), nr_sample_points);
-    gsl_spline_init(sp_f_integrated_inverse.get(), f1_integrated_pts.data_start(), times_u_pts.data_start(),
-                    nr_sample_points);
+  // ****************************************
+
+  [[nodiscard]] std::pair<std::vector<double>, double> map_reverse(std::vector<double> const &li_vec) const {
+    auto xi_vec = li_vec;
+    double jacobian_r = 1.0;
+    for (auto &xi : xi_vec) {
+      xi = f1_integrated_inverse(xi);
+      jacobian_r *= 1.0 / f1(xi); // f1 defined in ui, so evaluate after map
+    }
+    return std::make_pair(xi_vec, jacobian_r);
   }
 
-  warper_product_1d_simple_interp_hybrid_t &operator=(const warper_product_1d_simple_interp_hybrid_t &o) {
-    warper_product_1d_simple_interp_hybrid_t tmp(o);
-    std::swap(*this, tmp);
-    return *this;
+  [[nodiscard]] std::pair<std::vector<double>, double> map_forward(std::vector<double> const &ui_vec) const {
+    auto xi_vec = ui_vec;
+    double jacobian_f = 1.0;
+    for (auto &xi : xi_vec) {
+      jacobian_f *= f1(xi); // f1 defined in ui, so evaluate before map
+      xi = f1_integrated_inverse(xi);
+    }
+    return std::make_pair(xi_vec, jacobian_f);
+  }
+
+  [[nodiscard]] std::vector<double> ui_from_li(std::vector<double> const &li_vec) const {
+    std::vector<double> ui_vec = li_vec;
+    for (auto &ui : ui_vec) {
+      ui = f1_integrated_inverse(ui);
+    }
+    return ui_vec;
+  }
+
+  [[nodiscard]] std::vector<double> li_from_ui(std::vector<double> const &ui_vec) const {
+    std::vector<double> li_vec = ui_vec;
+    for (auto &li : li_vec) {
+      li = f1_integrated(li);
+    }
+    return li_vec;
+  }
+
+  [[nodiscard]] double jacobian_reverse(std::vector<double> const &li_vec) const {
+    double result = 1.0;
+    for (auto const &li : li_vec) {
+      result *= 1.0 / f1(f1_integrated_inverse(li));
+    }
+    return result;
+  }
+
+  [[nodiscard]] double jacobian_forward(std::vector<double> const &ui_vec) const {
+    double result = 1.0;
+    for (auto const &ui : ui_vec) {
+      result *= f1(ui);
+    }
+    return result;
+  }
+
+  [[nodiscard]] double operator()(std::vector<double> const &ui_vec) const {
+    double result = 1.0;
+    for (auto const &ui : ui_vec) {
+      result *= f1(ui) / f1_integrated_normalization;
+    }
+    return result;
   }
 };
 
