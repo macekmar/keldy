@@ -126,6 +126,7 @@ class warper_product_1d_t {
 
  public:
   warper_product_1d_t() = default;
+  void reserve(size_t new_cap) { warpers_dims.reserve(new_cap); }
 
   int size() { return warpers_dims.size(); }
   void emplace_back(warper_product_1d_simple_t& w) { warpers_dims.emplace_back(std::move(w)); }
@@ -166,6 +167,7 @@ class warper_product_1d_interp_nearest_t {
 
  public:
   warper_product_1d_interp_nearest_t() = default;
+  void reserve(size_t new_cap) { warpers_dims.reserve(new_cap); }
 
   int size() { return warpers_dims.size(); }
   void emplace_back(warper_product_1d_simple_interp_nearest_t &w) { warpers_dims.emplace_back(std::move(w)); }
@@ -206,6 +208,7 @@ class warper_product_1d_interp_hybrid_t {
 
  public:
   warper_product_1d_interp_hybrid_t() = default;
+  void reserve(size_t new_cap) { warpers_dims.reserve(new_cap); }
 
   int size() { return warpers_dims.size(); }
   void emplace_back(warper_product_1d_simple_interp_hybrid_t &w) { warpers_dims.emplace_back(std::move(w)); }
@@ -244,6 +247,8 @@ class warper_product_1d_interp_hybrid_t {
 
 inline warper_product_1d_t make_product_1d_inverse_cube_alternate(int order, double time, double warper_scale) {
   warper_product_1d_t result{};
+  result.reserve(order);
+
   for (int n = 1; n <= order; ++n) {
     if (n % 2 == 0) {
       result.emplace_back(make_product_1d_simple_inverse_power(3, time, warper_scale));
@@ -258,6 +263,7 @@ inline warper_product_1d_interp_nearest_t
 make_product_1d_inverse_cube_alternate_interp_nearest(int order, double time, double warper_scale,
                                                       int nr_sample_points_warper) {
   warper_product_1d_interp_nearest_t result{};
+  result.reserve(order);
 
   auto f1 = [warper_scale](double t) -> double { return warper_scale / (warper_scale + t); };
   auto f2 = [warper_scale](double t) -> double {
@@ -278,6 +284,7 @@ inline warper_product_1d_interp_hybrid_t
 make_product_1d_inverse_cube_alternate_interp_hybrid(int order, double time, double warper_scale,
                                                      int nr_sample_points_warper) {
   warper_product_1d_interp_hybrid_t result{};
+  result.reserve(order);
 
   auto f1 = [warper_scale](double t) -> double { return warper_scale / (warper_scale + t); };
   auto f2 = [warper_scale](double t) -> double {

@@ -33,10 +33,10 @@ c = class_(
 
 c.add_constructor("""()""", doc = r"""""")
 
-c.add_method("""std::pair<std::vector<double>,double> map_reverse (std::vector<double> li_vec)""",
+c.add_method("""std::pair<std::vector<double>, double> map_reverse (std::vector<double> li_vec)""",
              doc = r"""""")
 
-c.add_method("""std::pair<std::vector<double>,double> map_forward (std::vector<double> ui_vec)""",
+c.add_method("""std::pair<std::vector<double>, double> map_forward (std::vector<double> ui_vec)""",
              doc = r"""""")
 
 c.add_method("""std::vector<double> ui_from_li (std::vector<double> li_vec)""",
@@ -63,10 +63,10 @@ c = class_(
 
 c.add_constructor("""(double t_max_)""", doc = r"""""")
 
-c.add_method("""std::pair<std::vector<double>,double> map_reverse (std::vector<double> li_vec)""",
+c.add_method("""std::pair<std::vector<double>, double> map_reverse (std::vector<double> li_vec)""",
              doc = r"""""")
 
-c.add_method("""std::pair<std::vector<double>,double> map_forward (std::vector<double> ui_vec)""",
+c.add_method("""std::pair<std::vector<double>, double> map_forward (std::vector<double> ui_vec)""",
              doc = r"""""")
 
 c.add_method("""std::vector<double> ui_from_li (std::vector<double> li_vec)""",
@@ -93,12 +93,12 @@ c = class_(
 
 c.add_constructor("""()""", doc = r"""""")
 
-c.add_constructor("""(std::function<double(double)> f1_, std::function<double(double)> f1_integrated_, std::function<double(double)> f1_integrated_inverse_, double domain_u_max_, bool do_domain_checks = true)""", doc = r"""""")
+c.add_constructor("""(std::function<double (double)> f1_, std::function<double (double)> f1_integrated_, std::function<double (double)> f1_integrated_inverse_, double domain_u_max_, bool do_domain_checks = true)""", doc = r"""""")
 
-c.add_method("""std::pair<std::vector<double>,double> map_reverse (std::vector<double> li_vec)""",
+c.add_method("""std::pair<std::vector<double>, double> map_reverse (std::vector<double> li_vec)""",
              doc = r"""""")
 
-c.add_method("""std::pair<std::vector<double>,double> map_forward (std::vector<double> ui_vec)""",
+c.add_method("""std::pair<std::vector<double>, double> map_forward (std::vector<double> ui_vec)""",
              doc = r"""""")
 
 c.add_method("""std::vector<double> ui_from_li (std::vector<double> li_vec)""",
@@ -129,12 +129,12 @@ c = class_(
 
 c.add_constructor("""()""", doc = r"""""")
 
-c.add_constructor("""(std::function<double(double)> f1_, double domain_u_max_, int nr_sample_points_)""", doc = r"""""")
+c.add_constructor("""(std::function<double (double)> f1_, double domain_u_max_, int nr_sample_points_)""", doc = r"""""")
 
-c.add_method("""std::pair<std::vector<double>,double> map_reverse (std::vector<double> li_vec)""",
+c.add_method("""std::pair<std::vector<double>, double> map_reverse (std::vector<double> li_vec)""",
              doc = r"""""")
 
-c.add_method("""std::pair<std::vector<double>,double> map_forward (std::vector<double> ui_vec)""",
+c.add_method("""std::pair<std::vector<double>, double> map_forward (std::vector<double> ui_vec)""",
              doc = r"""""")
 
 c.add_method("""std::vector<double> ui_from_li (std::vector<double> li_vec)""",
@@ -165,12 +165,12 @@ c = class_(
 
 c.add_constructor("""()""", doc = r"""""")
 
-c.add_constructor("""(std::function<double(double)> f1_, double domain_u_max_, int nr_sample_points_)""", doc = r"""""")
+c.add_constructor("""(std::function<double (double)> f1_, double domain_u_max_, int nr_sample_points_)""", doc = r"""""")
 
-c.add_method("""std::pair<std::vector<double>,double> map_reverse (std::vector<double> li_vec)""",
+c.add_method("""std::pair<std::vector<double>, double> map_reverse (std::vector<double> li_vec)""",
              doc = r"""""")
 
-c.add_method("""std::pair<std::vector<double>,double> map_forward (std::vector<double> ui_vec)""",
+c.add_method("""std::pair<std::vector<double>, double> map_forward (std::vector<double> ui_vec)""",
              doc = r"""""")
 
 c.add_method("""std::vector<double> ui_from_li (std::vector<double> li_vec)""",
@@ -201,16 +201,22 @@ c = class_(
 
 c.add_constructor("""()""", doc = r"""""")
 
+c.add_method("""void reserve (size_t new_cap)""",
+             doc = r"""""")
+
 c.add_method("""int size ()""",
              doc = r"""""")
 
 c.add_method("""void emplace_back (keldy::warpers::warper_product_1d_simple_t w)""",
              doc = r"""""")
 
-c.add_method("""std::pair<std::vector<double>,double> map_reverse (std::vector<double> li_vec)""",
+c.add_method("""void emplace_back (keldy::warpers::warper_product_1d_simple_t w)""",
              doc = r"""""")
 
-c.add_method("""std::pair<std::vector<double>,double> map_forward (std::vector<double> ui_vec)""",
+c.add_method("""std::pair<std::vector<double>, double> map_reverse (std::vector<double> li_vec)""",
+             doc = r"""""")
+
+c.add_method("""std::pair<std::vector<double>, double> map_forward (std::vector<double> ui_vec)""",
              doc = r"""""")
 
 c.add_method("""std::vector<double> ui_from_li (std::vector<double> li_vec)""",
@@ -241,16 +247,22 @@ c = class_(
 
 c.add_constructor("""()""", doc = r"""""")
 
+c.add_method("""void reserve (size_t new_cap)""",
+             doc = r"""""")
+
 c.add_method("""int size ()""",
              doc = r"""""")
 
 c.add_method("""void emplace_back (keldy::warpers::warper_product_1d_simple_interp_nearest_t w)""",
              doc = r"""""")
 
-c.add_method("""std::pair<std::vector<double>,double> map_reverse (std::vector<double> li_vec)""",
+c.add_method("""void emplace_back (keldy::warpers::warper_product_1d_simple_interp_nearest_t w)""",
              doc = r"""""")
 
-c.add_method("""std::pair<std::vector<double>,double> map_forward (std::vector<double> ui_vec)""",
+c.add_method("""std::pair<std::vector<double>, double> map_reverse (std::vector<double> li_vec)""",
+             doc = r"""""")
+
+c.add_method("""std::pair<std::vector<double>, double> map_forward (std::vector<double> ui_vec)""",
              doc = r"""""")
 
 c.add_method("""std::vector<double> ui_from_li (std::vector<double> li_vec)""",
@@ -281,16 +293,22 @@ c = class_(
 
 c.add_constructor("""()""", doc = r"""""")
 
+c.add_method("""void reserve (size_t new_cap)""",
+             doc = r"""""")
+
 c.add_method("""int size ()""",
              doc = r"""""")
 
 c.add_method("""void emplace_back (keldy::warpers::warper_product_1d_simple_interp_hybrid_t w)""",
              doc = r"""""")
 
-c.add_method("""std::pair<std::vector<double>,double> map_reverse (std::vector<double> li_vec)""",
+c.add_method("""void emplace_back (keldy::warpers::warper_product_1d_simple_interp_hybrid_t w)""",
              doc = r"""""")
 
-c.add_method("""std::pair<std::vector<double>,double> map_forward (std::vector<double> ui_vec)""",
+c.add_method("""std::pair<std::vector<double>, double> map_reverse (std::vector<double> li_vec)""",
+             doc = r"""""")
+
+c.add_method("""std::pair<std::vector<double>, double> map_forward (std::vector<double> ui_vec)""",
              doc = r"""""")
 
 c.add_method("""std::vector<double> ui_from_li (std::vector<double> li_vec)""",
@@ -319,15 +337,15 @@ c = class_(
         hdf5 = False,
 )
 
-c.add_constructor("""(std::function<dcomplex(std::vector<double>)> warped_integrand, int order, int num_bins, int nr_samples, double sigma, bool optimize_sigma = true)""", doc = r"""""")
+c.add_constructor("""(std::function<dcomplex (std::vector<double>)> warped_integrand, int order, int num_bins, int nr_samples, double sigma, bool optimize_sigma = true)""", doc = r"""""")
 
-c.add_method("""keldy::binner::binner_t<1,0,double> get_xi (int axis)""",
+c.add_method("""keldy::binner::binner_t<1, 0, double> get_xi (int axis)""",
              doc = r"""""")
 
 c.add_method("""std::vector<double> get_sigmas ()""",
              doc = r"""""")
 
-c.add_method("""triqs::gfs::gf<triqs::gfs::retime,triqs::gfs::scalar_real_valued> get_fi (int axis)""",
+c.add_method("""triqs::gfs::gf<triqs::gfs::retime, triqs::gfs::scalar_real_valued> get_fi (int axis)""",
              doc = r"""""")
 
 c.add_method("""std::vector<double> ui_from_li (std::vector<double> li_vec)""",
@@ -342,10 +360,10 @@ c.add_method("""double jacobian_reverse (std::vector<double> li_vec)""",
 c.add_method("""double jacobian_forward (std::vector<double> ui_vec)""",
              doc = r"""""")
 
-c.add_method("""std::pair<std::vector<double>,double> map_reverse (std::vector<double> li_vec)""",
+c.add_method("""std::pair<std::vector<double>, double> map_reverse (std::vector<double> li_vec)""",
              doc = r"""""")
 
-c.add_method("""std::pair<std::vector<double>,double> map_forward (std::vector<double> ui_vec)""",
+c.add_method("""std::pair<std::vector<double>, double> map_forward (std::vector<double> ui_vec)""",
              doc = r"""""")
 
 module.add_class(c)
@@ -384,22 +402,25 @@ c.add_method("""void emplace_back (keldy::warpers::warper_product_1d_interp_hybr
 c.add_method("""void emplace_back (keldy::warpers::warper_projection_t w)""",
              doc = r"""""")
 
+c.add_method("""void reserve (size_t new_cap)""",
+             doc = r"""""")
+
 c.add_method("""void clear ()""",
              doc = r"""""")
 
 c.add_method("""size_t size ()""",
              doc = r"""""")
 
-c.add_method("""std::pair<std::vector<double>,double> map_reverse (std::vector<double> li_vec, int start_domain_nr, int end_domain_nr)""",
+c.add_method("""std::pair<std::vector<double>, double> map_reverse (std::vector<double> li_vec, int start_domain_nr, int end_domain_nr)""",
              doc = r"""""")
 
-c.add_method("""std::pair<std::vector<double>,double> map_forward (std::vector<double> ui_vec, int start_domain_nr, int end_domain_nr)""",
+c.add_method("""std::pair<std::vector<double>, double> map_forward (std::vector<double> ui_vec, int start_domain_nr, int end_domain_nr)""",
              doc = r"""""")
 
-c.add_method("""std::pair<std::vector<double>,double> map_reverse (std::vector<double> li_vec)""",
+c.add_method("""std::pair<std::vector<double>, double> map_reverse (std::vector<double> li_vec)""",
              doc = r"""""")
 
-c.add_method("""std::pair<std::vector<double>,double> map_forward (std::vector<double> ui_vec)""",
+c.add_method("""std::pair<std::vector<double>, double> map_forward (std::vector<double> ui_vec)""",
              doc = r"""""")
 
 c.add_method("""double jacobian_reverse (std::vector<double> li_vec)""",

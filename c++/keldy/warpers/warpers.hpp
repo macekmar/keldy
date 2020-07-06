@@ -62,6 +62,8 @@ class warper_train_t {
   template<typename W>
   void emplace_back(W &&w) { warpers.emplace_back(std::move(w)); }
 
+  void reserve(size_t new_cap) { warpers.reserve(new_cap); }
+
   // Warper Vector
   void clear() { warpers.clear(); }
   size_t size() const { return warpers.size(); }

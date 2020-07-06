@@ -27,6 +27,7 @@ TEST(ComputeObs, ValueKernel) { // NOLINT
   int const nr_bins = 10;
   compute_gf_kernel computer(g0, tmax, 2, nr_bins);
 
+  computer.warper.reserve(2);
   computer.warper.emplace_back(warpers::warper_plasma_uv_t{tmax});
   computer.warper.emplace_back(warpers::make_product_1d_inverse_cube_alternate_interp_hybrid(2, tmax, 1.0, 1e5));
 
