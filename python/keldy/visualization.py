@@ -62,6 +62,13 @@ def integrand_warper_plot(computer, order, d, t_max, nr_times=100, plot_all=Fals
     _plt.plot([], [], '-k', label='integrand')
     _plt.plot([], [], '--k', label='warper')
 
+    u_crossing = _warpers.ui_from_vi(t_max, d * _np.ones((order,)))
+    _warper_prefactor = _np.abs(warper_prefactor / warper.jacobian_forward(u_crossing))
+    try: # for kernel
+        _warper_prefactor *= integrand(u_crossing)[0].sum_moduli()
+    except AttributeError: # sum_weights not an attribute for non-kernel
+        _warper_prefactor *= _np.abs(integrand(u_crossing)[0])
+
     x_arr = _np.linspace(0., t_max, nr_times)
 
     if axes is None:
@@ -88,7 +95,7 @@ def integrand_warper_plot(computer, order, d, t_max, nr_times=100, plot_all=Fals
         _plt.plot(x_arr, values_v, '-', c=c, label='V=({})'.format(list2str(v_dir_int)))
 
         values_v = [warper.jacobian_forward(u) if is_u_valid(u) else _np.nan for u in u_arr]
-        _plt.plot(x_arr, warper_prefactor * _np.abs(values_v), '--', c=c)
+        _plt.plot(x_arr, _warper_prefactor * _np.abs(values_v), '--', c=c)
 
     _plt.legend(loc=0)
     _plt.xlabel(r'v')
