@@ -4,9 +4,12 @@ import unittest
 
 from keldy import impurity_oneband as qqmc
 from keldy import warpers
+from keldy.visualization import integrand_warper_plot
 
 import numpy as np
 from mpi4py import MPI
+import matplotlib
+from matplotlib import pyplot as plt
 
 class projection_usage(unittest.TestCase):
 
@@ -48,6 +51,11 @@ class projection_usage(unittest.TestCase):
         # oplot(warper_proj.get_fi(order - 1))
         # plt.semilogy()
         # plt.show()
+
+
+        for n in range(1, order + 1):
+            integrand_warper_plot(computer, n, 0.1, tmax, nr_times=50)
+            plt.show()
 
         computer.run(10000)
 

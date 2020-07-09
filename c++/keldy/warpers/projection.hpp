@@ -290,7 +290,12 @@ class warper_projection_t {
     }
   };
 
-  auto const &get_xi(int axis) const { return xi[axis]; };
+  auto const &get_xi(int axis) const {
+    if (axis < 0 or axis >= order) {
+      TRIQS_RUNTIME_ERROR << "this axis does not exist.";
+    }
+    return xi[axis];
+  };
 
   std::vector<double> get_sigmas() const {
     std::vector<double> output{};
@@ -301,7 +306,12 @@ class warper_projection_t {
     return output;
   }
 
-  auto get_fi(int axis) const { return fn[axis]; };
+  auto get_fi(int axis) const {
+    if (axis < 0 or axis >= order) {
+      TRIQS_RUNTIME_ERROR << "this axis does not exist.";
+    }
+    return fn[axis];
+  };
 
   std::vector<double> ui_from_li(std::vector<double> const &li_vec) const {
     std::vector<double> result = li_vec;
