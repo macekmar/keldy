@@ -8,6 +8,7 @@ _matplotlib.use('Agg')
 import matplotlib.pyplot as _plt
 
 from . import warpers as _warpers
+from pytriqs.plot.mpl_interface import oplot as _oplot
 
 def _gray_code(n):
     """
@@ -105,3 +106,12 @@ def integrand_warper_plot(computer, order, d, t_max, nr_times=100, plot_all=Fals
 
     return x_arr
 
+
+def projection_warper_plot(projection_warper, axis):
+    """
+    Plot sampled data, raw and smoothed , of the projection warper or a given axis.
+    """
+    binner = projection_warper.get_xi(axis)
+    coord = binner.get_bin_coord()
+    _plt.plot(coord, binner.get_data(), '.', ms=3)
+    _oplot(projection_warper.get_fi(axis))
