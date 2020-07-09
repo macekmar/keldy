@@ -64,15 +64,16 @@ class integrator {
 
   // Evaluate
   std::pair<typename I::result_t, double> evaluate_warped_integrand(std::vector<double> const &li_vec,
-                                                                    int start_domain_nr) const {
+                                                                    int start_domain_nr,
+                                                                    bool keep_u_hypercube = true) const {
     auto [ui_vec, jacobian] = warper.map_reverse(li_vec, start_domain_nr, 0);
-    auto [eval, in_domain] = integrand(ui_vec);
+    auto [eval, in_domain] = integrand(ui_vec, keep_u_hypercube);
     eval *= jacobian;
     return std::make_pair(eval, in_domain);
   }
 
   std::pair<typename I::result_t, double> evaluate_warped_integrand(std::vector<double> const &li_vec) const {
-    return evaluate_warped_integrand(li_vec, warper.size());
+    return evaluate_warped_integrand(li_vec, warper.size(), true);
   }
 
   void run(int nr_steps) {

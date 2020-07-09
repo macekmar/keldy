@@ -39,7 +39,8 @@ inline int GetBitParity(unsigned int in) { return 1 - 2 * __builtin_parity(in); 
 namespace keldy::impurity_oneband {
 
 // should we sort times?
-std::pair<binner::sparse_binner_t<1>, int> integrand_g_direct_time::operator()(std::vector<double> const &times) const {
+std::pair<binner::sparse_binner_t<1>, int> integrand_g_direct_time::operator()(std::vector<double> const &times,
+                                                                               bool const keep_u_hypercube) const {
   using namespace triqs::arrays;
 
   int order_n = times.size();
@@ -56,10 +57,12 @@ std::pair<binner::sparse_binner_t<1>, int> integrand_g_direct_time::operator()(s
     return std::make_pair(result, 0);
   }
 
-  // Integration starts a t = 0
-  if (std::any_of(times.cbegin(), times.cend(), [](double t) { return t < 0.0; })) {
-    result.accumulate(0, time_binner);
-    return std::make_pair(result, 0);
+  if (keep_u_hypercube) {
+    // Integration starts a t = 0
+    if (std::any_of(times.cbegin(), times.cend(), [](double t) { return t < 0.0; })) {
+      result.accumulate(0, time_binner);
+      return std::make_pair(result, 0);
+    }
   }
 
   // copy for now since we change time-splitting

@@ -41,12 +41,15 @@ namespace keldy::impurity_oneband {
 // TODO: Where is sorting of times done?
 // TODO: Efficnencies for spin symmetric case.
 
-std::pair<binner::sparse_binner_t<1, 1>, int> integrand_g_kernel::operator()(std::vector<double> const &times) const {
+std::pair<binner::sparse_binner_t<1, 1>, int> integrand_g_kernel::operator()(std::vector<double> const &times,
+                                                                             bool const keep_u_hypercube) const {
   using namespace triqs::arrays;
 
   // Interaction starts a t = 0
-  if (std::any_of(times.cbegin(), times.cend(), [](double t) { return t < 0.0; })) {
-    return std::make_pair(binner::sparse_binner_t<1, 1>{}, 0);
+  if (keep_u_hypercube) {
+    if (std::any_of(times.cbegin(), times.cend(), [](double t) { return t < 0.0; })) {
+      return std::make_pair(binner::sparse_binner_t<1, 1>{}, 0);
+    }
   }
 
   int order_n = times.size();

@@ -219,7 +219,7 @@ c = class_(
 
 c.add_constructor("""(keldy::impurity_oneband::g0_keldysh_contour_t g0_, keldy::impurity_oneband::gf_index_t external_A_, keldy::impurity_oneband::gf_index_t external_B_, double cutoff_ = 0.)""", doc = r"""""")
 
-c.add_method("""std::pair<keldy::impurity_oneband::integrand_g_direct_time::result_t, int> operator() (std::vector<double> times)""",
+c.add_method("""std::pair<keldy::impurity_oneband::integrand_g_direct_time::result_t, int> operator() (std::vector<double> times, bool keep_u_hypercube = true)""",
              name = "__call__",
              doc = r"""Returns integrand for the specified times""")
 
@@ -235,7 +235,7 @@ c = class_(
 
 c.add_constructor("""(keldy::impurity_oneband::g0_keldysh_contour_t g0_, keldy::impurity_oneband::gf_index_t g_idx_X_)""", doc = r"""""")
 
-c.add_method("""std::pair<keldy::impurity_oneband::integrand_g_kernel::result_t, int> operator() (std::vector<double> times)""",
+c.add_method("""std::pair<keldy::impurity_oneband::integrand_g_kernel::result_t, int> operator() (std::vector<double> times, bool keep_u_hypercube = true)""",
              name = "__call__",
              doc = r"""""")
 
@@ -258,7 +258,7 @@ c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int 
 
 c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, double cutoff_integrand)""", doc = r"""""")
 
-c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_direct::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec, int start_domain_nr)""",
+c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_direct::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec, int start_domain_nr, bool keep_u_hypercube = true)""",
              doc = r"""""")
 
 c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_direct::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec)""",
@@ -304,7 +304,7 @@ c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int 
 
 c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, double cutoff_integrand)""", doc = r"""""")
 
-c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_direct::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec, int start_domain_nr)""",
+c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_direct::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec, int start_domain_nr, bool keep_u_hypercube = true)""",
              doc = r"""""")
 
 c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_direct::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec)""",
@@ -350,7 +350,7 @@ c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int 
 
 c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, int nr_time_slices, double cutoff_integrand)""", doc = r"""""")
 
-c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_direct_time::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec, int start_domain_nr)""",
+c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_direct_time::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec, int start_domain_nr, bool keep_u_hypercube = true)""",
              doc = r"""""")
 
 c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_direct_time::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec)""",
@@ -396,7 +396,7 @@ c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int 
 
 c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, int nr_bins = 100)""", doc = r"""""")
 
-c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_kernel::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec, int start_domain_nr)""",
+c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_kernel::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec, int start_domain_nr, bool keep_u_hypercube = true)""",
              doc = r"""""")
 
 c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_kernel::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec)""",

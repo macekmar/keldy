@@ -40,7 +40,8 @@ inline int GetBitParity(unsigned int in) { return 1 - 2 * __builtin_parity(in); 
 namespace keldy::impurity_oneband {
 
 // should we sort times?
-std::pair<dcomplex, int> integrand_g_direct::operator()(std::vector<double> const &times, bool keep_u_hypercube) const {
+std::pair<dcomplex, int> integrand_g_direct::operator()(std::vector<double> const &times,
+                                                        bool const keep_u_hypercube) const {
   using namespace triqs::arrays;
 
   // Model is diagonal in spin
