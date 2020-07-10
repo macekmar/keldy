@@ -40,7 +40,7 @@ struct gsl_fit_linear_result {
 };
 
 /// not used, I kept it for possible future usage
-gsl_fit_linear_result gsl_fit_wlinear_wrapper(array<double, 1> const &x, array<double, 1> const &y,
+inline gsl_fit_linear_result gsl_fit_wlinear_wrapper(array<double, 1> const &x, array<double, 1> const &y,
                                               array<double, 1> const &w) {
   if (x.size() != y.size() or x.size() != w.size()) {
     TRIQS_RUNTIME_ERROR << "x, y and w should have the same size.";
@@ -63,7 +63,7 @@ gsl_fit_linear_result gsl_fit_wlinear_wrapper(array<double, 1> const &x, array<d
 
 /// kernel must be odd in size
 // in and out must have the same size
-void local_linear_reg(array<double, 1> const &x, array<double, 1> const &y, array<double, 1> &y_out,
+inline void local_linear_reg(array<double, 1> const &x, array<double, 1> const &y, array<double, 1> &y_out,
                       array<double, 1> const &kernel) {
 
   long const N = x.size();
