@@ -64,7 +64,7 @@ inline gsl_fit_linear_result gsl_fit_wlinear_wrapper(array<double, 1> const &x, 
 /// kernel must be odd in size
 // in and out must have the same size
 inline void local_linear_reg(array<double, 1> const &x, array<double, 1> const &y, array<double, 1> &y_out,
-                      array<double, 1> const &kernel) {
+                      array<double, 1> const &kernel, std::vector<int> const &dead_points = {}) {
 
   long const N = x.size();
   long const K = kernel.size();
@@ -78,7 +78,22 @@ inline void local_linear_reg(array<double, 1> const &x, array<double, 1> const &
   double c1;
   double cov00, cov01, cov11, chisq;
 
+  array<double, 1> kernel_copy; // if dead_points is not empty, a copy is necessary
+  auto *kernel_idx0 = kernel.storage().data();
+
   for (int i = 0; i < x.size(); ++i) {
+
+    if (!dead_points.empty()) {
+      kernel_copy = kernel; // make copy
+      for (size_t j : dead_points) {
+        size_t dp = j + H - i;
+        if (dp >= 0 and dp < K) {
+          kernel_copy(dp) = 0;
+        }
+      }
+      kernel_idx0 = kernel_copy.storage().data();
+    } // else no change, avoid copy
+
     start_ker = std::max(0l, H - i);
     end_ker = std::min(N + H - i - 1, K - 1);
     size_fit = end_ker - start_ker + 1;
@@ -90,8 +105,8 @@ inline void local_linear_reg(array<double, 1> const &x, array<double, 1> const &
     assert(start_x + size_fit <= N);
     assert(start_ker + size_fit <= K);
 
-    gsl_fit_wlinear(x.storage().data() + start_x, 1, kernel.storage().data() + start_ker, 1,
-                    y.storage().data() + start_x, 1, size_fit, &c0, &c1, &cov00, &cov01, &cov11, &chisq);
+    gsl_fit_wlinear(x.storage().data() + start_x, 1, kernel_idx0 + start_ker, 1, y.storage().data() + start_x, 1,
+                    size_fit, &c0, &c1, &cov00, &cov01, &cov11, &chisq);
 
     y_out(i) = c0 + x(i) * c1;
   }

@@ -92,6 +92,27 @@ TEST(LocalLinearRegression, VeryWideKernel) { //NOLINT
   EXPECT_ARRAY_NEAR(y, y_out);
 }
 
+TEST(LocalLinearRegression, DeadPoints) { //NOLINT
+  array<double, 1> x(100);
+  array<double, 1> y(100);
+  array<double, 1> y_out(100);
+  for (int i = 0; i < x.size(); ++i) {
+    x(i) = i;
+    y(i) = 3.0 * i + 6.0;
+    y_out(i) = 0;
+  }
+  std::vector<int> dead_points = {0, 15, 50, 51, 52, 60};
+  double const sigma = 15;
+  array<double, 1> kernel(51);
+  for (int j = 0; j < kernel.size(); ++j) {
+    kernel(j) = 1. / ((j - 25) * (j - 25) + sigma * sigma);
+  }
+
+  local_linear_reg(x, y, y_out, kernel, dead_points);
+
+  EXPECT_ARRAY_NEAR(y, y_out);
+}
+
 TEST(LocalLinearRegression, ConsistencyKernelSizes) { //NOLINT
   array<double, 1> x(100);
   array<double, 1> y(100);
@@ -125,5 +146,6 @@ TEST(LocalLinearRegression, ConsistencyKernelSizes) { //NOLINT
 }
 
 ///TODO: add test against values
+///TODO: test dead points
 
 MAKE_MAIN; // NOLINT
