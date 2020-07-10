@@ -274,7 +274,7 @@ class warper_product_1d_simple_interp_nearest_t {
     double jacobian_f = 1.0;
     for (auto &xi : xi_vec) {
       jacobian_f *= f1(xi); // f1 defined in ui, so evaluate before map
-      xi = f1_integrated_inverse(xi);
+      xi = f1_integrated(xi);
     }
     return std::make_pair(xi_vec, jacobian_f);
   }
@@ -422,7 +422,7 @@ class warper_product_1d_simple_interp_hybrid_t {
     double jacobian_f = 1.0;
     for (auto &xi : xi_vec) {
       jacobian_f *= f1(xi); // f1 defined in ui, so evaluate before map
-      xi = f1_integrated_inverse(xi);
+      xi = f1_integrated(xi);
     }
     return std::make_pair(xi_vec, jacobian_f);
   }

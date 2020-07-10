@@ -122,6 +122,15 @@ inline void function_test_warper(W const &warper, double const t_max, warper_fun
     EXPECT_NEAR(warper.jacobian_reverse(li), jacobian_ref(li), accuracy_jac);
     // EXPECT_NEAR(warper.jacobian_forward(li), 1.0 / jacobian_ref(li), accuracy_jac);
     EXPECT_GT(warper.jacobian_reverse(li), 0.); // has to be != 0.
+
+    // Repeat test with map forward / backwards
+    auto [li_from_ui_vec, jac_for] = warper.map_forward(ui);
+    EXPECT_NEAR(jac_for / warper.jacobian_forward(t_max_vec), f(ui) / f(t_max_vec), accuracy_f);
+    EXPECT_TRUE(are_iterable_near(li_from_ui_vec, li_from_ui_ref(ui), accuracy_map_vec));
+
+    auto [ui_from_li_vec, jac_rev] = warper.map_reverse(li);
+    EXPECT_NEAR(jac_rev, jacobian_ref(li), accuracy_jac);
+    EXPECT_GT(jac_rev, 0.); // has to be != 0.
   };
 
   for (double u = 0.1 * t_max; u < t_max; u += 0.1 * t_max) {
