@@ -78,16 +78,20 @@ inline void basic_test_warper_multidim(W const &warper, double const t_max, doub
     li = {0.7, l, 0.3, 0.5};
     li_plus = {0.7, l + 1e-9, 0.3, 0.5};
     EXPECT_NE(warper.ui_from_li(li), warper.ui_from_li(li_plus));
+    EXPECT_NE(warper.map_reverse(li).first, warper.map_reverse(li_plus).first);
   }
 
   /// reverse mapping
   for (double u = 0.1 * t_max; u < t_max; u += 0.1 * t_max) {
     ui = {0.7 * t_max, t_max, u, 0.};
     EXPECT_TRUE(are_iterable_near(warper.ui_from_li(warper.li_from_ui(ui)), ui, accuracy));
+    EXPECT_TRUE(are_iterable_near(warper.map_reverse(warper.map_forward(ui).first).first, ui, accuracy));
+
   }
   for (double l = 0.1; l < 1.; l += 0.1) {
     li = {0.7, 1., l, 0.};
     EXPECT_TRUE(are_iterable_near(warper.li_from_ui(warper.ui_from_li(li)), li, accuracy));
+    EXPECT_TRUE(are_iterable_near(warper.map_forward(warper.map_reverse(li).first).first, li, accuracy));
   }
 };
 
