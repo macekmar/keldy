@@ -52,7 +52,7 @@ auto gaussian = [](double x, double x0, double sigma) { return std::exp(-std::po
 // sigma is in unit of time step
 inline array<double, 1> CPP2PY_IGNORE kernel_smoothing(array<double, 1> const &y_in, double const sigma) {
   int const N = y_in.size();
-  array<double, 1> y_out(N);
+  array<double, 1> log_y_out(N);
   array<double, 1> x(N);
   std::vector<int> dead_points;
   for (int i = 0; i < N; ++i) {
@@ -69,13 +69,13 @@ inline array<double, 1> CPP2PY_IGNORE kernel_smoothing(array<double, 1> const &y
     kernel(j) = gaussian(j, H, sigma);
   }
 
-  details::local_linear_reg(x, y_in, y_out, kernel, dead_points);
+  details::local_linear_reg(x, log(y_in), log_y_out, kernel, dead_points);
 
-  for (int k = 0; k < N; ++k) {
-    if (y_out(k) < 0) y_out(k) = 0; // TODO: or should we raise an error?
-  }
+  //for (int k = 0; k < N; ++k) {
+  //  if (y_out(k) < 0) y_out(k) = 0; // TODO: or should we raise an error?
+  //}
 
-  return y_out;
+  return exp(log_y_out);
 }
 
 // lower, sigma and upper are in unit of time step
@@ -83,13 +83,17 @@ inline array<double, 1> CPP2PY_IGNORE kernel_smoothing(array<double, 1> const &y
                                                          double const upper) {
   int const N = y.size();
   double const sigma_min = 0.3; // narrow gaussians lead to unstable linear fit
-  array<double, 1> y_out(N);
+  array<double, 1> log_y_out(N);
+  array<double, 1> log_y(N);
   array<double, 1> x(N);
   std::vector<int> dead_points;
   for (int i = 0; i < N; ++i) {
     x(i) = i;
     if (y(i) <= 0) {
       dead_points.emplace_back(i);
+      log_y(i) = 0;
+    } else {
+      log_y(i) = std::log(y(i));
     }
   }
 
@@ -100,7 +104,7 @@ inline array<double, 1> CPP2PY_IGNORE kernel_smoothing(array<double, 1> const &y
   /// cost function is symetric in sigma and the minimum is looked for between
   //-upper and +upper in order to make sure the min can be bound even when
   //projection is noiseless.
-  auto f = [&x, &y, &kernel, &dead_points, &y_out, &H, sigma_min](double sigma) -> double {
+  auto f = [&x, &y, &log_y, &kernel, &dead_points, &log_y_out, &H, sigma_min](double sigma) -> double {
     sigma = std::max(std::abs(sigma), sigma_min);
 
     for (int j = 0; j < kernel.size(); ++j) {
@@ -109,9 +113,9 @@ inline array<double, 1> CPP2PY_IGNORE kernel_smoothing(array<double, 1> const &y
     kernel(H) = 0;
     kernel() /= kernel(H + 1);
 
-    details::local_linear_reg(x, y, y_out, kernel, dead_points);
+    details::local_linear_reg(x, log_y, log_y_out, kernel, dead_points);
 
-    double out = sum(pow(y_out - y, 2));
+    double out = sum(pow(exp(log_y_out) - y, 2));
     if (std::isnan(out)) {
       TRIQS_RUNTIME_ERROR
          << "Smoothing procedure returned a Nan. This may be due to a lack of data, try to increase the number of samples.";
