@@ -63,9 +63,9 @@ def _fourier_transform_fft(t, ft, n='auto', axis=-1, conv=-1):
     """
 
     if (len(t) != ft.shape[axis]):
-        raise ValueError, "coordinates should have the same length as values array on specified `axis`."
+        raise ValueError("coordinates should have the same length as values array on specified `axis`.")
     if (conv not in [-1, +1]):
-        raise ValueError, "`conv` must be -1 or +1."
+        raise ValueError("`conv` must be -1 or +1.")
     if n is None:
         n = len(t)
     elif n == 'auto':

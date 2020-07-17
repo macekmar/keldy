@@ -25,7 +25,7 @@ triqs_hash = "@TRIQS_GIT_HASH@"
 keldy_hash = "@PROJECT_GIT_HASH@"
 
 def show_version():
-  print "\nYou are using keldy version %s\n"%version
+  print("\nYou are using keldy version %s\n"%version)
 
 def show_git_hash():
-  print "\nYou are using keldy git hash %s based on triqs git hash %s\n"%(keldy_hash, triqs_hash)
+  print("\nYou are using keldy git hash %s based on triqs git hash %s\n"%(keldy_hash, triqs_hash))

@@ -77,7 +77,7 @@ def integrand_warper_plot(computer, order, d, t_max, nr_times=100, plot_all=Fals
             v_dir_gen = _gray_code(order)
         else:
             v_dir_gen = _ordered_axes(order)
-        v_dir_gen.next()
+        next(v_dir_gen)
     else:
         v_dir_gen = axes
 
