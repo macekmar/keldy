@@ -95,7 +95,7 @@ class CPP2PY_IGNORE gsl_integration_wrapper {
     auto f_imag = [&f](double t) -> double { return std::imag(f(t)); };
     auto [result_imag, abserr_imag] = qag(f_imag, lower_limit_a, upper_limit_b, epsabs, epsrel, key);
 
-    return std::make_pair(result_real + 1_j * result_imag, abserr_real + 1_j * abserr_imag);
+    return std::make_pair(std::complex(result_real, result_imag), std::complex(abserr_real, abserr_imag));
   }
 
   // Integrals on finite interval with known singularities
@@ -136,7 +136,7 @@ class CPP2PY_IGNORE gsl_integration_wrapper {
     auto f_imag = [&f](double t) -> double { return std::imag(f(t)); };
     auto [result_imag, abserr_imag] = qagp(f_imag, pts, epsabs, epsrel);
 
-    return std::make_pair(result_real + 1_j * result_imag, abserr_real + 1_j * abserr_imag);
+    return std::make_pair(std::complex(result_real, result_imag), std::complex(abserr_real, abserr_imag));
   }
 
   // Integrals with singularities or infinite intervals:
@@ -195,7 +195,7 @@ class CPP2PY_IGNORE gsl_integration_wrapper {
     std::function<double(double)> f_imag = [&f](double t) { return std::imag(f(t)); };
     auto [result_imag, abserr_imag] = qag_si(f_imag, lower_limit_a, upper_limit_b, epsabs, epsrel);
 
-    return std::make_pair(result_real + 1_j * result_imag, abserr_real + 1_j * abserr_imag);
+    return std::make_pair(std::complex(result_real, result_imag), std::complex(abserr_real, abserr_imag));
   }
 };
 

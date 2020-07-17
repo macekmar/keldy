@@ -6,21 +6,24 @@
 using namespace keldy::binner;
 using namespace triqs::arrays;
 
+using namespace std::complex_literals;
+
+
 TEST(Binner, Construction) { // NOLINT
   auto bin10 = binner_t<1>({std::make_tuple(-2.5, 5.0, 10)});
-  bin10(0.5) << 1_j;
+  bin10(0.5) << 1.0i;
 
   auto bin11 = binner_t<1, 1>({std::make_tuple(-2.5, 5.0, 10)}, {3});
-  bin11(0.5, 1) << 1_j;
+  bin11(0.5, 1) << 1.0i;
 
   auto bin12 = binner_t<1, 2>({std::make_tuple(-2.5, 5.0, 10)}, {3, 6});
-  bin12(0.5, 1, 2) << 1_j;
+  bin12(0.5, 1, 2) << 1.0i;
 
   auto bin20 = binner_t<2>({std::make_tuple(-2.5, 5.0, 10), std::make_tuple(0., 10., 5)});
-  bin20(0.5, 13.) << 1_j;
+  bin20(0.5, 13.) << 1.0i;
 
   auto bin21 = binner_t<2, 1>({std::make_tuple(-2.5, 5.0, 10), std::make_tuple(0., 10., 5)}, {3});
-  bin21(0.5, 13., 5) << 1_j;
+  bin21(0.5, 13., 5) << 1.0i;
 }
 
 TEST(Binner, accumulate) { // NOLINT
@@ -32,10 +35,10 @@ TEST(Binner, accumulate) { // NOLINT
   EXPECT_ARRAY_EQ(times_expected, binner.get_bin_coord());
   EXPECT_DOUBLE_EQ(2.5, binner.get_bin_size());
 
-  binner(1.5, 0) << 1.0_j;
-  binner(6.3, 1) << 10.0_j;
+  binner(1.5, 0) << 1.0i;
+  binner(6.3, 1) << 10.0i;
   binner(2.0, 0) << 1.0;
-  binner(2.0, 0) << 100.0_j;
+  binner(2.0, 0) << 100.0i;
 
   // boundary points
   binner(0.0, 1) << 10.0;
@@ -45,17 +48,17 @@ TEST(Binner, accumulate) { // NOLINT
   binner(7.5, 1) << 100'000.0;
 
   // dropped values
-  binner(-1.0, 0) << 1000.0_j;
-  binner(11.0, 0) << 10'000.0_j;
+  binner(-1.0, 0) << 1000.0i;
+  binner(11.0, 0) << 10'000.0i;
 
   // start testing
   EXPECT_EQ(2, binner.get_nr_values_dropped());
 
   array<dcomplex, 2> values_expected(4, 2);
   values_expected() = 0.0;
-  values_expected(range(), 0) = array<dcomplex, 1>{1.0 + 101.0_j, 0.0_j, 0.0_j, 0.0_j}; // forward
+  values_expected(range(), 0) = array<dcomplex, 1>{1.0 + 101.0i, 0.0i, 0.0i, 0.0i}; // forward
   values_expected(range(), 1) =
-     array<dcomplex, 1>{10.0 + 0.0_j, 1000.0 + 0.0_j, 10'000.0 + 10.0_j, 100'100.0 + 0.0_j}; // backward
+     array<dcomplex, 1>{10.0 + 0.0i, 1000.0 + 0.0i, 10'000.0 + 10.0i, 100'100.0 + 0.0i}; // backward
   EXPECT_ARRAY_EQ(values_expected, binner.get_data());
 
   array<long, 2> nr_values_expected(4, 2);
@@ -72,35 +75,35 @@ TEST(Binner, accumulate) { // NOLINT
 
 TEST(SparseBinner, Construction) { // NOLINT
   auto bin10 = sparse_binner_t<1>();
-  bin10.accumulate(1_j, 0.5);
+  bin10.accumulate(1.0i, 0.5);
 
   auto bin11 = sparse_binner_t<1, 1>();
-  bin11.accumulate(1_j, 0.5, 3);
+  bin11.accumulate(1.0i, 0.5, 3);
 
   auto bin12 = sparse_binner_t<1, 2>();
-  bin12.accumulate(1_j, 0.5, 3, 11);
+  bin12.accumulate(1.0i, 0.5, 3, 11);
 
   auto bin20 = sparse_binner_t<2>();
-  bin20.accumulate(1_j, 0.5, 3.);
+  bin20.accumulate(1.0i, 0.5, 3.);
 
   auto bin21 = sparse_binner_t<2, 1>();
-  bin21.accumulate(1_j, 0.5, 3., 0);
+  bin21.accumulate(1.0i, 0.5, 3., 0);
 }
 
 TEST(SparseBinner, accumulate) { //NOLINT
   sparse_binner_t<1, 2> sp_binner;
-  sp_binner.accumulate(1_j, 1.5, 0, 3);
-  sp_binner.accumulate(10_j, 1.5, 2, 3);
-  sp_binner.accumulate(100_j, 1.5, 2, 3);
-  sp_binner.accumulate(1000_j, 1.50001, 2, 3);
+  sp_binner.accumulate(1.0i, 1.5, 0, 3);
+  sp_binner.accumulate(10i, 1.5, 2, 3);
+  sp_binner.accumulate(100i, 1.5, 2, 3);
+  sp_binner.accumulate(1000i, 1.50001, 2, 3);
 
   auto &data = sp_binner.data;
 
   EXPECT_EQ(data.size(), 4);
-  EXPECT_EQ(data[0].second, 1_j);
-  EXPECT_EQ(data[1].second, 10_j);
-  EXPECT_EQ(data[2].second, 100_j);
-  EXPECT_EQ(data[3].second, 1000_j);
+  EXPECT_EQ(data[0].second, 1.0i);
+  EXPECT_EQ(data[1].second, 10i);
+  EXPECT_EQ(data[2].second, 100i);
+  EXPECT_EQ(data[3].second, 1000i);
 
   EXPECT_TRUE(are_iterable_eq(data[0].first.first, {1.5}));
   EXPECT_TRUE(are_iterable_eq(data[0].first.second, {0, 3}));
@@ -114,20 +117,20 @@ TEST(SparseBinner, accumulate) { //NOLINT
 
 TEST(SparseBinner, weight) { // NOLINT
   sparse_binner_t<1, 1> sp_binner;
-  sp_binner.accumulate(1.0_j, 1.5, 0);
-  sp_binner.accumulate(10.0_j, 6.3, 1);
-  sp_binner.accumulate(-100.0_j, 2.0, 0);
-  sp_binner.accumulate(1000.0_j, 2.0, 0);
+  sp_binner.accumulate(1.0i, 1.5, 0);
+  sp_binner.accumulate(10.0i, 6.3, 1);
+  sp_binner.accumulate(-100.0i, 2.0, 0);
+  sp_binner.accumulate(1000.0i, 2.0, 0);
 
   EXPECT_DOUBLE_EQ(911.0, sp_binner.sum_moduli());
 }
 
 TEST(SparseBinner, product_scalar) { // NOLINT
   sparse_binner_t<1, 1> sp_binner;
-  sp_binner.accumulate(1.0_j, 1.5, 0);
-  sp_binner.accumulate(10.0_j, 6.3, 1);
-  sp_binner.accumulate(-100.0_j, 2.0, 0);
-  sp_binner.accumulate(1000.0_j, 2.0, 0);
+  sp_binner.accumulate(1.0i, 1.5, 0);
+  sp_binner.accumulate(10.0i, 6.3, 1);
+  sp_binner.accumulate(-100.0i, 2.0, 0);
+  sp_binner.accumulate(1000.0i, 2.0, 0);
 
   sp_binner *= 2.0;
 
@@ -137,17 +140,17 @@ TEST(SparseBinner, product_scalar) { // NOLINT
 TEST(BinnerAndSparseBinner, accumulate) { // NOLINT
   binner_t<1, 1> binner({std::make_tuple(0.0, 10.0, 4)}, {2});
   sparse_binner_t<1, 1> sp_binner;
-  sp_binner.accumulate(1.0_j, 1.5, 0);
-  sp_binner.accumulate(10.0_j, 6.3, 1);
+  sp_binner.accumulate(1.0i, 1.5, 0);
+  sp_binner.accumulate(10.0i, 6.3, 1);
   sp_binner.accumulate(1.0, 2.0, 0);     // same coord
-  sp_binner.accumulate(100.0_j, 2.0, 0); // same coord
+  sp_binner.accumulate(100.0i, 2.0, 0); // same coord
   sp_binner.accumulate(10.0, 0.0, 1);
   sp_binner.accumulate(100.0, 10.0, 1);
   sp_binner.accumulate(1000.0, 2.5, 1);
   sp_binner.accumulate(10'000.0, 5.0, 1);
   sp_binner.accumulate(100'000.0, 7.5, 1);
-  sp_binner.accumulate(1000.0_j, -1.0, 0);
-  sp_binner.accumulate(10'000.0_j, 11.0, 0);
+  sp_binner.accumulate(1000.0i, -1.0, 0);
+  sp_binner.accumulate(10'000.0i, 11.0, 0);
 
   binner += sp_binner;
 
@@ -156,9 +159,9 @@ TEST(BinnerAndSparseBinner, accumulate) { // NOLINT
 
   array<dcomplex, 2> values_expected(4, 2);
   values_expected() = 0.0;
-  values_expected(range(), 0) = array<dcomplex, 1>{1.0 + 101.0_j, 0.0_j, 0.0_j, 0.0_j}; // forward
+  values_expected(range(), 0) = array<dcomplex, 1>{1.0 + 101.0i, 0.0i, 0.0i, 0.0i}; // forward
   values_expected(range(), 1) =
-     array<dcomplex, 1>{10.0 + 0.0_j, 1000.0 + 0.0_j, 10'000.0 + 10.0_j, 100'100.0 + 0.0_j}; // backward
+     array<dcomplex, 1>{10.0 + 0.0i, 1000.0 + 0.0i, 10'000.0 + 10.0i, 100'100.0 + 0.0i}; // backward
   EXPECT_ARRAY_EQ(values_expected, binner.get_data());
 
   array<long, 2> nr_values_expected(4, 2);
@@ -172,10 +175,10 @@ TEST(BinnerAndSparseBinner, accumulate) { // NOLINT
 TEST(BinnerAndSparseBinner, accumulate_twice) { // NOLINT
   binner_t<1, 1> binner({std::make_tuple(0.0, 10.0, 4)}, {2});
   sparse_binner_t<1, 1> sp_binner_A;
-  sp_binner_A.accumulate(1.0_j, 1.5, 0);
-  sp_binner_A.accumulate(10.0_j, 6.3, 1);
+  sp_binner_A.accumulate(1.0i, 1.5, 0);
+  sp_binner_A.accumulate(10.0i, 6.3, 1);
   sp_binner_A.accumulate(1.0, 2.0, 0);     // same coord
-  sp_binner_A.accumulate(100.0_j, 2.0, 0); // same coord
+  sp_binner_A.accumulate(100.0i, 2.0, 0); // same coord
   sp_binner_A.accumulate(10.0, 0.0, 1);
   sp_binner_A.accumulate(100.0, 10.0, 1);
 
@@ -185,8 +188,8 @@ TEST(BinnerAndSparseBinner, accumulate_twice) { // NOLINT
   sp_binner_B.accumulate(1000.0, 2.5, 1);
   sp_binner_B.accumulate(10'000.0, 5.0, 1);
   sp_binner_B.accumulate(100'000.0, 7.5, 1);
-  sp_binner_B.accumulate(1000.0_j, -1.0, 0);
-  sp_binner_B.accumulate(10'000.0_j, 11.0, 0);
+  sp_binner_B.accumulate(1000.0i, -1.0, 0);
+  sp_binner_B.accumulate(10'000.0i, 11.0, 0);
 
   binner += sp_binner_B;
 
@@ -195,9 +198,9 @@ TEST(BinnerAndSparseBinner, accumulate_twice) { // NOLINT
 
   array<dcomplex, 2> values_expected(4, 2);
   values_expected() = 0.0;
-  values_expected(range(), 0) = array<dcomplex, 1>{1.0 + 101.0_j, 0.0_j, 0.0_j, 0.0_j}; // forward
+  values_expected(range(), 0) = array<dcomplex, 1>{1.0 + 101.0i, 0.0i, 0.0i, 0.0i}; // forward
   values_expected(range(), 1) =
-     array<dcomplex, 1>{10.0 + 0.0_j, 1000.0 + 0.0_j, 10'000.0 + 10.0_j, 100'100.0 + 0.0_j}; // backward
+     array<dcomplex, 1>{10.0 + 0.0i, 1000.0 + 0.0i, 10'000.0 + 10.0i, 100'100.0 + 0.0i}; // backward
   EXPECT_ARRAY_EQ(values_expected, binner.get_data());
 
   array<long, 2> nr_values_expected(4, 2);

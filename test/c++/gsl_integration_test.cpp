@@ -5,6 +5,7 @@
 #include <triqs/test_tools/gfs.hpp>
 
 using namespace keldy::details;
+using namespace std::complex_literals;
 
 TEST(gsl_integration, real_qag_lambdas) { // NOLINT
   auto gsl_default_handler = gsl_set_error_handler_off();
@@ -105,7 +106,7 @@ TEST(gsl_integration, complex_qag) { // NOLINT
   auto gsl_default_handler = gsl_set_error_handler_off();
   gsl_integration_wrapper worker(100);
 
-  auto function = [](double t) -> dcomplex { return t * t + 1_j * t; };
+  auto function = [](double t) -> dcomplex { return t * t + 1.0i * t; };
   auto [result, abserr] = worker.qag(function, 1, 2, 1e-10, 1e-7, GSL_INTEG_GAUSS31);
   EXPECT_NEAR(std::real(result), 7. / 3., 7. / 3. * 1e-7);
   EXPECT_NEAR(std::imag(result), 3. / 2., 3. / 2. * 1e-7);
@@ -121,10 +122,10 @@ TEST(gsl_integration, complex_qag_si) { // NOLINT
 
   double inf = std::numeric_limits<double>::infinity();
 
-  auto function = [](double t) -> dcomplex { return (int(t > 0.) + 1) * std::exp(-(1. + 1_j) * t * t); };
+  auto function = [](double t) -> dcomplex { return (int(t > 0.) + 1) * std::exp(-(1. + 1.0i) * t * t); };
   auto [result, abserr] = worker.qag_si(function, -inf, inf, 1e-10, 1e-7);
 
-  dcomplex analytic_result = 3. / 2 * std::sqrt(M_PI / (1.0 + 1_j));
+  dcomplex analytic_result = 3. / 2 * std::sqrt(M_PI / (1.0 + 1.0i));
 
   EXPECT_NEAR(std::real(result), std::real(analytic_result), std::abs(std::real(analytic_result)) * 1e-7);
   EXPECT_NEAR(std::imag(result), std::imag(analytic_result), std::abs(std::imag(analytic_result)) * 1e-7);

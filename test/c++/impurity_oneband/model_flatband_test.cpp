@@ -13,6 +13,9 @@
 using namespace keldy;
 using namespace keldy::impurity_oneband;
 
+using namespace std::complex_literals;
+
+
 TEST(g0_model, Initialize_flatband) { // NOLINT
   model_param_t params;
   params.bath_type = "flatband";
@@ -75,7 +78,7 @@ TEST(g0_model, Flatband_sym) { // NOLINT
     auto Gt = Gamma * (t1 - t2); // = Gamma * (t1 - t2)
     auto real_part =
        (Gt == 0) ? 0.0 : (std::exp(Gt) * boost::math::expint(-Gt) - std::exp(-Gt) * boost::math::expint(Gt)) / (2 * pi);
-    return real_part + 0.5_j * std::exp(-std::abs(Gt));
+    return real_part + 0.5i * std::exp(-std::abs(Gt));
   };
   auto g0_grea_expected = [g0_less_expected](double t1, double t2) -> dcomplex {
     return std::conj(g0_less_expected(t1, t2));
@@ -114,7 +117,7 @@ TEST(g0_model, Flatband_contour_sym) { // NOLINT
     auto Gt = Gamma * (t1 - t2); // = Gamma * (t1 - t2)
     auto real_part =
        (Gt == 0) ? 0.0 : (std::exp(Gt) * boost::math::expint(-Gt) - std::exp(-Gt) * boost::math::expint(Gt)) / (2 * pi);
-    return real_part + 0.5_j * std::exp(-std::abs(Gt));
+    return real_part + 0.5i * std::exp(-std::abs(Gt));
   };
   auto g0_grea_expected = [g0_less_expected](double t1, double t2) -> dcomplex {
     return std::conj(g0_less_expected(t1, t2));
@@ -164,7 +167,7 @@ TEST(g0_model, Flatband_asym_1) { // NOLINT
   g0_model g0_fft{g0_model_omega{params}, false};
 
   /// value from Marjan analytic formula
-  EXPECT_COMPLEX_NEAR(-0.09907315 + 0.06406786_j, g0_fft.g0_lesser[up](1.0)(0, 0), 1e-4);
+  EXPECT_COMPLEX_NEAR(-0.09907315 + 0.06406786i, g0_fft.g0_lesser[up](1.0)(0, 0), 1e-4);
 
   params.beta = -1;
   params.time_max = 10.0;
@@ -175,7 +178,7 @@ TEST(g0_model, Flatband_asym_1) { // NOLINT
   g0_model g0_ctr{g0_model_omega{params}, false};
 
   /// value from Marjan analytic formula
-  EXPECT_COMPLEX_NEAR(-0.09907315 + 0.06406786_j, g0_ctr.g0_lesser[up](1.0)(0, 0), 1e-7);
+  EXPECT_COMPLEX_NEAR(-0.09907315 + 0.06406786i, g0_ctr.g0_lesser[up](1.0)(0, 0), 1e-7);
 }
 
 /*
@@ -197,7 +200,7 @@ TEST(g0_model, Flatband_asym_2) { // NOLINT
   g0_model g0_fft{g0_model_omega{params}, false};
 
   /// value from Marjan analytic formula
-  EXPECT_COMPLEX_NEAR(-0.2868307 + 0.05648988_j, g0_fft.g0_lesser[up](1.0)(0, 0), 1e-4);
+  EXPECT_COMPLEX_NEAR(-0.2868307 + 0.05648988i, g0_fft.g0_lesser[up](1.0)(0, 0), 1e-4);
 
   params.beta = -1;
   params.time_max = 10.0;
@@ -208,7 +211,7 @@ TEST(g0_model, Flatband_asym_2) { // NOLINT
   g0_model g0_ctr{g0_model_omega{params}, false};
 
   /// value from Marjan analytic formula
-  EXPECT_COMPLEX_NEAR(-0.2868307 + 0.05648988_j, g0_ctr.g0_lesser[up](1.0)(0, 0), 1e-7);
+  EXPECT_COMPLEX_NEAR(-0.2868307 + 0.05648988i, g0_ctr.g0_lesser[up](1.0)(0, 0), 1e-7);
 }
 
 /*
@@ -234,9 +237,9 @@ TEST(g0_model, Flatband_3) { // NOLINT
   std::cout << "t=0.1: " << g0_fft.g0_lesser[up](0.1) << std::endl;
 
   /// values from ctint_keldysh (dot-lead terms have an extra factor 1/2, mistake in the original code)
-  EXPECT_COMPLEX_NEAR(-0.218086 + 0.0265308_j, g0_fft.g0_lesser[up](1.0)(0, 0), 1e-3);
-  //EXPECT_COMPLEX_NEAR((0.258951 + 0.423124_j) / 2, g0_fft.g0_lesser[up](1.0)(0, 1), 1e-3);
-  //EXPECT_COMPLEX_NEAR((-0.107289 + 0.350721_j) / 2, g0_fft.g0_lesser[up](1.0)(1, 0), 1e-3);
+  EXPECT_COMPLEX_NEAR(-0.218086 + 0.0265308i, g0_fft.g0_lesser[up](1.0)(0, 0), 1e-3);
+  //EXPECT_COMPLEX_NEAR((0.258951 + 0.423124i) / 2, g0_fft.g0_lesser[up](1.0)(0, 1), 1e-3);
+  //EXPECT_COMPLEX_NEAR((-0.107289 + 0.350721i) / 2, g0_fft.g0_lesser[up](1.0)(1, 0), 1e-3);
 
   /// check t <-> -t symmetry
   EXPECT_COMPLEX_NEAR(g0_fft.g0_lesser[up](1.0)(0, 0), -std::conj(g0_fft.g0_lesser[up](-1.0)(0, 0)), 1e-8);
@@ -254,9 +257,9 @@ TEST(g0_model, Flatband_3) { // NOLINT
   std::cout << "t=0.1: " << g0_ctr.g0_lesser[up](0.1) << std::endl;
 
   /// values from ctint_keldysh (dot-lead terms have an extra factor 1/2, mistake in the original code)
-  EXPECT_COMPLEX_NEAR(-0.218086 + 0.0265308_j, g0_ctr.g0_lesser[up](1.0)(0, 0), 1e-3);
-  //EXPECT_COMPLEX_NEAR((0.258951 + 0.423124_j) / 2, g0_ctr.g0_lesser[up](1.0)(0, 1), 1e-3);
-  //EXPECT_COMPLEX_NEAR((-0.107289 + 0.350721_j) / 2, g0_ctr.g0_lesser[up](1.0)(1, 0), 1e-3);
+  EXPECT_COMPLEX_NEAR(-0.218086 + 0.0265308i, g0_ctr.g0_lesser[up](1.0)(0, 0), 1e-3);
+  //EXPECT_COMPLEX_NEAR((0.258951 + 0.423124i) / 2, g0_ctr.g0_lesser[up](1.0)(0, 1), 1e-3);
+  //EXPECT_COMPLEX_NEAR((-0.107289 + 0.350721i) / 2, g0_ctr.g0_lesser[up](1.0)(1, 0), 1e-3);
 
   /// check t <-> -t symmetry
   EXPECT_COMPLEX_NEAR(g0_ctr.g0_lesser[up](1.0)(0, 0), -std::conj(g0_ctr.g0_lesser[up](-1.0)(0, 0)), 1e-8);

@@ -217,11 +217,14 @@ class g0_model {
 
 /// Adapt g0_lesser and g0_greater into Green function on Keldysh contour
 struct g0_keldysh_contour_t {
+
   g0_model model;
   g0_keldysh_contour_t(g0_model model_) : model(std::move(model_)){};
 
   /// return $g^{ab}(t,t')$ in contour basis from $g^<, g^>$ functions
   dcomplex operator()(gf_index_t const &a, gf_index_t const &b, bool internal_point = true) const {
+    using namespace std::complex_literals;
+
     if (a.spin != b.spin) {
       return 0.0; //  g0 is diagonal in spin
     }
@@ -239,7 +242,7 @@ struct g0_keldysh_contour_t {
     }
     // if at equal contour points (incl. time-split) AND equal orbitals
     return model.g0_lesser[a.spin](0.0)(a.orbital, a.orbital)
-       - static_cast<int>(internal_point) * 1_j * model.model_omega.get_param_alpha();
+       - static_cast<int>(internal_point) * 1.0i * model.model_omega.get_param_alpha();
   }
 
   double get_time_max() const { return model.g0_lesser[up].mesh().x_max(); };

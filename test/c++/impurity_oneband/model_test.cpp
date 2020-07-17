@@ -115,6 +115,8 @@ TEST(g0_keldysh_adaptor, Orbital) { // NOLINT
 }
 
 TEST(g0_keldysh_adaptor, WithAlpha) { // NOLINT
+  using namespace std::complex_literals;
+
   model_param_t params;
   params.eps_d = 0.0;
   params.alpha = 0.8;
@@ -128,10 +130,10 @@ TEST(g0_keldysh_adaptor, WithAlpha) { // NOLINT
   gf_index_t const B = {2.0, up, forward, 1, 0};
   gf_index_t const C = {2.0, up, forward, 0, 1};
 
-  EXPECT_COMPLEX_NEAR(g0_k(A, A), g0.g0_lesser[up](0.0)(0, 0) - 1_j * 0.8, tol);
-  EXPECT_COMPLEX_NEAR(g0_k(A, A, true), g0.g0_lesser[up](0.0)(0, 0) - 1_j * 0.8, tol);
-  EXPECT_COMPLEX_NEAR(g0_k(B, B), g0.g0_lesser[up](0.0)(0, 0) - 1_j * 0.8, tol);
-  EXPECT_COMPLEX_NEAR(g0_k(C, C), g0.g0_lesser[up](0.0)(1, 1) - 1_j * 0.8, tol);
+  EXPECT_COMPLEX_NEAR(g0_k(A, A), g0.g0_lesser[up](0.0)(0, 0) - 1.0i * 0.8, tol);
+  EXPECT_COMPLEX_NEAR(g0_k(A, A, true), g0.g0_lesser[up](0.0)(0, 0) - 1.0i * 0.8, tol);
+  EXPECT_COMPLEX_NEAR(g0_k(B, B), g0.g0_lesser[up](0.0)(0, 0) - 1.0i * 0.8, tol);
+  EXPECT_COMPLEX_NEAR(g0_k(C, C), g0.g0_lesser[up](0.0)(1, 1) - 1.0i * 0.8, tol);
 }
 
 TEST(g0_keldysh_adaptor, WithoutAlpha) { // NOLINT

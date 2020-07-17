@@ -77,6 +77,7 @@ bool operator<(gf_index_t const &a, gf_index_t const &b) {
 // *****************************************************************************
 
 g0_model_omega::g0_model_omega(model_param_t const &parameters) : param_(parameters) {
+  using namespace std::complex_literals;
   if (param_.beta < 0) {
     std::cout << "WARNING: beta < 0. Interpret this as beta = +infinity." << std::endl;
     param_.beta = std::numeric_limits<double>::infinity();
@@ -95,7 +96,7 @@ g0_model_omega::g0_model_omega(model_param_t const &parameters) : param_(paramet
       }
       if (std::abs(std::real(omega)) < half_bandwidth) {
         return 0.5 * (Gamma / half_bandwidth)
-           * (omega - 1_j * std::sqrt(half_bandwidth * half_bandwidth - omega * omega));
+           * (omega - 1.0i * std::sqrt(half_bandwidth * half_bandwidth - omega * omega));
       }
       auto sgn_omega = (1 - 2 * int(std::signbit(std::real(omega))));
       return 0.5 * (Gamma / half_bandwidth)
@@ -105,14 +106,14 @@ g0_model_omega::g0_model_omega(model_param_t const &parameters) : param_(paramet
 
   } else if (param_.bath_type == "flatband") {
     bath_hybrid_R_left_ = [Gamma = param_.Gamma]([[maybe_unused]] dcomplex omega) -> dcomplex {
-      return -1_j * Gamma / 2.;
+      return - 1.0i * Gamma / 2.;
     };
     bath_hybrid_R_right_ = bath_hybrid_R_left_;
 
     /// half_bandwidth is here interpreted as half width at half maximum.
   } else if (param_.bath_type == "lorentzian") {
     bath_hybrid_R_left_ = [Gamma = param_.Gamma, half_bandwidth = param_.half_bandwidth](dcomplex omega) -> dcomplex {
-      return Gamma * half_bandwidth / 2. / (omega + 1_j * half_bandwidth);
+      return Gamma * half_bandwidth / 2. / (omega + 1.0i * half_bandwidth);
     };
     bath_hybrid_R_right_ = bath_hybrid_R_left_;
 
@@ -176,6 +177,7 @@ g0_model::g0_model(g0_model_omega model_omega_, bool make_dot_lead_)
 }
 
 void g0_model::make_g0_by_fft() {
+  using namespace std::complex_literals;
   using namespace triqs::gfs;
 
   auto param_ = model_omega.get_param();
@@ -187,7 +189,7 @@ void g0_model::make_g0_by_fft() {
   gf<refreq, matrix_valued> g0_greater_omega{freq_mesh, {2, 2}};
 
   for (auto omega : freq_mesh) {
-    dcomplex omegaj = omega + 0_j;
+    dcomplex omegaj = omega + 0.0i;
 
     g0_lesser_omega[omega](0, 0) = model_omega.g0_dot_lesser(omegaj);
     g0_greater_omega[omega](0, 0) = model_omega.g0_dot_greater(omegaj);
@@ -218,6 +220,7 @@ void g0_model::make_g0_by_fft() {
 void g0_model::make_g0_by_finite_contour(std::vector<double> pts) {
   using namespace triqs::gfs;
   using namespace boost::math::double_constants;
+  using namespace std::complex_literals;
 
   // sort and remove duplicates from pts
   std::sort(pts.begin(), pts.end());
@@ -246,7 +249,7 @@ void g0_model::make_g0_by_finite_contour(std::vector<double> pts) {
 
       // g_lesser:
       auto integrand_dot_lesser = [t, model = this->model_omega](double omega) -> dcomplex {
-        return std::exp(-1_j * omega * t) * model.g0_dot_lesser(omega) / (2 * pi);
+        return std::exp(-1.0i * omega * t) * model.g0_dot_lesser(omega) / (2 * pi);
       };
 
       std::tie(result, abserr) = worker.qagp(integrand_dot_lesser, pts, abstol, reltol);
@@ -255,7 +258,7 @@ void g0_model::make_g0_by_finite_contour(std::vector<double> pts) {
 
       if (make_dot_lead) {
         auto integrand_lead_lesser = [t, model = this->model_omega](double omega) -> dcomplex {
-          return std::exp(-1_j * omega * t) * model.g0_rightlead_dot_lesser(omega) / (2 * pi);
+          return std::exp(-1.0i * omega * t) * model.g0_rightlead_dot_lesser(omega) / (2 * pi);
         };
 
         std::tie(result, abserr) = worker.qagp(integrand_lead_lesser, pts, abstol, reltol);
@@ -265,7 +268,7 @@ void g0_model::make_g0_by_finite_contour(std::vector<double> pts) {
 
       // g_greater
       auto integrand_dot_greater = [t, model = this->model_omega](double omega) -> dcomplex {
-        return std::exp(-1_j * omega * t) * model.g0_dot_greater(omega) / (2 * pi);
+        return std::exp(-1.0i * omega * t) * model.g0_dot_greater(omega) / (2 * pi);
       };
 
       std::tie(result, abserr) = worker.qagp(integrand_dot_greater, pts, abstol, reltol);
@@ -274,7 +277,7 @@ void g0_model::make_g0_by_finite_contour(std::vector<double> pts) {
 
       if (make_dot_lead) {
         auto integrand_lead_greater = [t, model = this->model_omega](double omega) -> dcomplex {
-          return std::exp(-1_j * omega * t) * model.g0_rightlead_dot_greater(omega) / (2 * pi);
+          return std::exp(-1.0i * omega * t) * model.g0_rightlead_dot_greater(omega) / (2 * pi);
         };
 
         std::tie(result, abserr) = worker.qagp(integrand_lead_greater, pts, abstol, reltol);
@@ -306,6 +309,7 @@ void g0_model::make_g0_by_finite_contour(std::vector<double> pts) {
 void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
   using namespace triqs::gfs;
   using namespace boost::math::double_constants;
+  using namespace std::complex_literals;
 
   auto param_ = model_omega.get_param();
 
@@ -328,13 +332,13 @@ void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
 
     for (const auto t : itertools::omp_chunk(time_mesh)) {
       int sign_of_t = (t > 0) - (t < 0);
-      dcomplex direc_1 = (t == 0) ? -1 : -1_j * sign_of_t;
-      dcomplex direc_2 = (param_.beta == std::numeric_limits<double>::infinity()) ? 1. : param_.beta - t * 1_j;
+      dcomplex direc_1 = (t == 0) ? -1 : -1.0i * sign_of_t;
+      dcomplex direc_2 = (param_.beta == std::numeric_limits<double>::infinity()) ? 1. : param_.beta - t * 1.0i;
       direc_2 /= std::abs(direc_2);
 
       // g_lesser:
       auto integrand_dot_lesser = [t, model = this->model_omega](dcomplex omega) -> dcomplex {
-        return std::exp(-1_j * omega * t) * model.g0_dot_lesser(omega) / (2 * pi);
+        return std::exp(-1.0i * omega * t) * model.g0_dot_lesser(omega) / (2 * pi);
       };
 
       worker.integrate(integrand_dot_lesser, direc_1, direc_2);
@@ -343,7 +347,7 @@ void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
 
       if (make_dot_lead) {
         auto integrand_lead_lesser = [t, model = this->model_omega](dcomplex omega) -> dcomplex {
-          return std::exp(-1_j * omega * t) * model.g0_rightlead_dot_lesser(omega) / (2 * pi);
+          return std::exp(-1.0i * omega * t) * model.g0_rightlead_dot_lesser(omega) / (2 * pi);
         };
 
         worker.integrate(integrand_lead_lesser, direc_1, direc_2);
@@ -353,7 +357,7 @@ void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
 
       // g_greater
       auto integrand_dot_greater = [t, model = this->model_omega](dcomplex omega) -> dcomplex {
-        return std::exp(-1_j * omega * t) * model.g0_dot_greater(omega) / (2 * pi);
+        return std::exp(-1.0i * omega * t) * model.g0_dot_greater(omega) / (2 * pi);
       };
 
       worker.integrate(integrand_dot_greater, -std::conj(direc_2), -std::conj(direc_1));
@@ -362,7 +366,7 @@ void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
 
       if (make_dot_lead) {
         auto integrand_lead_greater = [t, model = this->model_omega](dcomplex omega) -> dcomplex {
-          return std::exp(-1_j * omega * t) * model.g0_rightlead_dot_greater(omega) / (2 * pi);
+          return std::exp(-1.0i * omega * t) * model.g0_rightlead_dot_greater(omega) / (2 * pi);
         };
 
         worker.integrate(integrand_lead_greater, -std::conj(direc_2), -std::conj(direc_1));
@@ -387,6 +391,7 @@ void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
 }
 
 void g0_model::make_flat_band_analytic() {
+  using namespace std::complex_literals;
 
   auto param_ = model_omega.get_param();
   if (param_.beta != std::numeric_limits<double>::infinity() || param_.bias_V != 0. || param_.eps_d != 0.) {
@@ -406,11 +411,11 @@ void g0_model::make_flat_band_analytic() {
     using namespace boost::math::double_constants;
 
     if (time == 0.0) {
-      return 0.5_j;
+      return 0.5i;
     }
     auto Gt = Gamma * time;
     auto real_part = (std::exp(Gt) * expint(-Gt) - std::exp(-Gt) * expint(Gt)) / (2 * pi);
-    return real_part + 0.5_j * std::exp(-std::abs(Gt));
+    return real_part + 0.5i * std::exp(-std::abs(Gt));
   };
 
   dcomplex val = 0.;

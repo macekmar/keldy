@@ -7,6 +7,8 @@
 using namespace keldy;
 using namespace keldy::impurity_oneband;
 
+using namespace std::complex_literals;
+
 TEST(ComputeObs, Initialize1) { // NOLINT
   // model_param_t params;
   // // TRIQS_PRINT(params.bath_type);
@@ -90,7 +92,7 @@ TEST(ComputeObs, Initialize_current) { // NOLINT
 
 TEST(ComputeChargeQDirect, FlatbandAnalyticCompare1) { // NOLINT
 
-  auto i_to_the_n = std::vector<dcomplex>{1, 1_j, -1, -1_j};
+  auto i_to_the_n = std::vector<dcomplex>{1, 1.0i, -1, -1.0i};
 
   model_param_t params;
   params.beta = -1.0; // zero temperature
@@ -128,14 +130,14 @@ TEST(ComputeChargeQDirect, FlatbandAnalyticCompare1) { // NOLINT
       tol = 1e-2;
     }
 
-    EXPECT_COMPLEX_NEAR(-1_j * i_to_the_n[order % 4] * computer.reduce_result(), HZ_charge_series[order],
+    EXPECT_COMPLEX_NEAR(-1.0i * i_to_the_n[order % 4] * computer.reduce_result(), HZ_charge_series[order],
                         tol * std::abs(HZ_charge_series[order]));
   }
 }
 
 TEST(ComputeChargeQDirect, FlatbandAnalyticCompare2) { // NOLINT
 
-  auto i_to_the_n = std::vector<dcomplex>{1, 1_j, -1, -1_j};
+  auto i_to_the_n = std::vector<dcomplex>{1, 1.0i, -1, -1.0i};
 
   model_param_t params;
   params.beta = -1.0; // zero temperature
@@ -173,7 +175,7 @@ TEST(ComputeChargeQDirect, FlatbandAnalyticCompare2) { // NOLINT
     //  tol = 1e-2;
     //}
 
-    EXPECT_COMPLEX_NEAR(-1_j * i_to_the_n[order % 4] * computer.reduce_result(), HZ_charge_series[order],
+    EXPECT_COMPLEX_NEAR(-1.0i * i_to_the_n[order % 4] * computer.reduce_result(), HZ_charge_series[order],
                         tol * std::abs(HZ_charge_series[order]));
   }
 }
@@ -200,7 +202,7 @@ TEST(ComputeObs, ValueCurrent1) { // NOLINT
   computer.run(1e5);
 
   // exact result from analytical calculation
-  EXPECT_NEAR(-2 * std::real(1_j * computer.reduce_result()), 0.041401946352562884, 1e-5);
+  EXPECT_NEAR(-2 * std::real(1.0i * computer.reduce_result()), 0.041401946352562884, 1e-5);
 }
 
 MAKE_MAIN; // NOLINT
