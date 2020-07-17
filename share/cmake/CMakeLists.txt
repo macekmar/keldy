@@ -1,10 +1,10 @@
-configure_file(keldy-config.cmake.in keldy-config.cmake @ONLY)
-configure_file(keldy-config-version.cmake.in keldy-config-version.cmake @ONLY)
+configure_file(${PROJECT_NAME}-config.cmake.in ${PROJECT_NAME}-config.cmake @ONLY)
+configure_file(${PROJECT_NAME}-config-version.cmake.in ${PROJECT_NAME}-config-version.cmake @ONLY)
 install(
   FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/keldy-config.cmake
-    ${CMAKE_CURRENT_BINARY_DIR}/keldy-config-version.cmake
-  DESTINATION lib/cmake/keldy
+    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake
+  DESTINATION lib/cmake/${PROJECT_NAME}
 )
 
-install(EXPORT keldy-targets NAMESPACE keldy:: DESTINATION lib/cmake/keldy)
+install(EXPORT ${PROJECT_NAME}-targets NAMESPACE ${PROJECT_NAME}:: DESTINATION lib/cmake/${PROJECT_NAME})
