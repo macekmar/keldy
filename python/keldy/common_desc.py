@@ -1,5 +1,5 @@
 # Generated automatically using the command :
-# c++2py ../../c++/keldy/qrng.hpp -a keldy -m common -o common -C pytriqs --cxxflags="-std=c++17 " --includes ../../c++ -N keldy
+# c++2py ../../c++/keldy/qrng.hpp -a keldy -m common -o common -C triqs --cxxflags="-std=c++17 " --includes ../../c++ -N keldy
 from cpp2py.wrap_generator import *
 
 # The module

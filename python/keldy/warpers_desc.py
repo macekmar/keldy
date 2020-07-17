@@ -1,12 +1,12 @@
 # Generated automatically using the command :
-# c++2py ../../c++/keldy/warpers/warpers.hpp -a keldy -m warpers -o warpers  -C pytriqs -C keldy --cxxflags="-std=c++17 " --includes ../../c++ -N keldy::warpers
+# c++2py ../../c++/keldy/warpers/warpers.hpp -a keldy -m warpers -o warpers  -C triqs -C keldy --cxxflags="-std=c++17 " --includes ../../c++ -N keldy::warpers
 from cpp2py.wrap_generator import *
 
 # The module
 module = module_(full_name = "warpers", doc = r"", app_name = "keldy")
 
 # Imports
-module.add_imports(*['keldy.binner', 'keldy.common', 'pytriqs.gf'])
+module.add_imports(*['keldy.binner', 'keldy.common', 'triqs.gf'])
 
 # Add here all includes
 module.add_include("keldy/warpers/warpers.hpp")

@@ -26,7 +26,7 @@
 #include "model.hpp"
 
 #include <triqs/utility/first_include.hpp>
-#include <triqs/utility/variant.hpp>
+#include <variant>
 #include <vector>
 
 namespace keldy::impurity_oneband {

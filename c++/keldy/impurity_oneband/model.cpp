@@ -30,7 +30,7 @@
 
 namespace keldy::impurity_oneband {
 
-void h5_write(triqs::h5::group &h5group, std::string const &subgroup_name, model_param_t const &c) {
+void h5_write(h5::group &h5group, std::string const &subgroup_name, model_param_t const &c) {
   auto grp = h5group.create_group(subgroup_name);
   h5_write(grp, "beta", c.beta);
   h5_write(grp, "bias_V", c.bias_V);
@@ -44,7 +44,7 @@ void h5_write(triqs::h5::group &h5group, std::string const &subgroup_name, model
   h5_write(grp, "ft_method", c.ft_method);
 }
 
-void h5_read(triqs::h5::group &h5group, std::string const &subgroup_name, model_param_t &c) {
+void h5_read(h5::group &h5group, std::string const &subgroup_name, model_param_t &c) {
   auto grp = h5group.open_group(subgroup_name);
   h5_read(grp, "beta", c.beta);
   h5_read(grp, "bias_V", c.bias_V);
@@ -121,12 +121,12 @@ g0_model_omega::g0_model_omega(model_param_t const &parameters) : param_(paramet
   }
 }
 
-void h5_write(triqs::h5::group &h5group, std::string const &subgroup_name, g0_model_omega const &c) {
+void h5_write(h5::group &h5group, std::string const &subgroup_name, g0_model_omega const &c) {
   auto grp = h5group.create_group(subgroup_name);
   h5_write(grp, "param_", c.param_);
 }
 
-void h5_read(triqs::h5::group &h5group, std::string const &subgroup_name, g0_model_omega &c) {
+void h5_read(h5::group &h5group, std::string const &subgroup_name, g0_model_omega &c) {
   auto grp = h5group.open_group(subgroup_name);
   model_param_t param_temp;
   h5_read(grp, "param_", param_temp);

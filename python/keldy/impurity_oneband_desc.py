@@ -1,12 +1,12 @@
 # Generated automatically using the command :
-# c++2py ../../c++/keldy/impurity_oneband/compute_obs.hpp -N keldy::impurity_oneband -a keldy -m impurity_oneband -o impurity_oneband -C pytriqs -C keldy --cxxflags="-std=c++17 " --includes ../../c++
+# c++2py ../../c++/keldy/impurity_oneband/compute_obs.hpp -N keldy::impurity_oneband -a keldy -m impurity_oneband -o impurity_oneband -C triqs -C keldy --cxxflags="-std=c++17 " --includes ../../c++
 from cpp2py.wrap_generator import *
 
 # The module
 module = module_(full_name = "impurity_oneband", doc = r"", app_name = "keldy")
 
 # Imports
-module.add_imports(*['keldy.common', 'keldy.warpers', 'pytriqs.gf'])
+module.add_imports(*['keldy.common', 'keldy.warpers', 'triqs.gf'])
 
 # Add here all includes
 module.add_include("keldy/impurity_oneband/compute_obs.hpp")
@@ -19,8 +19,6 @@ module.add_preamble("""
 #include <cpp2py/converters/vector.hpp>
 #include <triqs/cpp2py_converters/arrays.hpp>
 #include <triqs/cpp2py_converters/gf.hpp>
-#include <triqs/cpp2py_converters/h5.hpp>
-#include <triqs/cpp2py_converters/h5.hpp>
 
 using namespace keldy::impurity_oneband;
 """)
@@ -163,7 +161,7 @@ c.add_constructor("""()""", doc = r"""""")
 
 c.add_constructor("""(keldy::impurity_oneband::g0_model_omega model_omega_, bool make_dot_lead_)""", doc = r"""""")
 
-c.add_method("""std::string hdf5_scheme ()""",
+c.add_method("""std::string hdf5_format ()""",
              is_static = True,
              doc = r"""""")
 
@@ -454,9 +452,9 @@ module.add_function ("void keldy::impurity_oneband::fake (**keldy::impurity_oneb
 +-------------------+-------------+--------------+---------------+
 """)
 
-module.add_function ("void keldy::impurity_oneband::h5_write (triqs::h5::group h5group, std::string subgroup_name, keldy::impurity_oneband::model_param_t c)", doc = r"""""")
+module.add_function ("void keldy::impurity_oneband::h5_write (h5::group h5group, std::string subgroup_name, keldy::impurity_oneband::model_param_t c)", doc = r"""""")
 
-module.add_function ("void keldy::impurity_oneband::h5_read (triqs::h5::group h5group, std::string subgroup_name, keldy::impurity_oneband::model_param_t c)", doc = r"""""")
+module.add_function ("void keldy::impurity_oneband::h5_read (h5::group h5group, std::string subgroup_name, keldy::impurity_oneband::model_param_t c)", doc = r"""""")
 
 module.add_function ("bool keldy::impurity_oneband::equivalent_without_timesplit (keldy::impurity_oneband::gf_index_t lhs, keldy::impurity_oneband::gf_index_t rhs)", doc = r"""""")
 

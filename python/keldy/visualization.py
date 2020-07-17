@@ -8,7 +8,7 @@ _matplotlib.use('Agg')
 import matplotlib.pyplot as _plt
 
 from . import warpers as _warpers
-from pytriqs.plot.mpl_interface import oplot as _oplot
+from triqs.plot.mpl_interface import oplot as _oplot
 
 def _gray_code(n):
     """
