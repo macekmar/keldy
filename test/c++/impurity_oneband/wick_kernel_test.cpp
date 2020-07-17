@@ -97,10 +97,10 @@ TEST(integrand_kernel, Order_2) { // NOLINT
   ASSERT_EQ(expected_res.data.size(), 8);
 
   for (int i = 0; i < 4; ++i) {
-    std::cout << computed_res.data[2 * i].first << " ; " << expected_res.data[2 * i].first << std::endl;
-    std::cout << computed_res.data[2 * i + 1].first << " ; " << expected_res.data[2 * i + 1].first << std::endl;
-    std::cout << computed_res.data[2 * i].second << " ; " << expected_res.data[2 * i].second << std::endl;
-    std::cout << computed_res.data[2 * i + 1].second << " ; " << expected_res.data[2 * i + 1].second << std::endl;
+    // std::cout << computed_res.data[2 * i].first << " ; " << expected_res.data[2 * i].first << std::endl;
+    // std::cout << computed_res.data[2 * i + 1].first << " ; " << expected_res.data[2 * i + 1].first << std::endl;
+    // std::cout << computed_res.data[2 * i].second << " ; " << expected_res.data[2 * i].second << std::endl;
+    // std::cout << computed_res.data[2 * i + 1].second << " ; " << expected_res.data[2 * i + 1].second << std::endl;
     EXPECT_COMPLEX_NEAR(computed_res.data[2 * i].second + computed_res.data[2 * i + 1].second,
                         expected_res.data[2 * i].second + expected_res.data[2 * i + 1].second, 1e-16);
   }
