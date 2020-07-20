@@ -80,7 +80,7 @@ TEST(integration_direct_time, consistency) { // NOLINT
 
   auto integrand_summed = sum(result.get_data());
 
-  EXPECT_COMPLEX_NEAR(integrand_summed, result_direct, 1e-16);
+  EXPECT_COMPLEX_NEAR(integrand_summed, result_direct, 1e-15);
 }
 
 MAKE_MAIN; // NOLINT
