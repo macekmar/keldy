@@ -54,8 +54,7 @@ TEST(integrand_direct_time, consistency) { // NOLINT
   EXPECT_EQ(res.data.size(), 1);
   auto integrand_direct_out = integrand_direct(time_vec).first;
 
-  EXPECT_DOUBLE_EQ(res.data[0].second.real(), integrand_direct_out.real());
-  EXPECT_DOUBLE_EQ(res.data[0].second.imag(), integrand_direct_out.imag());
+  EXPECT_COMPLEX_NEAR(res.data[0].second, integrand_direct_out, 1e-16);
 }
 
 TEST(integration_direct_time, consistency) { // NOLINT
@@ -81,8 +80,7 @@ TEST(integration_direct_time, consistency) { // NOLINT
 
   auto integrand_summed = sum(result.get_data());
 
-  EXPECT_DOUBLE_EQ(integrand_summed.real(), result_direct.real());
-  EXPECT_DOUBLE_EQ(integrand_summed.imag(), result_direct.imag());
+  EXPECT_COMPLEX_NEAR(integrand_summed, result_direct, 1e-16);
 }
 
 MAKE_MAIN; // NOLINT

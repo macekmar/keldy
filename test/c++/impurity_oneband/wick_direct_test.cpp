@@ -55,7 +55,7 @@ TEST(integrand_direct, Cutoff) { // NOLINT
 
   time_vec = {4.9, 4.8};
   EXPECT_GT(std::abs(integrand_1(time_vec).first), cutoff);
-  EXPECT_EQ(integrand_1(time_vec).first, integrand_2(time_vec).first);
+  EXPECT_COMPLEX_NEAR(integrand_1(time_vec).first, integrand_2(time_vec).first, 1e-16);
 }
 
 TEST(integrand_direct, Order_1) { // NOLINT
