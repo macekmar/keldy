@@ -3,6 +3,8 @@
 
 #include <keldy/common.hpp>
 
+#include "./warper_tests_common.hpp" // after keldy/warpers imports
+
 #include <itertools/itertools.hpp>
 #include <triqs/gfs.hpp>
 #include <triqs/test_tools/arrays.hpp>
@@ -55,7 +57,19 @@ TEST(WarperTrain, ConstructionAddingWarpers) { // NOLINT
   double warper_scale = 1.0;
   w.emplace_back(make_product_1d_simple_exponential(t_max, warper_scale));
 
-  // Make tests
+  //TODO: try the warper
+}
+
+TEST(WarperTrain, ValidWarperComposition) { // NOLINT
+  warper_train_t w;
+
+  double const t_max = 10.0;
+  double const warper_scale = 1.0;
+  w.emplace_back(make_product_1d_simple_inverse(t_max, warper_scale));
+  w.emplace_back(make_product_1d_simple_exponential(1.0, warper_scale));
+
+  basic_test_warper_at_order_1(w, t_max, 1e-10);
+  basic_test_warper_multidim(w, t_max, 1e-10);
 }
 
 MAKE_MAIN; // NOLINT

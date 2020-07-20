@@ -17,6 +17,8 @@ bool vector_is_bounded(std::vector<T> const &x, T const x_min, T const x_max) {
 ///--------------------------- Warper tests -----------------------------
 // 'basic' tests are for warpers of type u-> l, they check that it forms a
 // one-to-one map between [0, t_max]^n and [0, 1]^n
+// with 0 mapped to 0 and t_max mapped to 1.
+// The uv warper will fail at this test.
 
 using warper_func_t = std::function<double(std::vector<double>)>;
 using warper_map_t = std::function<std::vector<double>(std::vector<double>)>;

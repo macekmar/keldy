@@ -33,10 +33,7 @@ TEST(SimpleProduct1DWarper, NointerpIdentityConstructor2) { // NOLINT
 
 TEST(SimpleProduct1DWarper, NointerpExponentialConstructor) { // NOLINT
   double const t_max = 5.;
-  auto const warper = warper_product_1d_simple_t(
-     [t_max](double u) -> double { return -0.5 * std::exp(-u / 2.) / std::expm1(-t_max / 2.); },
-     [t_max](double u) -> double { return std::expm1(-u / 2.) / std::expm1(-t_max / 2.); },
-     [t_max](double l) -> double { return -2. * std::log(1 + l * std::expm1(-t_max / 2.)); }, t_max);
+  auto const warper = make_product_1d_simple_exponential(t_max, 2.0);
 
   basic_test_warper_at_order_1(warper, t_max, 1e-9);
   basic_test_warper_multidim(warper, t_max, 1e-9);

@@ -92,18 +92,18 @@ TEST(ProjectionWarper, Values) { // NOLINT
   //std::cout << proj_warper.jacobian_reverse({0.5}) << std::endl;
   //std::cout << proj_warper.jacobian_reverse({0.9}) << std::endl;
 
-  EXPECT_NEAR(proj_warper.jacobian_forward({0.3}), 0.764648, tol);
-  EXPECT_NEAR(proj_warper.jacobian_forward({0.5}), 0.857939, tol);
-  EXPECT_NEAR(proj_warper.jacobian_forward({0.9}), 0.273381, tol);
-  EXPECT_NEAR(proj_warper.ui_from_li({0.3})[0], 0.341149, tol);
-  EXPECT_NEAR(proj_warper.ui_from_li({0.5})[0], 0.481958, tol);
-  EXPECT_NEAR(proj_warper.ui_from_li({0.9})[0], 0.790271, tol);
-  EXPECT_NEAR(proj_warper.li_from_ui({0.3})[0], 0.242981, tol);
-  EXPECT_NEAR(proj_warper.li_from_ui({0.5})[0], 0.527598, tol);
-  EXPECT_NEAR(proj_warper.li_from_ui({0.9})[0], 0.974175, tol);
-  EXPECT_NEAR(proj_warper.jacobian_reverse({0.3}), 0.720125, tol);
-  EXPECT_NEAR(proj_warper.jacobian_reverse({0.5}), 0.661651, tol);
-  EXPECT_NEAR(proj_warper.jacobian_reverse({0.9}), 1.21275, tol);
+  EXPECT_NEAR(proj_warper.jacobian_forward({0.3}), 0.841834, tol);
+  EXPECT_NEAR(proj_warper.jacobian_forward({0.5}), 0.977436, tol);
+  EXPECT_NEAR(proj_warper.jacobian_forward({0.9}), 0.237891, tol);
+  EXPECT_NEAR(proj_warper.ui_from_li({0.3})[0], 0.341224, tol);
+  EXPECT_NEAR(proj_warper.ui_from_li({0.5})[0], 0.47522, tol);
+  EXPECT_NEAR(proj_warper.ui_from_li({0.9})[0], 0.77635, tol);
+  EXPECT_NEAR(proj_warper.li_from_ui({0.3})[0], 0.243646, tol);
+  EXPECT_NEAR(proj_warper.li_from_ui({0.5})[0], 0.538089, tol);
+  EXPECT_NEAR(proj_warper.li_from_ui({0.9})[0], 0.98085, tol);
+  EXPECT_NEAR(proj_warper.jacobian_reverse({0.3}), 0.709755, tol);
+  EXPECT_NEAR(proj_warper.jacobian_reverse({0.5}), 0.650334, tol);
+  EXPECT_NEAR(proj_warper.jacobian_reverse({0.9}), 1.08937, tol);
 }
 /// TODO: add more substantial tests
 
