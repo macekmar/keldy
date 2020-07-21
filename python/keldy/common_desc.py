@@ -43,6 +43,8 @@ c.add_member(c_name = "timesplit_n",
              read_only= False,
              doc = r"""""")
 
+c.add_constructor("""()""", doc = r"""""")
+
 module.add_class(c)
 
 # The class sobol
