@@ -390,6 +390,9 @@ c.add_method("""void emplace_back (keldy::warpers::warper_product_1d_simple_t w)
 c.add_method("""void emplace_back (keldy::warpers::warper_product_1d_simple_interp_nearest_t w)""",
              doc = r"""""")
 
+c.add_method("""void emplace_back (keldy::warpers::warper_product_1d_simple_interp_hybrid_t w)""",
+             doc = r"""""")
+
 c.add_method("""void emplace_back (keldy::warpers::warper_product_1d_t w)""",
              doc = r"""""")
 
