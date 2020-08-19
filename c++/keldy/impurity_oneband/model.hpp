@@ -122,6 +122,8 @@ class g0_model_omega {
 
   double get_param_alpha() const { return param_.alpha; }
 
+  void set_param_alpha(double alpha) {param_.alpha = alpha;}
+
   double mu_left() const { return -param_.bias_V / 2; }
   double mu_right() const { return +param_.bias_V / 2; }
 

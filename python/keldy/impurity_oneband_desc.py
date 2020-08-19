@@ -75,6 +75,9 @@ c.add_method("""keldy::impurity_oneband::model_param_t get_param ()""",
 c.add_method("""double get_param_alpha ()""",
              doc = r"""""")
 
+c.add_method("""void set_param_alpha (double alpha)""",
+             doc = r"""""")
+
 c.add_method("""double mu_left ()""",
              doc = r"""""")
 
