@@ -345,6 +345,52 @@ c.add_method("""keldy::warpers::warper_train_t get_warper ()""",
 
 module.add_class(c)
 
+# The class compute_direct
+c = class_(
+        py_type = "ComputeDirect",  # name of the python class
+        c_type = "keldy::impurity_oneband::compute_direct",   # name of the C++ class
+        doc = r"""""",   # doc of the C++ class
+        hdf5 = False,
+)
+
+c.add_member(c_name = "warper",
+             c_type = "keldy::warpers::warper_train_t",
+             read_only= False,
+             doc = r"""""")
+
+c.add_constructor("""(keldy::impurity_oneband::g0_model model, gf_index_t id_a, gf_index_t id_b, double time, int order, double cutoff_integrand)""", doc = r"""""")
+
+c.add_constructor("""(keldy::impurity_oneband::model_param_t params, gf_index_t id_a, gf_index_t id_b, double time, int order, double cutoff_integrand)""", doc = r"""""")
+
+c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_direct::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec, int start_domain_nr, bool keep_u_hypercube = true)""",
+             doc = r"""""")
+
+c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_direct::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec)""",
+             doc = r"""""")
+
+c.add_method("""void run (int nr_steps)""",
+             doc = r"""""")
+
+c.add_method("""void reset_rng (std::string rng_name, int rng_state_seed, bool do_shift = false, bool do_scramble = false, int rng_seed_shift = 0)""",
+             doc = r"""""")
+
+c.add_method("""dcomplex reduce_result ()""",
+             doc = r"""""")
+
+c.add_method("""uint64_t reduce_nr_points_run ()""",
+             doc = r"""""")
+
+c.add_method("""uint64_t reduce_nr_points_in_domain ()""",
+             doc = r"""""")
+
+c.add_method("""keldy::impurity_oneband::integrand_g_direct get_integrand ()""",
+             doc = r"""""")
+
+c.add_method("""keldy::warpers::warper_train_t get_warper ()""",
+             doc = r"""""")
+
+module.add_class(c)
+
 # The class compute_charge_Q_direct_time
 c = class_(
         py_type = "ComputeChargeQDirectTime",  # name of the python class
@@ -361,6 +407,98 @@ c.add_member(c_name = "warper",
 c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int order, int nr_time_slices, double cutoff_integrand)""", doc = r"""""")
 
 c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, int nr_time_slices, double cutoff_integrand)""", doc = r"""""")
+
+c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_direct_time::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec, int start_domain_nr, bool keep_u_hypercube = true)""",
+             doc = r"""""")
+
+c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_direct_time::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec)""",
+             doc = r"""""")
+
+c.add_method("""void run (int nr_steps)""",
+             doc = r"""""")
+
+c.add_method("""void reset_rng (std::string rng_name, int rng_state_seed, bool do_shift = false, bool do_scramble = false, int rng_seed_shift = 0)""",
+             doc = r"""""")
+
+c.add_method("""keldy::binner::binner_t<1,0> reduce_result ()""",
+             doc = r"""""")
+
+c.add_method("""uint64_t reduce_nr_points_run ()""",
+             doc = r"""""")
+
+c.add_method("""uint64_t reduce_nr_points_in_domain ()""",
+             doc = r"""""")
+
+c.add_method("""keldy::warpers::warper_train_t get_warper ()""",
+             doc = r"""""")
+
+c.add_method("""keldy::impurity_oneband::integrand_g_direct_time get_integrand ()""",
+             doc = r"""""")
+
+module.add_class(c)
+
+# The class compute_current_J_direct_time
+c = class_(
+        py_type = "ComputeCurrentJDirectTime",  # name of the python class
+        c_type = "keldy::impurity_oneband::compute_current_J_direct_time",   # name of the C++ class
+        doc = r"""""",   # doc of the C++ class
+        hdf5 = False,
+)
+
+c.add_member(c_name = "warper",
+             c_type = "keldy::warpers::warper_train_t",
+             read_only= False,
+             doc = r"""""")
+
+c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int order, int nr_time_slices, double cutoff_integrand)""", doc = r"""""")
+
+c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, int order, int nr_time_slices, double cutoff_integrand)""", doc = r"""""")
+
+c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_direct_time::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec, int start_domain_nr, bool keep_u_hypercube = true)""",
+             doc = r"""""")
+
+c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_direct_time::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec)""",
+             doc = r"""""")
+
+c.add_method("""void run (int nr_steps)""",
+             doc = r"""""")
+
+c.add_method("""void reset_rng (std::string rng_name, int rng_state_seed, bool do_shift = false, bool do_scramble = false, int rng_seed_shift = 0)""",
+             doc = r"""""")
+
+c.add_method("""keldy::binner::binner_t<1,0> reduce_result ()""",
+             doc = r"""""")
+
+c.add_method("""uint64_t reduce_nr_points_run ()""",
+             doc = r"""""")
+
+c.add_method("""uint64_t reduce_nr_points_in_domain ()""",
+             doc = r"""""")
+
+c.add_method("""keldy::warpers::warper_train_t get_warper ()""",
+             doc = r"""""")
+
+c.add_method("""keldy::impurity_oneband::integrand_g_direct_time get_integrand ()""",
+             doc = r"""""")
+
+module.add_class(c)
+
+# The class compute_direct_time
+c = class_(
+        py_type = "ComputeDirectTime",  # name of the python class
+        c_type = "keldy::impurity_oneband::compute_direct_time",   # name of the C++ class
+        doc = r"""""",   # doc of the C++ class
+        hdf5 = False,
+)
+
+c.add_member(c_name = "warper",
+             c_type = "keldy::warpers::warper_train_t",
+             read_only= False,
+             doc = r"""""")
+
+c.add_constructor("""(keldy::impurity_oneband::g0_model model, gf_index_t id_a, gf_index_t id_b, double time, int order, int nr_time_slices, double cutoff_integrand)""", doc = r"""""")
+
+c.add_constructor("""(keldy::impurity_oneband::model_param_t params, gf_index_t id_a, gf_index_t id_b, double time, int order, int nr_time_slices, double cutoff_integrand)""", doc = r"""""")
 
 c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_direct_time::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec, int start_domain_nr, bool keep_u_hypercube = true)""",
              doc = r"""""")

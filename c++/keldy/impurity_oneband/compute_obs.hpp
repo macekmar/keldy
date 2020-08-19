@@ -77,6 +77,21 @@ class compute_current_J_direct : public integrator<dcomplex, integrand_g_direct>
   compute_current_J_direct(model_param_t params, double time, int order, double cutoff_integrand)
      : compute_current_J_direct{g0_model{g0_model_omega{params}, true}, time, order, cutoff_integrand} {};
 };
+
+// Class to compute
+class compute_direct : public integrator<dcomplex, integrand_g_direct> {
+ public:
+  compute_direct(g0_model model, gf_index_t id_a, gf_index_t id_b, double time, int order, double cutoff_integrand)
+     : integrator{dcomplex{0},
+                  integrand_g_direct{g0_keldysh_contour_t{std::move(model)}, id_a, id_b, cutoff_integrand},
+                  {},
+                  order,
+                  "sobol_unshifted",
+                  0} {}
+
+  compute_direct(model_param_t params, gf_index_t id_a, gf_index_t id_b, double time, int order, double cutoff_integrand)
+     : compute_direct{g0_model{g0_model_omega{params}, true}, id_a, id_b, time, order, cutoff_integrand} {};
+};
 // ****************************************************************************
 // Profumo + Time evolution methods
 
@@ -98,6 +113,40 @@ class compute_charge_Q_direct_time : public integrator<binner::binner_t<1>, inte
                                     cutoff_integrand} {};
 };
 
+// Class to compute the current = -2e/hbar gamma Re[G^<_{lead-dot}(t, t)]
+class compute_current_J_direct_time : public integrator<binner::binner_t<1>, integrand_g_direct_time> {
+ public:
+  compute_current_J_direct_time(g0_model model, double time, int order, int nr_time_slices, double cutoff_integrand)
+     : integrator{binner::binner_t<1>({std::make_tuple(0., time, nr_time_slices)}),
+                  integrand_g_direct_time{g0_keldysh_contour_t{std::move(model)}, gf_index_t{time, up, forward, 0, 1},
+                                     gf_index_t{time, up, backward, 0, 0}, cutoff_integrand},
+                  {},
+                  order,
+                  "sobol_unshifted",
+                  0} {}
+
+  compute_current_J_direct_time(model_param_t params, double time, int order, int nr_time_slices,
+                               double cutoff_integrand)
+     : compute_current_J_direct_time{g0_model{g0_model_omega{params}, false}, time, order, nr_time_slices,
+                                    cutoff_integrand} {};
+};
+
+// Class to compute
+class compute_direct_time : public integrator<binner::binner_t<1>, integrand_g_direct_time> {
+ public:
+  compute_direct_time(g0_model model, gf_index_t id_a, gf_index_t id_b, double time, int order, int nr_time_slices, double cutoff_integrand)
+     : integrator{binner::binner_t<1>({std::make_tuple(0., time, nr_time_slices)}),
+                  integrand_g_direct_time{g0_keldysh_contour_t{std::move(model)}, id_a, id_b, cutoff_integrand},
+                  {},
+                  order,
+                  "sobol_unshifted",
+                  0} {}
+
+  compute_direct_time(model_param_t params, gf_index_t id_a, gf_index_t id_b, double time, int order, int nr_time_slices,
+                               double cutoff_integrand)
+     : compute_direct_time{g0_model{g0_model_omega{params}, false}, id_a, id_b, time, order, nr_time_slices,
+                                    cutoff_integrand} {};
+};
 // ******************************************************************************************************************************************************
 // Kernal Method
 
