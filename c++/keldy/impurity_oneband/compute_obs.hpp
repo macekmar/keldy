@@ -30,6 +30,7 @@
 #include "wick_direct.hpp"
 #include "wick_direct_time.hpp"
 #include "wick_kernel.hpp"
+#include "wick_kernel_single_omega.hpp"
 
 #include "../common.hpp"
 #include "../integrator.hpp"
@@ -112,6 +113,22 @@ class compute_gf_kernel : public integrator<binner::binner_t<1, 1>, integrand_g_
 
   compute_gf_kernel(model_param_t params, double time, int order, int nr_bins = 100)
      : compute_gf_kernel{g0_model{g0_model_omega{params}, false}, time, order, nr_bins} {}
+};
+
+// Kernal Method at a single omega
+class compute_gf_kernel_single_omega : public integrator<dcomplex, integrand_g_kernel_single_omega> {
+ public:
+  compute_gf_kernel_single_omega(g0_model model, double time, double omega, int order, int nr_bins = 100)
+     : integrator{
+        dcomplex{0},
+        integrand_g_kernel_single_omega{g0_keldysh_contour_t{std::move(model)}, gf_index_t{time, up, forward}, omega},
+        {},
+        order,
+        "sobol_unshifted",
+        0} {}
+
+  compute_gf_kernel_single_omega(model_param_t params, double time, double omega, int order, int nr_bins = 100)
+     : compute_gf_kernel_single_omega{g0_model{g0_model_omega{params}, false}, time, omega, order, nr_bins} {}
 };
 
 } // namespace keldy::impurity_oneband
