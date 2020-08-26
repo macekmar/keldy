@@ -118,7 +118,7 @@ class compute_gf_kernel : public integrator<binner::binner_t<1, 1>, integrand_g_
 // Kernal Method at a single omega
 class compute_gf_kernel_single_omega : public integrator<dcomplex, integrand_g_kernel_single_omega> {
  public:
-  compute_gf_kernel_single_omega(g0_model model, double time, double omega, int order, int nr_bins = 100)
+  compute_gf_kernel_single_omega(g0_model model, double time, double omega, int order)
      : integrator{
         dcomplex{0},
         integrand_g_kernel_single_omega{g0_keldysh_contour_t{std::move(model)}, gf_index_t{time, up, forward}, omega},
@@ -127,8 +127,8 @@ class compute_gf_kernel_single_omega : public integrator<dcomplex, integrand_g_k
         "sobol_unshifted",
         0} {}
 
-  compute_gf_kernel_single_omega(model_param_t params, double time, double omega, int order, int nr_bins = 100)
-     : compute_gf_kernel_single_omega{g0_model{g0_model_omega{params}, false}, time, omega, order, nr_bins} {}
+  compute_gf_kernel_single_omega(model_param_t params, double time, double omega, int order)
+     : compute_gf_kernel_single_omega{g0_model{g0_model_omega{params}, false}, time, omega, order} {}
 };
 
 } // namespace keldy::impurity_oneband
