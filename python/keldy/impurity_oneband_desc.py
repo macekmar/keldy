@@ -237,6 +237,20 @@ c.add_method("""std::pair<keldy::impurity_oneband::integrand_g_kernel::result_t,
              name = "__call__",
              doc = r"""""")
 
+# The class integrand_g_kernel_single_omega
+c = class_(
+        py_type = "IntegrandGKernelSingleOmega",  # name of the python class
+        c_type = "keldy::impurity_oneband::integrand_g_kernel_single_omega",   # name of the C++ class
+        doc = r"""""",   # doc of the C++ class
+        hdf5 = False,
+)
+
+c.add_constructor("""(keldy::impurity_oneband::g0_keldysh_contour_t g0_, keldy::impurity_oneband::gf_index_t g_idx_X_, double omega_)""", doc = r"""""")
+
+c.add_method("""std::pair<keldy::impurity_oneband::integrand_g_kernel_single_omega::result_t, int> operator() (std::vector<double> times, bool keep_u_hypercube = true)""",
+             name = "__call__",
+             doc = r"""""")
+
 module.add_class(c)
 
 # The class compute_charge_Q_direct
@@ -416,6 +430,52 @@ c.add_method("""uint64_t reduce_nr_points_in_domain ()""",
              doc = r"""""")
 
 c.add_method("""keldy::impurity_oneband::integrand_g_kernel get_integrand ()""",
+             doc = r"""""")
+
+c.add_method("""keldy::warpers::warper_train_t get_warper ()""",
+             doc = r"""""")
+
+module.add_class(c)
+
+# The class compute_gf_kernel_single_omega
+c = class_(
+        py_type = "ComputeGfKernelSingleOmega",  # name of the python class
+        c_type = "keldy::impurity_oneband::compute_gf_kernel_single_omega",   # name of the C++ class
+        doc = r"""""",   # doc of the C++ class
+        hdf5 = False,
+)
+
+c.add_member(c_name = "warper",
+             c_type = "keldy::warpers::warper_train_t",
+             read_only= False,
+             doc = r"""""")
+
+c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, double omega, int order)""", doc = r"""""")
+
+c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, double omega, int order)""", doc = r"""""")
+
+c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_kernel_single_omega::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec, int start_domain_nr, bool keep_u_hypercube = true)""",
+             doc = r"""""")
+
+c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_g_kernel_single_omega::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec)""",
+             doc = r"""""")
+
+c.add_method("""void run (int nr_steps)""",
+             doc = r"""""")
+
+c.add_method("""void reset_rng (std::string rng_name, int rng_state_seed, bool do_shift = false, bool do_scramble = false, int rng_seed_shift = 0)""",
+             doc = r"""""")
+
+c.add_method("""dcomplex reduce_result ()""",
+             doc = r"""""")
+
+c.add_method("""uint64_t reduce_nr_points_run ()""",
+             doc = r"""""")
+
+c.add_method("""uint64_t reduce_nr_points_in_domain ()""",
+             doc = r"""""")
+
+c.add_method("""keldy::impurity_oneband::integrand_g_kernel_single_omega get_integrand ()""",
              doc = r"""""")
 
 c.add_method("""keldy::warpers::warper_train_t get_warper ()""",
