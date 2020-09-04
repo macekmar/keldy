@@ -44,6 +44,7 @@ namespace keldy::impurity_oneband {
 std::pair<dcomplex, int> integrand_g_kernel_single_omega::operator()(std::vector<double> const &times,
                                                                      bool const keep_u_hypercube) const {
   using namespace triqs::arrays;
+  using namespace std::complex_literals;
 
   // Interaction starts a t = 0
   if (keep_u_hypercube) {
@@ -164,7 +165,7 @@ std::pair<dcomplex, int> integrand_g_kernel_single_omega::operator()(std::vector
     for (int i = 1; i < x_minors.size(); i++) {
       auto ind = all_config_1[col_pick_s1[i]];
       //result.accumulate(x_minors(i, 0), ind.contour.time, ind.contour.k_idx);
-      result += x_minors(i, 0) * std::exp(1_j * omega * ind.contour.time);
+      result += x_minors(i, 0) * std::exp(1i * omega * ind.contour.time);
     }
   }
   return std::make_pair(result, 1);
