@@ -4,15 +4,15 @@ def dockerName = projectName.toLowerCase();
 /* which platform to build documentation on */
 def documentationPlatform = "ubuntu-clang"
 /* depend on triqs upstream branch/project */
-def triqsBranch = "2.2.x" // env.CHANGE_TARGET ?: env.BRANCH_NAME
+def triqsBranch = env.CHANGE_TARGET ?: env.BRANCH_NAME
 def triqsProject = '/TRIQS/triqs/' + triqsBranch.replaceAll('/', '%2F')
-/* whether to publish the results (disabled for template project) */
-def publish = false
+/* whether to keep and publish the results */
+def keepInstall = false
 
 properties([
   disableConcurrentBuilds(),
   buildDiscarder(logRotator(numToKeepStr: '10', daysToKeepStr: '30')),
-  pipelineTriggers(publish ? [
+  pipelineTriggers(keepInstall ? [
     upstream(
       threshold: 'SUCCESS',
       upstreamProjects: triqsProject
@@ -102,9 +102,10 @@ for (int i = 0; i < osxPlatforms.size(); i++) {
 }
 
 /****************** wrap-up */
+def error = null
 try {
   parallel platforms
-  if (publish) { node("docker") {
+  if (keepInstall) { node("docker") {
     /* Publish results */
     stage("publish") { timeout(time: 5, unit: 'MINUTES') {
       def commit = sh(returnStdout: true, script: "git rev-parse HEAD").trim()
@@ -150,12 +151,12 @@ try {
     } }
   } }
 } catch (err) {
+  error = err
+} finally {
   /* send email on build failure (declarative pipeline's post section would work better) */
-  if (env.BRANCH_NAME != "jenkins") emailext(
+  if ((error != null || currentBuild.currentResult != 'SUCCESS') && env.BRANCH_NAME != "jenkins") emailext(
     subject: "\$PROJECT_NAME - Build # \$BUILD_NUMBER - FAILED",
     body: """\$PROJECT_NAME - Build # \$BUILD_NUMBER - FAILED
-
-$err
 
 Check console output at \$BUILD_URL to view full results.
 
@@ -168,11 +169,11 @@ Changes:
 End of build log:
 \${BUILD_LOG,maxLines=60}
     """,
-    to: 'pdumitrescu@flatironinstitute.org',
+    to: 'pdumitrescu@flatironinstitute.org, cbertrand@flatironinstitute.org',
     recipientProviders: [
       [$class: 'DevelopersRecipientProvider'],
     ],
     replyTo: '$DEFAULT_REPLYTO'
   )
-  throw err
+  if (error != null) throw error
 }
