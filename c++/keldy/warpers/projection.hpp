@@ -187,9 +187,9 @@ class warper_projection_t {
   mpi::communicator comm{};
 
  public:
-  void CPP2PY_IGNORE gather_data(std::function<dcomplex(std::vector<double>)> const &warped_integrand,
+  void CPP2PY_IGNORE gather_data(std::function<std::vector<dcomplex>(std::vector<double>)> const &warped_integrand,
                                  int const nr_samples) {
-    double value;
+    std::vector<dcomplex> value;
     int mpi_rank = comm.rank();
     int mpi_size = comm.size();
 
@@ -201,10 +201,18 @@ class warper_projection_t {
         continue;
       }
 
-      value = std::abs(warped_integrand(l));
+      value = warped_integrand(l);
 
+      if (std::abs(value[1]) == 0) {
+        i--;
+        for (int axis = 0; axis < order; axis++) {
+          xi[axis].nr_values_dropped++;
+        }
+        continue;
+      }
+      
       for (int axis = 0; axis < order; axis++) {
-        xi[axis](l[axis]) << value;
+        xi[axis](l[axis]) << std::abs(value[0]);
       }
     }
     for (int axis = 0; axis < order; axis++) {
@@ -222,7 +230,7 @@ class warper_projection_t {
     }
   }
 
-  warper_projection_t(std::function<dcomplex(std::vector<double>)> const &warped_integrand, int const order,
+  warper_projection_t(std::function<std::vector<dcomplex>(std::vector<double>)> const &warped_integrand, int const order,
                       int const num_bins, int const nr_samples, const double sigma, bool const optimize_sigma = true)
      : num_bins(num_bins), order(order) {
     // Initialize xi;

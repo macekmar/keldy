@@ -12,12 +12,12 @@ using namespace triqs::arrays;
 /// --------------------------------------------------------
 
 TEST(ProjectionWarper, OneToOne) { // NOLINT
-  auto integrand = [](std::vector<double> const xi) -> double {
+  auto integrand = [](std::vector<double> const xi) -> std::vector<dcomplex> {
     double output = 1.;
     for (double x : xi) {
       output *= std::sin(3 * x);
     }
-    return output;
+    return {output, 1};
   };
 
   auto proj_warper = warper_projection_t(integrand, 4, int(1e3), int(1e3), 0.06, false);
@@ -30,22 +30,22 @@ TEST(ProjectionWarper, OneToOne) { // NOLINT
 TEST(ProjectionWarper, OptimizeSigma) { // NOLINT
   double const tmax = 1.;
   double const tol = 1e-6;
-  auto integrand = [](std::vector<double> const xi) -> double {
+  auto integrand = [](std::vector<double> const xi) -> std::vector<dcomplex> {
     double output = 1.;
     for (double x : xi) {
       output *= std::sin(3 * x);
     }
-    return output;
+    return {output, 1};
   };
 
   // TODO: get rid of this warper in tests?
   auto cst = []([[maybe_unused]] double x) -> double { return 1.; };
   warper_product_1d_simple_interp_nearest_t warper = {cst, tmax, 10};
 
-  auto warped_integrand = [&warper, &integrand, tmax](std::vector<double> const li) -> double {
+  auto warped_integrand = [&warper, &integrand, tmax](std::vector<double> const li) -> std::vector<dcomplex> {
     auto [vi, jac] = warper.map_forward(li);
     auto ui = ui_from_vi(tmax, vi);
-    return integrand(ui) * jac;
+    return {integrand(ui)[0] * jac, 1};
   };
 
   auto proj_warper = warper_projection_t(warped_integrand, 1, int(1e2), int(1e3), 0.1, true);
@@ -59,22 +59,22 @@ TEST(ProjectionWarper, OptimizeSigma) { // NOLINT
 TEST(ProjectionWarper, Values) { // NOLINT
   double const tmax = 1.;
   double const tol = 5e-6;
-  auto integrand = [](std::vector<double> const xi) -> double {
+  auto integrand = [](std::vector<double> const xi) -> std::vector<dcomplex> {
     double output = 1.;
     for (double x : xi) {
       output *= std::sin(3 * x);
     }
-    return output;
+    return {output, 1};
   };
 
   // TODO: get rid of this warper in tests?
   auto cst = []([[maybe_unused]] double x) -> double { return 1.; };
   warper_product_1d_simple_interp_nearest_t warper = {cst, tmax, 10};
 
-  auto warped_integrand = [&warper, &integrand, tmax](std::vector<double> const li) -> double {
+  auto warped_integrand = [&warper, &integrand, tmax](std::vector<double> const li) -> std::vector<dcomplex> {
     auto [vi, jac] = warper.map_forward(li);
     auto ui = ui_from_vi(tmax, vi);
-    return integrand(ui) * jac;
+    return {integrand(ui)[0] * jac, 1};
   };
 
   auto proj_warper = warper_projection_t(warped_integrand, 1, int(1e2), int(1e2), 0.06754688329, false);

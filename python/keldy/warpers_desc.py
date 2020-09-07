@@ -337,7 +337,7 @@ c = class_(
         hdf5 = False,
 )
 
-c.add_constructor("""(std::function<dcomplex (std::vector<double>)> warped_integrand, int order, int num_bins, int nr_samples, double sigma, bool optimize_sigma = true)""", doc = r"""""")
+c.add_constructor("""(std::function<std::vector<dcomplex>(std::vector<double>)> warped_integrand, int order, int num_bins, int nr_samples, double sigma, bool optimize_sigma = true)""", doc = r"""""")
 
 c.add_method("""keldy::binner::binner_t<1, 0, double> get_xi (int axis)""",
              doc = r"""""")

@@ -38,7 +38,7 @@ class projection_usage(unittest.TestCase):
 
         nr_bins = 500
         nr_samples = 5000
-        warper_proj = warpers.WarperProjectionT(lambda l: np.abs(computer.evaluate_warped_integrand(l, warper_train.size(), False)[0]),
+        warper_proj = warpers.WarperProjectionT(lambda l: computer.evaluate_warped_integrand(l, warper_train.size(), False),
                                                 order, nr_bins, nr_samples, 0.1, True)
         print(warper_proj.get_sigmas())
 
