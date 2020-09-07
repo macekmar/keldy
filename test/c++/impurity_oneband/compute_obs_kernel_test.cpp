@@ -14,7 +14,8 @@ TEST(ComputeObs, ValueKernel) { // NOLINT
 
   model_param_t params;
   params.beta = -1.0; // zero temperature
-  params.bias_V = 0.;
+  params.bias_V_left = 0.0;
+  params.bias_V_right = 0.0;
   params.eps_d = 0.;
   params.Gamma = 0.5;
   params.alpha = 0.5;

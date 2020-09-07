@@ -33,7 +33,8 @@ namespace keldy::impurity_oneband {
 void h5_write(h5::group &h5group, std::string const &subgroup_name, model_param_t const &c) {
   auto grp = h5group.create_group(subgroup_name);
   h5_write(grp, "beta", c.beta);
-  h5_write(grp, "bias_V", c.bias_V);
+  h5_write(grp, "bias_V_left", c.bias_V_left);
+  h5_write(grp, "bias_V_right", c.bias_V_right);
   h5_write(grp, "eps_d", c.eps_d);
   h5_write(grp, "Gamma", c.Gamma);
   h5_write(grp, "alpha", c.alpha);
@@ -47,7 +48,8 @@ void h5_write(h5::group &h5group, std::string const &subgroup_name, model_param_
 void h5_read(h5::group &h5group, std::string const &subgroup_name, model_param_t &c) {
   auto grp = h5group.open_group(subgroup_name);
   h5_read(grp, "beta", c.beta);
-  h5_read(grp, "bias_V", c.bias_V);
+  h5_read(grp, "bias_V_left", c.bias_V_left);
+  h5_read(grp, "bias_V_right", c.bias_V_right);
   h5_read(grp, "eps_d", c.eps_d);
   h5_read(grp, "Gamma", c.Gamma);
   h5_read(grp, "alpha", c.alpha);
@@ -149,7 +151,7 @@ g0_model::g0_model(g0_model_omega model_omega_, bool make_dot_lead_)
     make_g0_by_fft();
 
   } else if (param_.ft_method == "contour") {
-    auto half_bias = std::abs(param_.bias_V / 2);
+    auto half_bias = std::abs(param_.bias_V_left - param_.bias_V_right) / 2;
     if (param_.bath_type == "semicircle") { // semicircular DOS has a bounded support
       if (half_bias < param_.half_bandwidth) {
         make_g0_by_finite_contour({-param_.half_bandwidth, -half_bias, half_bias, param_.half_bandwidth});
@@ -313,7 +315,7 @@ void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
 
   auto param_ = model_omega.get_param();
 
-  if (!(left_turn_pt < -std::abs(param_.bias_V / 2) && right_turn_pt > std::abs(param_.bias_V / 2))) {
+  if (!(left_turn_pt < -std::abs(param_.bias_V_left) && right_turn_pt > std::abs(param_.bias_V_right))) {
     TRIQS_RUNTIME_ERROR << "Contour is wrong regarding Fermi functions poles.";
   }
 
@@ -394,7 +396,7 @@ void g0_model::make_flat_band_analytic() {
   using namespace std::complex_literals;
 
   auto param_ = model_omega.get_param();
-  if (param_.beta != std::numeric_limits<double>::infinity() || param_.bias_V != 0. || param_.eps_d != 0.) {
+  if (param_.beta != std::numeric_limits<double>::infinity() || param_.bias_V_left != 0. || param_.bias_V_right != 0.0 || param_.eps_d != 0.) {
     TRIQS_RUNTIME_ERROR
        << "Analytic flatband covers only the following parameters: beta=infinity (zero temperature), bias_V=0, eps_d=0.";
   }

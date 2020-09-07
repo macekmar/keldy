@@ -96,7 +96,8 @@ TEST(ComputeChargeQDirect, FlatbandAnalyticCompare1) { // NOLINT
 
   model_param_t params;
   params.beta = -1.0; // zero temperature
-  params.bias_V = 0.0;
+  params.bias_V_left = 0.0;
+  params.bias_V_right = 0.0;
   params.eps_d = 0.0;
   params.Gamma = 1.0;
   params.time_max = 30.0;
@@ -141,7 +142,8 @@ TEST(ComputeChargeQDirect, FlatbandAnalyticCompare2) { // NOLINT
 
   model_param_t params;
   params.beta = -1.0; // zero temperature
-  params.bias_V = 0.0;
+  params.bias_V_left = 0.0;
+  params.bias_V_right = 0.0;
   params.eps_d = 0.0;
   params.Gamma = 1.0;
   params.time_max = 30.0;
@@ -184,7 +186,8 @@ TEST(ComputeObs, ValueCurrent1) { // NOLINT
 
   model_param_t params;
   params.beta = -1.0; // zero temperature
-  params.bias_V = 0.6;
+  params.bias_V_left = -0.3;
+  params.bias_V_right = 0.3;
   params.eps_d = -0.5;
   params.Gamma = 1.0;
   params.time_max = 100.0;

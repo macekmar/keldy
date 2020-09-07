@@ -26,7 +26,8 @@ TEST(g0_model, Initialize_flatband) { // NOLINT
 TEST(g0_model, Initialize_flatband_contour) { // NOLINT
   model_param_t params;
   params.beta = 1.0;
-  params.bias_V = 0.3;
+  params.bias_V_left = -0.15;
+  params.bias_V_right = 0.15;
   params.eps_d = -1.0;
   params.Gamma = 1.5;
   params.time_max = 100.0;
@@ -45,7 +46,8 @@ TEST(g0_model, Initialize_flatband_contour) { // NOLINT
 TEST(g0_model, Initialize_flatband_analytic) { // NOLINT
   model_param_t params;
   params.beta = -1.;
-  params.bias_V = 0.;
+  params.bias_V_left = 0.0;
+  params.bias_V_right = 0.0;
   params.eps_d = 0.;
   params.alpha = 0.;
   params.bath_type = "flatband";
@@ -61,7 +63,8 @@ TEST(g0_model, Flatband_sym) { // NOLINT
 
   model_param_t params;
   params.beta = 100000.0;
-  params.bias_V = 0.0;
+  params.bias_V_left = -0.0;
+  params.bias_V_right = 0.0;
   params.eps_d = 0.0;
   params.Gamma = 1.5;
   params.time_max = 1000.0;
@@ -101,7 +104,8 @@ TEST(g0_model, Flatband_contour_sym) { // NOLINT
 
   model_param_t params;
   params.beta = -1.;
-  params.bias_V = 0.0;
+  params.bias_V_left = -0.0;
+  params.bias_V_right = 0.0;
   params.eps_d = 0.0;
   params.Gamma = 1.5;
   params.time_max = 20.0;
@@ -155,7 +159,8 @@ TEST(g0_model, Flatband_asym_1) { // NOLINT
 
   model_param_t params;
   params.beta = 100000.0;
-  params.bias_V = 0.0;
+  params.bias_V_left = -0.0;
+  params.bias_V_right = 0.0;
   params.eps_d = 1.0;
   params.Gamma = 1.5;
   params.time_max = 100.0;
@@ -188,7 +193,8 @@ TEST(g0_model, Flatband_asym_2) { // NOLINT
 
   model_param_t params;
   params.beta = 100000.0;
-  params.bias_V = 0.0;
+  params.bias_V_left = -0.0;
+  params.bias_V_right = 0.0;
   params.eps_d = -1.0;
   params.Gamma = 1.5;
   params.time_max = 100.0;
@@ -221,7 +227,8 @@ TEST(g0_model, Flatband_3) { // NOLINT
 
   model_param_t params;
   params.beta = 10.0;
-  params.bias_V = 2.0;
+  params.bias_V_left = -1.0;
+  params.bias_V_right = 1.0;
   params.eps_d = -1.0;
   params.Gamma = 1.5;
   params.time_max = 100.0;

@@ -37,7 +37,8 @@ namespace keldy::impurity_oneband {
 class CPP2PY_IGNORE model_param_t {
  public:
   double beta = 1.0;
-  double bias_V = 0.0;
+  double bias_V_left = 0.0;
+  double bias_V_right = 0.0;
   double eps_d = 0.0;
   double Gamma = 1.0;
   double alpha = 0.0;
@@ -124,8 +125,8 @@ class g0_model_omega {
 
   void set_param_alpha(double alpha) {param_.alpha = alpha;}
 
-  double mu_left() const { return -param_.bias_V / 2; }
-  double mu_right() const { return +param_.bias_V / 2; }
+  double mu_left() const { return param_.bias_V_left; }
+  double mu_right() const { return param_.bias_V_right; }
 
   dcomplex g0_dot_R(dcomplex omega) const {
     return 1.0 / (omega - param_.eps_d - bath_hybrid_R_left(omega) - bath_hybrid_R_right(omega));

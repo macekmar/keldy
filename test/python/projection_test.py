@@ -17,7 +17,8 @@ class projection_usage(unittest.TestCase):
         tmax = 20.
         order = 3
         params = {'beta': -1.,
-                  'bias_V': 0.,
+                  'bias_V_left': 0.,
+                  'bias_V_right': 0.,
                   'eps_d': 0.,
                   'Gamma': 1.,
                   'alpha': 0.,

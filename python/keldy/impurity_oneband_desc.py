@@ -670,7 +670,12 @@ c.add_member(c_name = "beta",
              initializer = """ 1.0 """,
              doc = r"""""")
 
-c.add_member(c_name = "bias_V",
+c.add_member(c_name = "bias_V_left",
+             c_type = "double",
+             initializer = """ 0.0 """,
+             doc = r"""""")
+
+c.add_member(c_name = "bias_V_right",
              c_type = "double",
              initializer = """ 0.0 """,
              doc = r"""""")

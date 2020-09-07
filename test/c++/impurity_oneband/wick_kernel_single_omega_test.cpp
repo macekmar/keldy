@@ -8,7 +8,8 @@ using namespace keldy::impurity_oneband;
 TEST(kernel_single_omega, integrand) { // NOLINT
   model_param_t params;
   params.beta = 1.0;
-  params.bias_V = 0.0;
+  params.bias_V_left = 0.0;
+  params.bias_V_right = 0.0;
   params.eps_d = 0.0;
   params.Gamma = 1.0;
   params.time_max = 10.0; // (time_limit_min = - time_limit_max)

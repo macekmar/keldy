@@ -31,7 +31,8 @@ TEST(g0_model, Semicirc_fft) { // NOLINT
 
   model_param_t params;
   params.beta = 10.0;
-  params.bias_V = 2.0;
+  params.bias_V_left = -1.0; 
+  params.bias_V_right = 1.0;
   params.eps_d = -1.0;
   params.Gamma = 1.5;
   params.time_max = 100.0;
@@ -56,7 +57,8 @@ TEST(g0_model, Semicirc_contour) { // NOLINT
 
   model_param_t params;
   params.beta = 10.0;
-  params.bias_V = 2.0;
+  params.bias_V_left = -1.0;
+  params.bias_V_right = 1.0;
   params.eps_d = -1.0;
   params.Gamma = 1.5;
   params.time_max = 100.0;
@@ -90,7 +92,8 @@ TEST(g0_model, Semicirc_contour_outliers) { // NOLINT
 
   model_param_t params;
   params.beta = -1.;
-  params.bias_V = -3.0;
+  params.bias_V_left = -1.5;
+  params.bias_V_right = 1.5;
   params.eps_d = -0.5;
   params.Gamma = 1.;
   params.time_max = 50.0;
