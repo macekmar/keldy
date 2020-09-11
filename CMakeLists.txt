@@ -175,10 +175,10 @@ if(PythonSupport)
   add_subdirectory(python/${PROJECT_NAME})
 endif()
 
-# Docs
-if(Build_Documentation)
-  add_subdirectory(doc)
-endif()
+# # # Docs
+# if(Build_Documentation)
+#   add_subdirectory(doc)
+# endif()
 
 # Additional configuration files
 add_subdirectory(share)
