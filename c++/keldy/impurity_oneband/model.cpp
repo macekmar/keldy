@@ -414,7 +414,7 @@ void g0_model::make_flat_band_analytic() {
       return 0.5i;
     }
     auto Gt = Gamma * time;
-    auto real_part = (std::exp(Gt) * expint(-Gt) - std::exp(-Gt) * expint(Gt)) / (2 * pi);
+    auto real_part = (std::exp(Gt) * boost::math::expint(-Gt) - std::exp(-Gt) * boost::math::expint(Gt)) / (2 * pi);
     return real_part + 0.5i * std::exp(-std::abs(Gt));
   };
 
