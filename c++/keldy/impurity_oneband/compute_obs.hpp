@@ -31,6 +31,7 @@
 #include "wick_direct_time.hpp"
 #include "wick_kernel.hpp"
 #include "wick_kernel_single_omega.hpp"
+#include "integrand_spin_plus_spin_minus_freq.hpp"
 
 #include "../common.hpp"
 #include "../integrator.hpp"
@@ -129,6 +130,28 @@ class compute_gf_kernel_single_omega : public integrator<dcomplex, integrand_g_k
 
   compute_gf_kernel_single_omega(model_param_t params, double time, double omega, int order)
      : compute_gf_kernel_single_omega{g0_model{g0_model_omega{params}, false}, time, omega, order} {}
+};
+
+// ****************************************************************************
+// <sigma^+ sigma^-> correlator
+
+array<dcomplex, 1> zero_array(int size) {
+  array<dcomplex, 1> out(size);
+  out() = 0;
+  return out;
+};
+
+// cannot be constructed from params only, as make_chi must be called manually
+class compute_spin_plus_spin_minus_freq : public integrator<array<dcomplex, 1>, integrand_spin_plus_spin_minus_freq> {
+ public:
+  compute_spin_plus_spin_minus_freq(g0_model model, double time, int order)
+     : integrator{
+        zero_array(model.omegas.size()),
+        integrand_spin_plus_spin_minus_freq{g0_keldysh_contour_t{std::move(model)}, gf_index_t{time, up, forward}},
+        {},
+        order,
+        "sobol_unshifted",
+        0} {}
 };
 
 } // namespace keldy::impurity_oneband

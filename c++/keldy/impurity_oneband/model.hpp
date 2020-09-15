@@ -31,6 +31,7 @@
 #include <vector>
 
 using namespace triqs::gfs;
+namespace mda = triqs::arrays;
 
 namespace keldy::impurity_oneband {
 
@@ -133,6 +134,20 @@ class g0_model_omega {
   }
   dcomplex g0_dot_lesser(dcomplex omega) const { return g0_dot(omega, true); }
   dcomplex g0_dot_greater(dcomplex omega) const { return g0_dot(omega, false); }
+  dcomplex g0_dot_keldysh(keldysh_idx_t a, keldysh_idx_t b, dcomplex omega) const {
+    if (a < b) {
+      return g0_dot(omega, true); // lesser
+    }
+    if (a > b) {
+      return g0_dot(omega, false); // greater
+    }
+    // a == b
+    if (a == forward) {
+      return g0_dot(omega, true) + g0_dot_R(omega); // time-ordered
+    }
+    // a == backward
+    return g0_dot(omega, false) - g0_dot_R(omega); // anti time-ordered
+  }
 
   dcomplex bath_hybrid_R_left(dcomplex omega) const { return bath_hybrid_R_left_(omega); }
   dcomplex bath_hybrid_A_left(dcomplex omega) const { return std::conj(bath_hybrid_R_left_(std::conj(omega))); }
@@ -170,8 +185,14 @@ class g0_model {
   block_gf<retime, matrix_valued> g0_greater;
   gf<retime, matrix_valued> greater_ft_error;
 
+  mda::array<double, 1> omegas;
+  gf<retime, tensor_valued<3>> chi;
+  int chi_spin = up;
+
   g0_model() = default;
   g0_model(g0_model_omega model_omega_, bool make_dot_lead_);
+
+  void make_chi(mda::array<double, 1> omegas_array, gf_index_t const &a);
 
   static std::string hdf5_format() { return "KELDY_G0Model"; }
 
@@ -184,6 +205,9 @@ class g0_model {
     h5_write(grp, "lesser_ft_error", c.lesser_ft_error);
     h5_write(grp, "g0_greater", c.g0_greater);
     h5_write(grp, "greater_ft_error", c.greater_ft_error);
+    h5_write(grp, "omegas", c.omegas);
+    h5_write(grp, "chi", c.chi);
+    h5_write(grp, "chi_spin", c.chi_spin);
   }
 
   // Function that read all containers to hdf5 file
@@ -195,6 +219,9 @@ class g0_model {
     h5_read(grp, "lesser_ft_error", c.lesser_ft_error);
     h5_read(grp, "g0_greater", c.g0_greater);
     h5_read(grp, "greater_ft_error", c.greater_ft_error);
+    h5_read(grp, "omegas", c.omegas);
+    h5_read(grp, "chi", c.chi);
+    h5_read(grp, "chi_spin", c.chi_spin);
   }
 
   // Function that read all containers to hdf5 file
@@ -216,6 +243,7 @@ class g0_model {
 // *****************************************************************************
 
 /// Adapt g0_lesser and g0_greater into Green function on Keldysh contour
+// TODO: why don't we make this a method of model?
 struct g0_keldysh_contour_t {
 
   g0_model model;
@@ -244,6 +272,20 @@ struct g0_keldysh_contour_t {
     return model.g0_lesser[a.spin](0.0)(a.orbital, a.orbital)
        - static_cast<int>(internal_point) * 1.0i * model.model_omega.get_param_alpha();
   }
+
+  /// returns ......
+  // alpha not supported yet
+  mda::array<dcomplex, 1> chi(gf_index_t const &a, gf_index_t const &b, double t_prime) const {
+    if ((a.spin != b.spin) or (a.spin != model.chi_spin)) {
+      return 0.0 * model.omegas; //  g0 is diagonal in spin
+    }
+
+    /// TODO /!\ change next line to slice
+    auto out = model.chi(b.contour.time - a.contour.time)(0, a.contour.k_idx, b.contour.k_idx);
+    return out * mda::exp(1.0i * model.omegas * (a.contour.time - t_prime));
+  };
+
+  int get_nr_omegas() const { return model.omegas.size(); };
 
   double get_time_max() const { return model.g0_lesser[up].mesh().x_max(); };
 };

@@ -87,6 +87,9 @@ c.add_method("""keldy::dcomplex g0_dot_R (keldy::dcomplex omega)""",
 c.add_method("""keldy::dcomplex g0_dot_A (keldy::dcomplex omega)""",
              doc = r"""""")
 
+c.add_method("""keldy::dcomplex g0_dot_keldysh (keldy::keldysh_idx_t a, keldy::keldysh_idx_t b, keldy::dcomplex omega)""",
+             doc = r"""""")
+
 c.add_method("""keldy::dcomplex g0_dot_lesser (keldy::dcomplex omega)""",
              doc = r"""""")
 
@@ -476,6 +479,50 @@ c.add_method("""uint64_t reduce_nr_points_in_domain ()""",
              doc = r"""""")
 
 c.add_method("""keldy::impurity_oneband::integrand_g_kernel_single_omega get_integrand ()""",
+             doc = r"""""")
+
+c.add_method("""keldy::warpers::warper_train_t get_warper ()""",
+             doc = r"""""")
+
+module.add_class(c)
+
+# The class compute_spin_plus_spin_minus_freq
+c = class_(
+        py_type = "ComputeSpinPlusSpinMinusFreq",  # name of the python class
+        c_type = "keldy::impurity_oneband::compute_spin_plus_spin_minus_freq",   # name of the C++ class
+        doc = r"""""",   # doc of the C++ class
+        hdf5 = False,
+)
+
+c.add_member(c_name = "warper",
+             c_type = "keldy::warpers::warper_train_t",
+             read_only= False,
+             doc = r"""""")
+
+c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, int order)""", doc = r"""""")
+
+c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_spin_plus_spin_minus_freq::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec, int start_domain_nr, bool keep_u_hypercube = true)""",
+             doc = r"""""")
+
+c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_spin_plus_spin_minus_freq::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec)""",
+             doc = r"""""")
+
+c.add_method("""void run (int nr_steps)""",
+             doc = r"""""")
+
+c.add_method("""void reset_rng (std::string rng_name, int rng_state_seed, bool do_shift = false, bool do_scramble = false, int rng_seed_shift = 0)""",
+             doc = r"""""")
+
+c.add_method("""keldy::impurity_oneband::integrand_spin_plus_spin_minus_freq::result_t reduce_result ()""",
+             doc = r"""""")
+
+c.add_method("""uint64_t reduce_nr_points_run ()""",
+             doc = r"""""")
+
+c.add_method("""uint64_t reduce_nr_points_in_domain ()""",
+             doc = r"""""")
+
+c.add_method("""keldy::impurity_oneband::integrand_spin_plus_spin_minus_freq get_integrand ()""",
              doc = r"""""")
 
 c.add_method("""keldy::warpers::warper_train_t get_warper ()""",
