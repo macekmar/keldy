@@ -47,7 +47,7 @@ inline void error_handler(int err_code, double result, double abserr) {
                           << ", error = " << abserr << ")";
     }
   }
-};
+}
 
 class CPP2PY_IGNORE gsl_integration_wrapper {
  private:
@@ -69,8 +69,8 @@ class CPP2PY_IGNORE gsl_integration_wrapper {
                                               double epsrel, int key) {
 
     gsl_function f_gsl{[](double x, void *param) -> double {
-                         auto &f = *static_cast<T *>(param);
-                         return f(x);
+                         auto &f_ = *static_cast<T *>(param);
+                         return f_(x);
                        },
                        (void *)&f};
 
@@ -111,8 +111,8 @@ class CPP2PY_IGNORE gsl_integration_wrapper {
     }
 
     gsl_function f_gsl{[](double x, void *param) -> double {
-                         auto &f = *static_cast<T *>(param);
-                         return f(x);
+                         auto &f_ = *static_cast<T *>(param);
+                         return f_(x);
                        },
                        (void *)&f};
 
@@ -151,8 +151,8 @@ class CPP2PY_IGNORE gsl_integration_wrapper {
     }
 
     gsl_function f_gsl{[](double x, void *param) -> double {
-                         auto &f = *static_cast<T *>(param);
-                         return f(x);
+                         auto &f_ = *static_cast<T *>(param);
+                         return f_(x);
                        },
                        (void *)&f};
     double result = 0.0;

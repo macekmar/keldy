@@ -26,7 +26,7 @@ void expect_contain(T const &container, V value) {
   }
 
   EXPECT_TRUE(found);
-};
+}
 
 TEST(g0_model, MiddleTimePoint1) { // NOLINT
   model_param_t params;
@@ -167,4 +167,4 @@ TEST(g0_keldysh_adaptor, WithoutAlpha) { // NOLINT
   EXPECT_COMPLEX_NEAR(g0_k(A, B), g0.g0_lesser[up](0.0)(0, 1), tol);
 }
 
-MAKE_MAIN; // NOLINT
+MAKE_MAIN // NOLINT

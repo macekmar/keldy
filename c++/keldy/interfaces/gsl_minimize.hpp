@@ -59,8 +59,8 @@ gsl_minimize_result gsl_minimize(T const &f, double x_lower, double x_guess, dou
                                  double reltol = 0, int max_iter = 1000, bool end_message = false) {
 
   gsl_function f_gsl{[](double x, void *param) -> double {
-                       auto &f = *static_cast<T *>(param);
-                       return f(x);
+                       auto &f_ = *static_cast<T *>(param);
+                       return f_(x);
                      },
                      (void *)&f};
 
@@ -85,7 +85,7 @@ gsl_minimize_result gsl_minimize(T const &f, double x_lower, double x_guess, dou
     }
     // unexpected error
     TRIQS_RUNTIME_ERROR << "GSL error " << res.status << " : " << gsl_strerror(res.status);
-  };
+  }
 
   do {
     res.nr_iter++;
@@ -132,6 +132,6 @@ gsl_minimize_result gsl_minimize(T const &f, double x_lower, double x_guess, dou
   gsl_min_fminimizer_free(workspace);
 
   return res;
-};
+}
 
 } // namespace keldy::details

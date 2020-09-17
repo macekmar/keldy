@@ -72,4 +72,4 @@ TEST(WarperTrain, ValidWarperComposition) { // NOLINT
   basic_test_warper_multidim(w, t_max, 1e-10);
 }
 
-MAKE_MAIN; // NOLINT
+MAKE_MAIN // NOLINT

@@ -65,4 +65,4 @@ TEST(SimpleProduct1DWarperMaker, InversePower) { // NOLINT
   basic_test_warper_multidim(warper_3, 20.0, tol);
 }
 
-MAKE_MAIN; // NOLINT
+MAKE_MAIN // NOLINT

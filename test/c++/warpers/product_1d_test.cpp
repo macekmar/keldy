@@ -10,7 +10,7 @@ std::vector<T> operator/(std::vector<T> const vector, S const scalar) {
     output.push_back(*i / scalar);
   }
   return output;
-};
+}
 
 using namespace keldy;
 using namespace keldy::warpers;
@@ -22,7 +22,7 @@ using namespace triqs::arrays;
 TEST(Product1DWarper, Default) { // NOLINT
   double const t_max = 1.5;
 
-  std::function<double(double)> const_function = [](double t) { return 1.0; };
+  std::function<double(double)> const_function = []([[maybe_unused]] double t) { return 1.0; };
   auto warper = warper_product_1d_interp_nearest_t{};
   warper.emplace_back({const_function, t_max, 8});
 
@@ -32,7 +32,7 @@ TEST(Product1DWarper, Default) { // NOLINT
 
 TEST(Product1DWarper, Identity) { // NOLINT
   double const t_max = 1.5;
-  auto cst = [](double u) -> double { return 1.; };
+  auto cst = []([[maybe_unused]] double u) -> double { return 1.; };
 
   auto warper = warper_product_1d_interp_nearest_t{};
   warper.emplace_back({cst, t_max, int(1e2)});
@@ -44,7 +44,7 @@ TEST(Product1DWarper, Identity) { // NOLINT
   basic_test_warper_multidim(warper, t_max, 1e-14);
 
   function_test_warper(
-     warper, t_max, [](std::vector<double> const ui) -> double { return 1.; },
+     warper, t_max, []([[maybe_unused]] std::vector<double> const ui) -> double { return 1.; },
      [t_max](std::vector<double> const ui) -> std::vector<double> { return ui / t_max; },
      [t_max](std::vector<double> const li) -> double { return std::pow(t_max, li.size()); });
 }
@@ -155,4 +155,4 @@ TEST(Product1DWarper, AlternateInverseAndCubeHybrid) { // NOLINT
   // errors are ~ 1/delta, 1/delta^2, 1/delta
 }
 
-MAKE_MAIN; // NOLINT
+MAKE_MAIN // NOLINT

@@ -34,4 +34,4 @@ TEST(g0_model, contour_integration) { // NOLINT
   gsl_set_error_handler(gsl_error_handler_old);
 }
 
-MAKE_MAIN; // NOLINT
+MAKE_MAIN // NOLINT

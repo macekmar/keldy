@@ -113,4 +113,4 @@ TEST(contour_pt_test, compare_3way_timeorder) { // NOLINT
   }
 }
 
-MAKE_MAIN; // NOLINT
+MAKE_MAIN // NOLINT

@@ -135,4 +135,4 @@ TEST(gsl_integration, complex_qag_si) { // NOLINT
   gsl_set_error_handler(gsl_default_handler);
 }
 
-MAKE_MAIN; // NOLINT
+MAKE_MAIN // NOLINT

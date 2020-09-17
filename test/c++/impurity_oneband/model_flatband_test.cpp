@@ -268,4 +268,4 @@ TEST(g0_model, Flatband_3) { // NOLINT
   //EXPECT_COMPLEX_NEAR(g0_ctr.g0_greater[up](1.0)(0, 1), -std::conj(g0_ctr.g0_greater[up](-1.0)(1, 0)), 1e-8);
 }
 
-MAKE_MAIN; // NOLINT
+MAKE_MAIN // NOLINT

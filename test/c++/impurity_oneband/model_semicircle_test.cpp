@@ -112,4 +112,4 @@ TEST(g0_model, Semicirc_contour_outliers) { // NOLINT
   EXPECT_LT(max_element(abs(imag(deriv2))), 1.);
 }
 
-MAKE_MAIN; // NOLINT
+MAKE_MAIN // NOLINT

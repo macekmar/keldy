@@ -59,7 +59,7 @@ inline gsl_fit_linear_result gsl_fit_wlinear_wrapper(array<double, 1> const &x, 
   res.cov(1, 1) = cov11;
 
   return res;
-};
+}
 
 /// kernel must be odd in size
 // in and out must have the same size
@@ -86,7 +86,7 @@ inline void local_linear_reg(array<double, 1> const &x, array<double, 1> const &
     if (!dead_points.empty()) {
       kernel_copy = kernel; // make copy
       for (size_t j : dead_points) {
-        size_t dp = j + H - i;
+        long dp = j + H - i;
         if (dp >= 0 and dp < K) {
           kernel_copy(dp) = 0;
         }
@@ -110,6 +110,6 @@ inline void local_linear_reg(array<double, 1> const &x, array<double, 1> const &
 
     y_out(i) = c0 + x(i) * c1;
   }
-};
+}
 
 } // namespace keldy::details

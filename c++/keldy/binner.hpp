@@ -67,7 +67,7 @@ class sparse_binner_t {
     coord_arr_t coord_array = {{std::get<cont_axes>(coords)...}, {std::get<N + disc_axes>(coords)...}};
 
     data.push_back(make_pair(coord_array, value));
-  };
+  }
 
  public:
   using coord_arr_t = std::pair<std::array<cont_coord_t, N>, std::array<disc_coord_t, M>>;
@@ -81,14 +81,14 @@ class sparse_binner_t {
       rh.second *= scalar;
     }
     return *this;
-  };
+  }
 
   /// Append a value into the list `data`.
   template <typename... Coord>
   void accumulate(dcomplex value, Coord... coords) {
     static_assert(sizeof...(coords) == N + M);
     accumulate_impl(value, std::make_index_sequence<N>(), std::make_index_sequence<M>(), coords...);
-  };
+  }
 
   /// sum moduli of values stored in sparse binner.
   //  Values with same coordinates are summed before taking the modulus.
@@ -111,7 +111,7 @@ class sparse_binner_t {
       res += std::abs(q.second);
     }
     return res;
-  };
+  }
 };
 
 ///%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -128,17 +128,17 @@ inline void mpi_broadcast(continuous_axis_t &in, mpi::communicator c, int root) 
   mpi::broadcast(in.xmax, c, root);
   mpi::broadcast(in.nr_bins, c, root);
   mpi::broadcast(in.bin_size, c, root);
-};
+}
 
 inline bool operator==(continuous_axis_t const &a, continuous_axis_t const &b) {
   return (a.xmin == b.xmin) && (a.xmax == b.xmax) && (a.nr_bins == b.nr_bins) && (a.bin_size == b.bin_size);
-};
+}
 
 struct discreet_axis_t {
   long nr_bins;
 };
 
-inline void mpi_broadcast(discreet_axis_t &in, mpi::communicator c, int root) { mpi::broadcast(in.nr_bins, c, root); };
+inline void mpi_broadcast(discreet_axis_t &in, mpi::communicator c, int root) { mpi::broadcast(in.nr_bins, c, root); }
 
 /*
  * Multidimentional binner with N continuous coordinates and M discreet ones.
@@ -170,13 +170,13 @@ class binner_t {
     } else { // discreet axis
       return x;
     }
-  };
+  }
 
   /// Find flattened index from complete list of coordinates
   template <size_t... axes, typename... Coord>
   [[nodiscard]] long coord2flatidx(std::index_sequence<axes...>, Coord... coords) {
     return _data.indexmap()(coord2index<axes>(coords)...);
-  };
+  }
 
   /// Check if coordinate lies inside the binner on a given axis.
   template <size_t axis, typename T>
@@ -186,21 +186,21 @@ class binner_t {
       return (ax.xmin <= x && x <= ax.xmax);
     }
     return (0 <= x && x < discreet_axes[axis - N].nr_bins);
-  };
+  }
 
   /// Check if complete list of coordinates lies inside the binner.
   template <size_t... axes, typename... Coord>
   [[nodiscard]] bool in_bounds(std::index_sequence<axes...>, Coord... coords) {
     auto all = [](auto... args) -> bool { return (... && args); };
     return all(in_bounds<axes>(coords)...);
-  };
+  }
 
   /// Accumulate a value from a sparse binner.
   template <size_t... cont_axes, size_t... disc_axes>
   void accumulate_array(data_t value, std::index_sequence<cont_axes...>, std::index_sequence<disc_axes...>,
                         coord_arr_t coords) {
     (*this)(coords.first[cont_axes]..., coords.second[disc_axes]...) << value;
-  };
+  }
 
  public:
   long nr_values_dropped = 0;
@@ -265,7 +265,7 @@ class binner_t {
       return {*this, coord2flatidx(std::make_index_sequence<N + M>(), coords...)};
     }
     return {*this, -1};
-  };
+  }
 
   mda::array_view<data_t, N + M> data() const { return _data; };
   mda::array_view<long, N + M> nr_values_added() const { return _nr_values_added; };

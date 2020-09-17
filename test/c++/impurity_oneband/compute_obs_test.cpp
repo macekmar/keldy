@@ -205,4 +205,4 @@ TEST(ComputeObs, ValueCurrent1) { // NOLINT
   EXPECT_NEAR(-2 * std::real(1.0i * computer.reduce_result()), 0.041401946352562884, 1e-5);
 }
 
-MAKE_MAIN; // NOLINT
+MAKE_MAIN // NOLINT

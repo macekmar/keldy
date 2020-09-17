@@ -25,4 +25,4 @@ TEST(GreyCodeTest, Order3) { // NOLINT
   // EXPECT_EQ(my_model.g0_lesser.mesh().size(), in_param.nr_time_points_gf);
 }
 
-MAKE_MAIN; // NOLINT
+MAKE_MAIN // NOLINT

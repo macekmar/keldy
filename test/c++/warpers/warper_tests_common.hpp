@@ -12,7 +12,7 @@ bool vector_is_bounded(std::vector<T> const &x, T const x_min, T const x_max) {
     output = output && (x_min <= elt) && (elt <= x_max);
   }
   return output;
-};
+}
 
 ///--------------------------- Warper tests -----------------------------
 // 'basic' tests are for warpers of type u-> l, they check that it forms a
@@ -56,7 +56,7 @@ inline void basic_test_warper_at_order_1(W const &warper, double const t_max, do
   for (double l = 0.1; l < 1.; l += 0.1) {
     EXPECT_NEAR(warper.li_from_ui(warper.ui_from_li({l}))[0], l, accuracy);
   }
-};
+}
 
 template <typename W>
 inline void basic_test_warper_multidim(W const &warper, double const t_max, double const accuracy) {
@@ -95,7 +95,7 @@ inline void basic_test_warper_multidim(W const &warper, double const t_max, doub
     EXPECT_TRUE(are_iterable_near(warper.li_from_ui(warper.ui_from_li(li)), li, accuracy));
     EXPECT_TRUE(are_iterable_near(warper.map_forward(warper.map_reverse(li).first).first, li, accuracy));
   }
-};
+}
 
 /// check that the different methods of the warper correspond to the functions provided
 template <typename W>
@@ -147,4 +147,4 @@ inline void function_test_warper(W const &warper, double const t_max, warper_fun
     do_test({u, 0., 0.3 * t_max});
     do_test({0.7 * t_max, t_max, u, 0.});
   }
-};
+}

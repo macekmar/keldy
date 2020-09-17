@@ -144,4 +144,4 @@ TEST(integrand_direct, Order_2) { // NOLINT
   EXPECT_COMPLEX_NEAR(expected_val, computed_val, 1e-16); // real part very close to 0
 }
 
-MAKE_MAIN; // NOLINT
+MAKE_MAIN // NOLINT

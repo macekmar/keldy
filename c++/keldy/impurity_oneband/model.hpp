@@ -50,7 +50,7 @@ class CPP2PY_IGNORE model_param_t {
 };
 
 // fake function to get cpp2py to create adaptor for model_param_t
-CPP2PY_ARG_AS_DICT inline void fake([[maybe_unused]] model_param_t const &temp){};
+CPP2PY_ARG_AS_DICT inline void fake([[maybe_unused]] model_param_t const &temp){}
 
 void h5_write(h5::group &h5group, std::string const &subgroup_name, model_param_t const &c);
 void h5_read(h5::group &h5group, std::string const &subgroup_name, model_param_t &c);

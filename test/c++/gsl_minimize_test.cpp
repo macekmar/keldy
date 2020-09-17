@@ -84,4 +84,4 @@ TEST_F(GSLMinimize, invalid_function_start) { // NOLINT
   EXPECT_THROW(gsl_minimize(f, -2., 1.5, 2., 1e-10, 0., 100), triqs::runtime_error);
 }
 
-MAKE_MAIN; // NOLINT
+MAKE_MAIN // NOLINT

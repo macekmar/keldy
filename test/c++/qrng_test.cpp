@@ -60,4 +60,4 @@ TEST(RNGConstructors, Taus) { // NOLINT
   std::cout << std::endl;
 }
 
-MAKE_MAIN; // NOLINT
+MAKE_MAIN // NOLINT

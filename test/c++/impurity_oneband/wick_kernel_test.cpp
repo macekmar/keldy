@@ -21,7 +21,7 @@ void sort(binner::sparse_binner_t<N, M> &sp_bin) {
                                         b.first.first.cend());
   };
   std::stable_sort(sp_bin.data.begin(), sp_bin.data.end(), comp);
-};
+}
 
 TEST(integrand_kernel, Order_1) { // NOLINT
   model_param_t const params;
@@ -143,4 +143,4 @@ TEST(ComputeObs, Initialize3) { // NOLINT
   // std::cout << computer.reduce_nr_points_run() << std::endl;
 }
 
-MAKE_MAIN; // NOLINT
+MAKE_MAIN // NOLINT

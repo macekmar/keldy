@@ -10,7 +10,7 @@ std::vector<T> operator/(std::vector<T> const vector, S const scalar) {
     output.push_back(*i / scalar);
   }
   return output;
-};
+}
 
 using namespace keldy;
 using namespace keldy::warpers;
@@ -61,4 +61,4 @@ TEST(SimpleProduct1DWarper, NointerpExponentialConstructor) { // NOLINT
      1e-10, 1e-10, 1e-6);
 }
 
-MAKE_MAIN; // NOLINT
+MAKE_MAIN // NOLINT

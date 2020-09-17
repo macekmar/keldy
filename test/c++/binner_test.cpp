@@ -211,4 +211,4 @@ TEST(BinnerAndSparseBinner, accumulate_twice) { // NOLINT
   EXPECT_ARRAY_EQ(nr_values_expected, nr_values);
 }
 
-MAKE_MAIN; // NOLINT
+MAKE_MAIN // NOLINT

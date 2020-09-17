@@ -148,4 +148,4 @@ TEST(LocalLinearRegression, ConsistencyKernelSizes) { //NOLINT
 ///TODO: add test against values
 ///TODO: test dead points
 
-MAKE_MAIN; // NOLINT
+MAKE_MAIN // NOLINT

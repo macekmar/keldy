@@ -39,7 +39,7 @@ TEST(ProjectionWarper, OptimizeSigma) { // NOLINT
   };
 
   // TODO: get rid of this warper in tests?
-  auto cst = [](double x) -> double { return 1.; };
+  auto cst = []([[maybe_unused]] double x) -> double { return 1.; };
   warper_product_1d_simple_interp_nearest_t warper = {cst, tmax, 10};
 
   auto warped_integrand = [&warper, &integrand, tmax](std::vector<double> const li) -> double {
@@ -68,7 +68,7 @@ TEST(ProjectionWarper, Values) { // NOLINT
   };
 
   // TODO: get rid of this warper in tests?
-  auto cst = [](double x) -> double { return 1.; };
+  auto cst = []([[maybe_unused]] double x) -> double { return 1.; };
   warper_product_1d_simple_interp_nearest_t warper = {cst, tmax, 10};
 
   auto warped_integrand = [&warper, &integrand, tmax](std::vector<double> const li) -> double {
@@ -107,4 +107,4 @@ TEST(ProjectionWarper, Values) { // NOLINT
 }
 /// TODO: add more substantial tests
 
-MAKE_MAIN; // NOLINT
+MAKE_MAIN // NOLINT

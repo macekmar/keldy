@@ -14,7 +14,7 @@ size_t get_iterable_size(T const &a) {
     size++;
   }
   return size;
-};
+}
 
 /* Check element-wise strict equality
  * Use like:
@@ -39,7 +39,7 @@ bool are_iterable_eq(T const &a, T const &b) {
     return false;
   }
   return true;
-};
+}
 
 /* Check element-wise closeness
  * Use like:
@@ -64,7 +64,7 @@ bool are_iterable_near(T const &a, T const &b, double abs_tol) {
     return false;
   }
   return true;
-};
+}
 
 template <typename T>
 bool are_iterable_near(T const &a, T const &b, std::vector<double> const &abs_tol) {
@@ -91,7 +91,7 @@ bool are_iterable_near(T const &a, T const &b, std::vector<double> const &abs_to
     return false;
   }
   return true;
-};
+}
 
 /* Check element-wize almost equality
  * TODO: in case of failure, line number refers to this file, which is pointless
@@ -108,4 +108,4 @@ void expect_iterable_double_eq(T const &a, T const &b) {
       EXPECT_DOUBLE_EQ(*i, *j);
     }
   }
-};
+}

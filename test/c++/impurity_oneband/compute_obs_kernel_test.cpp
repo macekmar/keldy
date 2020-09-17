@@ -59,4 +59,4 @@ TEST(ComputeObs, ValueKernel) { // NOLINT
   std::cout << result << std::endl;
 }
 
-MAKE_MAIN; // NOLINT
+MAKE_MAIN // NOLINT

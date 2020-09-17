@@ -31,4 +31,4 @@ TEST(kernel_single_omega, integrand) { // NOLINT
   std::cout << integrand(time_vec) << std::endl;
 }
 
-MAKE_MAIN; // NOLINT
+MAKE_MAIN // NOLINT

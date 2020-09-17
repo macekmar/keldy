@@ -121,7 +121,7 @@ class boost_rng_wrapper_t {
   G generator;
 
  public:
-  boost_rng_wrapper_t(int dimension_, int seed) : dimension(dimension_), generator{seed} {}
+  boost_rng_wrapper_t(int dimension_, unsigned int seed) : dimension(dimension_), generator{seed} {}
 
   std::vector<double> operator()() {
     std::vector<double> out(dimension);

@@ -83,4 +83,4 @@ TEST(integration_direct_time, consistency) { // NOLINT
   EXPECT_COMPLEX_NEAR(integrand_summed, result_direct, 1e-15);
 }
 
-MAKE_MAIN; // NOLINT
+MAKE_MAIN // NOLINT

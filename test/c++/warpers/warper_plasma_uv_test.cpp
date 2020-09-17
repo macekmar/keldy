@@ -39,8 +39,8 @@ TEST(ViUiMaps, OutOfOrder) { // NOLINT
 }
 
 TEST(PlasmaUVWaroper, Mapping) { // NOLINT
-  warper_plasma_uv_t w{10.0};
   double t_max = 10.0;
+  warper_plasma_uv_t w{t_max};
   std::vector<double> ui_times = {0.0, 2.0, 6.0, 1.0};
 
   std::vector<double> vi_out = w.li_from_ui(ui_times);
@@ -55,7 +55,7 @@ TEST(PlasmaUVWaroper, Mapping) { // NOLINT
   EXPECT_EQ(w.jacobian_forward(ui_times), 1.0);
 }
 
-MAKE_MAIN; // NOLINT
+MAKE_MAIN // NOLINT
 
 // FIX OLD TESTS:
 

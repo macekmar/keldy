@@ -104,11 +104,11 @@ inline array<double, 1> CPP2PY_IGNORE kernel_smoothing(array<double, 1> const &y
   /// cost function is symetric in sigma and the minimum is looked for between
   //-upper and +upper in order to make sure the min can be bound even when
   //projection is noiseless.
-  auto f = [&x, &y, &log_y, &kernel, &dead_points, &log_y_out, &H, sigma_min](double sigma) -> double {
-    sigma = std::max(std::abs(sigma), sigma_min);
+  auto f = [&x, &y, &log_y, &kernel, &dead_points, &log_y_out, &H, sigma_min](double sigma_) -> double {
+    sigma_ = std::max(std::abs(sigma_), sigma_min);
 
     for (int j = 0; j < kernel.size(); ++j) {
-      kernel(j) = gaussian(j, H, sigma);
+      kernel(j) = gaussian(j, H, sigma_);
     }
     kernel(H) = 0;
     kernel() /= kernel(H + 1);
@@ -125,7 +125,7 @@ inline array<double, 1> CPP2PY_IGNORE kernel_smoothing(array<double, 1> const &y
 
   auto const out = details::gsl_minimize(f, -upper, sigma, upper, 1e-8, 0., 20).x;
   return std::max(std::abs(out), sigma_min);
-};
+}
 
 /// for optimization debug purpose, returns a sampling of the cost function
 CPP2PY_IGNORE inline array<double, 1> optimize_sigma_landscape(array<double, 1> const &y, double const lower,
@@ -171,7 +171,7 @@ CPP2PY_IGNORE inline array<double, 1> optimize_sigma_landscape(array<double, 1> 
   }
 
   return map(f)(sigmas);
-};
+}
 
 class warper_projection_t {
  private:
@@ -220,7 +220,7 @@ class warper_projection_t {
         }
       }
     }
-  };
+  }
 
   warper_projection_t(std::function<dcomplex(std::vector<double>)> const &warped_integrand, int const order,
                       int const num_bins, int const nr_samples, const double sigma, bool const optimize_sigma = true)
@@ -242,7 +242,7 @@ class warper_projection_t {
     populate_sigmas(sigma, optimize_sigma);
 
     populate_functions();
-  };
+  }
 
   void CPP2PY_IGNORE populate_sigmas(double const sigma, bool const optimize = true) {
     //Smooth and update functions
@@ -314,14 +314,14 @@ class warper_projection_t {
         fn_integrated_inverse[axis][l] = interpolate(l);
       }
     }
-  };
+  }
 
   auto const &get_xi(int axis) const {
     if (axis < 0 or axis >= order) {
       TRIQS_RUNTIME_ERROR << "this axis does not exist.";
     }
     return xi[axis];
-  };
+  }
 
   std::vector<double> get_sigmas() const {
     std::vector<double> output{};
@@ -337,7 +337,7 @@ class warper_projection_t {
       TRIQS_RUNTIME_ERROR << "this axis does not exist.";
     }
     return fn[axis];
-  };
+  }
 
   std::vector<double> ui_from_li(std::vector<double> const &li_vec) const {
     std::vector<double> result = li_vec;
