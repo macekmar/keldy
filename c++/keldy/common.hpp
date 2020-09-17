@@ -47,7 +47,7 @@ class contour_pt_t {
   keldysh_idx_t k_idx = forward;
   int timesplit_n = 0; // time-spliting order to dinstiguish vertices at equal times
 
-  contour_pt_t() = default; // for py wrapping
+  // contour_pt_t() = default; // for py wrapping
 
   bool operator==(const contour_pt_t &other) const {
     return (time == other.time) && (k_idx == other.k_idx) && (timesplit_n == other.timesplit_n);
