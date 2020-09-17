@@ -380,12 +380,12 @@ class warper_product_1d_simple_interp_hybrid_t {
 
     // Inetegrate function using Simpsons rule: Evaluate f1 two times for each output point
     f1_integrated_pts[0] = 0.0;      // scale co-ordinates later
-    double f2 = f1_(times_u_pts[0]); // temp -- carry over
+    double f2d = f1_(times_u_pts[0]); // temp -- carry over
     for (int i = 1; i < nr_sample_points; i++) {
-      double f0 = f2;
-      double f1 = f1_(0.5 * (times_u_pts[i - 1] + times_u_pts[i]));
-      f2 = f1_(times_u_pts[i]);
-      f1_integrated_pts[i] = f1_integrated_pts[i - 1] + delta / 6. * (f0 + 4 * f1 + f2);
+      double f0d = f2d;
+      double f1d = f1_(0.5 * (times_u_pts[i - 1] + times_u_pts[i]));
+      f2d = f1_(times_u_pts[i]);
+      f1_integrated_pts[i] = f1_integrated_pts[i - 1] + delta / 6. * (f0d + 4 * f1d + f2d);
     }
 
     f1_integrated_normalization = f1_integrated_pts[nr_sample_points - 1];
