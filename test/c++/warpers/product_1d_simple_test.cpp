@@ -61,4 +61,26 @@ TEST(SimpleProduct1DWarper, NointerpExponentialConstructor) { // NOLINT
      1e-10, 1e-10, 1e-6);
 }
 
+TEST(SimpleProduct1DWarper, NointerpFlatTail) { // NOLINT
+  double const t_max = 2.0;
+  auto f1 = [](double u) -> double {
+    if (u <= 1) {
+      return 3. / 2. - u;
+    }
+    return 0;
+  };
+  auto f1_integrated = [](double u) -> double {
+    if (u < 1) {
+      return u * (3 - u) / 2.;
+    }
+    return 1.;
+  };
+  auto f1_integrated_inv = [](double l) -> double { return 3. / 2. - std::sqrt(9. / 4. - 2 * l); };
+
+  auto const warper = warper_product_1d_simple_t(f1, f1_integrated, f1_integrated_inv, t_max, false);
+
+  basic_test_warper_at_order_1(warper, t_max, 1e-14);
+  basic_test_warper_multidim(warper, t_max, 1e-14);
+}
+
 MAKE_MAIN // NOLINT
