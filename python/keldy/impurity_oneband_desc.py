@@ -164,6 +164,12 @@ c.add_constructor("""()""", doc = r"""""")
 
 c.add_constructor("""(keldy::impurity_oneband::g0_model_omega model_omega_, bool make_dot_lead_)""", doc = r"""""")
 
+c.add_constructor("""(model_param_t parameters, int n, triqs::arrays::array<dcomplex, 3> g0_lesser_data, triqs::arrays::array<dcomplex, 3> g0_greater_data)""", doc = r"""""")
+
+c.add_constructor("""(keldy::impurity_oneband::g0_model_omega model_omega_, triqs::gfs::gf<retime, matrix_valued> g0_lesser_up, triqs::gfs::gf<retime, matrix_valued> g0_greater_up)""", doc = r"""""")
+
+c.add_constructor("""(model_param_t parameters, triqs::gfs::gf_mesh<refreq> freq_mesh, triqs::gfs::gf<refreq, matrix_valued> g0_lesser_omega, triqs::gfs::gf<refreq, matrix_valued> g0_greater_omega)""", doc = r"""""")
+
 c.add_method("""std::string hdf5_format ()""",
              is_static = True,
              doc = r"""""")

@@ -175,6 +175,10 @@ class g0_model {
 
   g0_model() = default;
   g0_model(g0_model_omega model_omega_, bool make_dot_lead_);
+  g0_model(model_param_t const &parameters, int n, array<dcomplex, 3> const &g0_lesser_data, array<dcomplex, 3> const &g0_greater_data);
+  g0_model(g0_model_omega model_omega_, gf<retime, matrix_valued> g0_lesser_up, gf<retime, matrix_valued> g0_greater_up);
+
+  g0_model(model_param_t const &parameters, gf_mesh<refreq> freq_mesh, gf<refreq, matrix_valued> g0_lesser_omega, gf<refreq, matrix_valued> g0_greater_omega);
 
   static std::string hdf5_format() { return "KELDY_G0Model"; }
 

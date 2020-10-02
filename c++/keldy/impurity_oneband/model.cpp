@@ -432,4 +432,49 @@ void g0_model::make_flat_band_analytic() {
   g0_greater = make_block_gf<retime, matrix_valued>({"up", "down"}, {g0_greater_up, g0_greater_up});
 }
 
+using namespace triqs::arrays;
+
+g0_model::g0_model(model_param_t const &parameters, int n, array<dcomplex, 3> const &g0_lesser_data, array<dcomplex, 3> const &g0_greater_data) {
+  // Creates g0(t) from data
+  auto param_ = parameters;
+  auto const time_mesh = gf_mesh<retime>({-param_.time_max, param_.time_max, param_.nr_time_points_gf});
+
+  gf<retime, matrix_valued> g0_lesser_up{time_mesh, {n, n}};
+  gf<retime, matrix_valued> g0_greater_up{time_mesh, {n, n}};
+
+  // Loop to copy data
+  for (auto const [i, t] : itertools::enumerate(time_mesh)) {
+    g0_lesser_up[t] = g0_lesser_data(i,range(),range());
+    g0_greater_up[t] = g0_greater_data(i,range(),range());
+  }
+  // Since Spin up and down are currently identical
+  g0_lesser = make_block_gf<retime, matrix_valued>({"up", "down"}, {g0_lesser_up, g0_lesser_up});
+  g0_greater = make_block_gf<retime, matrix_valued>({"up", "down"}, {g0_greater_up, g0_greater_up});
+}
+
+g0_model::g0_model(g0_model_omega model_omega_, 
+                   gf<retime, matrix_valued> g0_lesser_up, 
+                   gf<retime, matrix_valued> g0_greater_up) : model_omega(std::move(model_omega_)), make_dot_lead(true) {
+  // Since Spin up and down are currently identical
+  g0_lesser = make_block_gf<retime, matrix_valued>({"up", "down"}, {g0_lesser_up, g0_lesser_up});
+  g0_greater = make_block_gf<retime, matrix_valued>({"up", "down"}, {g0_greater_up, g0_greater_up});
+}
+
+g0_model::g0_model(model_param_t const &parameters, gf_mesh<refreq> freq_mesh, 
+                    gf<refreq, matrix_valued> g0_lesser_omega, 
+                    gf<refreq, matrix_valued> g0_greater_omega) : model_omega(parameters) {
+
+  // model_omega = g0_model_omega(parameters);              
+
+  auto time_mesh = make_adjoint_mesh(freq_mesh);
+
+  gf<retime, matrix_valued> g0_lesser_up = make_gf_from_fourier(g0_lesser_omega, time_mesh);
+  gf<retime, matrix_valued> g0_greater_up = make_gf_from_fourier(g0_greater_omega, time_mesh);
+
+  // Since Spin up and down are currently identical
+  g0_lesser = make_block_gf<retime, matrix_valued>({"up", "down"}, {g0_lesser_up, g0_lesser_up});
+  g0_greater = make_block_gf<retime, matrix_valued>({"up", "down"}, {g0_greater_up, g0_greater_up});
+}
+
+
 } // namespace keldy::impurity_oneband
