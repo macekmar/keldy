@@ -6,6 +6,19 @@
 #include <functional>
 
 template <typename T>
+std::function<std::vector<T>(std::vector<T>)> vectorize(std::function<T(T)> const &f) {
+  auto new_func = [&f](std::vector<T> x) -> std::vector<T> {
+    std::vector<T> y = {};
+    y.reserve(x.size());
+    for (auto i = x.cbegin(); i != x.cend(); ++i) {
+      y.push_back(f(*i));
+    }
+    return y;
+  };
+  return new_func;
+}
+
+template <typename T>
 bool vector_is_bounded(std::vector<T> const &x, T const x_min, T const x_max) {
   bool output = true;
   for (auto const &elt : x) {
@@ -23,29 +36,38 @@ using warper_func_t = std::function<double(std::vector<double>)>;
 using warper_map_t = std::function<std::vector<double>(std::vector<double>)>;
 
 template <typename W>
-inline void basic_test_warper_at_order_1(W const &warper, double const t_max, double const accuracy) {
-  EXPECT_GT(t_max, 0.);
+inline void basic_test_warper_at_order_1(W const &warper, double const u_max, double const accuracy,
+                                         bool const negative = false, double const l_min = 0, double const l_max = 1) {
   double const u_min = 0;
-  double const u_max = t_max;
-  double const l_min = 0;
-  double const l_max = 1;
+  ASSERT_LT(u_min, u_max);
+  ASSERT_LT(l_min, l_max);
 
-  double const eps = std::nextafter(l_max, l_max + 1) - l_max; // ~2.2e-16
-  std::vector<double> list{0., 1e-9, 0.0001, 0.001, 0.1, 0.2, 0.5, 0.7, 0.999, 0.9999, 1. - 1e-9, 1.};
+  std::vector<double> list{1e-9, 0.0001, 0.001, 0.1, 0.2, 0.5, 0.7, 0.999, 0.9999, 1. - 1e-9};
   auto u_list = list; // copy
   auto l_list = list; // copy
   auto stretch_u = [u_min, u_max](double x) -> double { return u_min + x * (u_max - u_min); };
   auto stretch_l = [l_min, l_max](double x) -> double { return l_min + x * (l_max - l_min); };
-  std::for_each(u_list.begin(), u_list.end(), stretch_u);
-  std::for_each(l_list.begin(), l_list.end(), stretch_l);
+  std::transform(u_list.begin(), u_list.end(), u_list.begin(), stretch_u);
+  std::transform(l_list.begin(), l_list.end(), l_list.begin(), stretch_l);
+
+  // if warper is decreasing, monotony has to be checked in reverse
+  if (negative) {
+    std::reverse(u_list.begin(), u_list.end());
+    std::reverse(l_list.begin(), l_list.end());
+  }
 
   /// u -> l boundaries
-  EXPECT_EQ(warper.li_from_ui({u_min})[0], l_min);
-  EXPECT_EQ(warper.li_from_ui({u_max})[0], l_max);
+  if (not negative) {
+    EXPECT_NEAR(warper.li_from_ui({u_min})[0], l_min, accuracy);
+    EXPECT_NEAR(warper.li_from_ui({u_max})[0], l_max, accuracy);
+  } else {
+    EXPECT_NEAR(warper.li_from_ui({u_min})[0], l_max, accuracy);
+    EXPECT_NEAR(warper.li_from_ui({u_max})[0], l_min, accuracy);
+  }
   for (auto const u : u_list) {
     double const l = warper.li_from_ui({u})[0];
-    EXPECT_GE(l, l_min);
-    EXPECT_LE(l, l_max);
+    EXPECT_GE(l, l_min - accuracy);
+    EXPECT_LE(l, l_max + accuracy);
   }
 
   /// u -> l monotony
@@ -57,16 +79,24 @@ inline void basic_test_warper_at_order_1(W const &warper, double const t_max, do
     l_tmp_max = l;
     /// very close u values
     if (u + 1e-9 <= u_max) {
-      EXPECT_LE(l, warper.li_from_ui({u + 1e-9})[0]);
+      if (not negative) {
+        EXPECT_LE(l, warper.li_from_ui({u + 1e-9})[0]);
+      } else {
+        EXPECT_GE(l, warper.li_from_ui({u + 1e-9})[0]);
+      }
     }
   }
 
   /// l -> u boundaries
-  EXPECT_EQ(warper.ui_from_li({l_min})[0], u_min); // only one side
+  if (not negative) {
+    EXPECT_NEAR(warper.ui_from_li({l_min})[0], u_min, accuracy); // only one side
+  } else {
+    EXPECT_NEAR(warper.ui_from_li({l_max})[0], u_min, accuracy); // only one side
+  }
   for (auto const l : l_list) {
     double const u = warper.ui_from_li({l})[0];
-    EXPECT_GE(u, u_min);
-    EXPECT_LE(u, u_max);
+    EXPECT_GE(u, u_min - accuracy);
+    EXPECT_LE(u, u_max + accuracy);
   }
 
   /// l -> u strict monotony
@@ -77,17 +107,11 @@ inline void basic_test_warper_at_order_1(W const &warper, double const t_max, do
     u_tmp_max = u;
     /// very close l values
     if (l + 1e-9 <= l_max) {
-      EXPECT_LT(u, warper.ui_from_li({l + 1e-9})[0]); // strict
-    }
-  }
-
-  /// l -> u slope must be bounded
-  for (auto const l : l_list) {
-    double const l_next = l + 1e-9;
-    if (l_next <= l_max) {
-      double const u = warper.ui_from_li({l})[0];
-      double const u_next = warper.ui_from_li({l_next})[0];
-      EXPECT_LE((u_next - u) / (l_next - l), 1. / eps);
+      if (not negative) {
+        EXPECT_LT(u, warper.ui_from_li({l + 1e-9})[0]); // strict
+      } else {
+        EXPECT_GT(u, warper.ui_from_li({l + 1e-9})[0]); // strict
+      }
     }
   }
 
@@ -106,17 +130,6 @@ inline void basic_test_warper_at_order_1(W const &warper, double const t_max, do
     EXPECT_NEAR(l, warper.li_from_ui(warper.ui_from_li({l}))[0], accuracy);
   }
 
-  /// jacobian reverse
-  for (auto const l : l_list) {
-    EXPECT_LE(warper.jacobian_reverse({l}), 1. / eps);
-  }
-
-  /// jacobian forward (equal to model function) is positive
-  for (auto const u : u_list) {
-    auto const x = warper.jacobian_forward({u});
-    EXPECT_TRUE((x == 0) || (x >= eps));
-  }
-
   /// map reverse
   for (auto const l : l_list) {
     auto [ui, jac] = warper.map_reverse({l});
@@ -133,33 +146,38 @@ inline void basic_test_warper_at_order_1(W const &warper, double const t_max, do
 }
 
 template <typename W>
-inline void basic_test_warper_multidim(W const &warper, double const t_max, double const accuracy) {
-  EXPECT_GT(t_max, 0.);
+inline void basic_test_warper_multidim(W const &warper, double const u_max, double const accuracy,
+                                       bool const negative = false, double const l_min = 0, double const l_max = 1) {
   double const u_min = 0;
-  double const u_max = t_max;
-  double const l_min = 0;
-  double const l_max = 1;
+  ASSERT_LT(u_min, u_max);
+  ASSERT_LT(l_min, l_max);
 
   std::vector<double> ui = {};
   std::vector<double> li = {};
   std::vector<double> li_plus = {};
 
-  std::vector<double> list{0., 1e-9, 0.0001, 0.001, 0.1, 0.2, 0.5, 0.7, 0.999, 0.9999, 1. - 1e-9, 1.};
+  std::vector<double> list{1e-9, 0.0001, 0.001, 0.1, 0.2, 0.5, 0.7, 0.999, 0.9999, 1. - 1e-9};
   auto u_list = list; // copy
   auto l_list = list; // copy
   auto stretch_u = [u_min, u_max](double x) -> double { return u_min + x * (u_max - u_min); };
   auto stretch_l = [l_min, l_max](double x) -> double { return l_min + x * (l_max - l_min); };
-  std::for_each(u_list.begin(), u_list.end(), stretch_u);
-  std::for_each(l_list.begin(), l_list.end(), stretch_l);
+  std::transform(u_list.begin(), u_list.end(), u_list.begin(), stretch_u);
+  std::transform(l_list.begin(), l_list.end(), l_list.begin(), stretch_l);
 
   /// boundaries are almost equal (except l = 1 ---> u <= t_max)
   std::vector<double> vec_u_min = {u_min, u_min, u_min, u_min};
   std::vector<double> vec_u_max = {u_max, u_max, u_max, u_max};
   std::vector<double> vec_l_min = {l_min, l_min, l_min, l_min};
   std::vector<double> vec_l_max = {l_max, l_max, l_max, l_max};
-  EXPECT_TRUE(are_iterable_near(warper.li_from_ui(vec_u_min), vec_l_min, accuracy));
-  EXPECT_TRUE(are_iterable_near(warper.li_from_ui(vec_u_max), vec_l_max, accuracy));
-  EXPECT_TRUE(are_iterable_near(warper.ui_from_li(vec_l_min), vec_u_min, accuracy));
+  if (not negative) {
+    EXPECT_TRUE(are_iterable_near(warper.li_from_ui(vec_u_min), vec_l_min, accuracy));
+    EXPECT_TRUE(are_iterable_near(warper.li_from_ui(vec_u_max), vec_l_max, accuracy));
+    EXPECT_TRUE(are_iterable_near(warper.ui_from_li(vec_l_min), vec_u_min, accuracy));
+  } else {
+    EXPECT_TRUE(are_iterable_near(warper.li_from_ui(vec_u_min), vec_l_max, accuracy));
+    EXPECT_TRUE(are_iterable_near(warper.li_from_ui(vec_u_max), vec_l_min, accuracy));
+    EXPECT_TRUE(are_iterable_near(warper.ui_from_li(vec_l_max), vec_u_min, accuracy));
+  }
 
   /// u -> l boundaries
   for (auto const u : u_list) {
@@ -223,13 +241,13 @@ inline void function_test_warper(W const &warper, double const t_max, warper_fun
     std::vector<double> accuracy_map_vec(li.size(), accuracy_map);
 
     if (use_accuracy_relative) {
-      accuracy_f *= warper.jacobian_forward(ui) / warper.jacobian_forward(t_max_vec);
+      accuracy_f *= std::abs(warper.jacobian_forward(ui) / warper.jacobian_forward(t_max_vec));
       for (int i = 0; i < li.size(); i++) {
         if (li.at(i) != 0.0) {
-          accuracy_map_vec.at(i) *= li.at(i);
+          accuracy_map_vec.at(i) *= std::abs(li.at(i));
         }
       }
-      accuracy_jac *= warper.jacobian_reverse(li);
+      accuracy_jac *= std::abs(warper.jacobian_reverse(li));
     }
 
     EXPECT_NEAR(warper.jacobian_forward(ui) / warper.jacobian_forward(t_max_vec), f(ui) / f(t_max_vec), accuracy_f);

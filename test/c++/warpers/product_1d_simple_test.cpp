@@ -3,15 +3,6 @@
 
 #include <triqs/test_tools/arrays.hpp>
 
-template <typename T, typename S>
-std::vector<T> operator/(std::vector<T> const vector, S const scalar) {
-  std::vector<T> output = {};
-  for (auto i = vector.begin(); i != vector.end(); ++i) {
-    output.push_back(*i / scalar);
-  }
-  return output;
-}
-
 using namespace keldy;
 using namespace keldy::warpers;
 using namespace triqs::arrays;
@@ -25,9 +16,9 @@ TEST(SimpleProduct1DWarper, NointerpIdentityConstructor2) { // NOLINT
   basic_test_warper_at_order_1(warper, t_max, 1e-14);
   basic_test_warper_multidim(warper, t_max, 1e-14);
 
+  std::function<double(double)> l_from_u = [t_max](double ui) { return ui / t_max; };
   function_test_warper(
-     warper, t_max, [](std::vector<double> const & /**/) -> double { return 1.; },
-     [t_max](std::vector<double> const &ui) -> std::vector<double> { return ui / t_max; },
+     warper, t_max, [](std::vector<double> const & /**/) -> double { return 1.; }, vectorize(l_from_u),
      [t_max](std::vector<double> const &li) -> double { return std::pow(t_max, li.size()); });
 }
 

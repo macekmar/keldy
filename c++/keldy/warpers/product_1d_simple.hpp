@@ -49,7 +49,7 @@ class warper_product_1d_simple_t {
   std::function<double(double)> f1_integrated = [](double u) { return u; };
   std::function<double(double)> f1_integrated_inverse = [](double l) { return l; };
 
-  constexpr static double domain_u_min = 0.0; // alwyas start at 0.0
+  constexpr static double domain_u_min = 0.0; // always start at 0.0
   double domain_u_max = 1.0;                  // "t_max"
 
   constexpr static double codomain_l_min = 0.0;
@@ -175,9 +175,10 @@ class warper_product_1d_simple_interp_nearest_t {
  private:
   double f1_integrated_normalization = 1.0;
 
-  constexpr static double domain_u_min = 0.0; // alwyas start at 0.0
+  constexpr static double domain_u_min = 0.0; // always start at 0.0
   double domain_u_max = 1.0;                  // "t_max"
 
+  // the codomain is [0, 1], but internally this codomain is reversed onto [-1, 0]
   constexpr static double codomain_l_min = 0.0;
   constexpr static double codomain_l_max = 1.0;
 
@@ -195,6 +196,7 @@ class warper_product_1d_simple_interp_nearest_t {
 
   // f is constant interpolated to nearest downward: this piggy-backs on the acc lookup for f_integrated
   double f1(double u) const {
+    assert((domain_u_min <= u) && (u <= domain_u_max));
     auto i = gsl_interp_accel_find(acc_f_integrated.get(), times_u_pts.data_start(), nr_sample_points, u);
     if (i == times_u_pts.size() - 1) {
       return f1_pts[i];
@@ -202,9 +204,15 @@ class warper_product_1d_simple_interp_nearest_t {
     return 0.5 * (f1_pts[i] + f1_pts[i + 1]);
   }
 
-  double f1_integrated(double u) const { return gsl_spline_eval(sp_f_integrated.get(), u, acc_f_integrated.get()); }
+  double f1_integrated(double u) const {
+    assert((domain_u_min <= u) && (u <= domain_u_max));
+    double l = gsl_spline_eval(sp_f_integrated.get(), u, acc_f_integrated.get());
+    return -l; // map [-1, 0] to [0, 1] without accuracy loss
+  }
 
   double f1_integrated_inverse(double l) const {
+    assert((codomain_l_min <= l) && (l <= codomain_l_max));
+    l = -l; // map [0, 1] to [-1, 0] without accuracy loss
     return gsl_spline_eval(sp_f_integrated_inverse.get(), l, acc_f_integrated_inverse.get());
   }
 
@@ -235,26 +243,47 @@ class warper_product_1d_simple_interp_nearest_t {
     //#pragma omp parallel for
     for (int i = 0; i < nr_sample_points; i++) {
       times_u_pts[i] = domain_u_min + static_cast<double>(i) / (nr_sample_points - 1) * (domain_u_max - domain_u_min);
+    }
+    times_u_pts[nr_sample_points - 1] = domain_u_max; // avoid float operation inaccuracy
+    for (int i = 0; i < nr_sample_points; i++) {
       f1_pts[i] = f1_(times_u_pts[i]);
     }
 
-    f1_integrated_pts[0] = 0.0; // scale co-ordinates later
-    for (int i = 1; i < nr_sample_points; i++) {
+    // integrate in the negative direction from u_max.
+    int cut_index = nr_sample_points - 1;
+    bool found_cut = false;
+    f1_integrated_pts[nr_sample_points - 1] = 0.0; // scale co-ordinates later
+    for (int i = nr_sample_points - 2; i >= 0; i--) {
       f1_integrated_pts[i] =
-         f1_integrated_pts[i - 1] + 0.5 * (f1_pts[i - 1] + f1_pts[i]) * (times_u_pts[i] - times_u_pts[i - 1]);
+         f1_integrated_pts[i + 1] - 0.5 * (f1_pts[i + 1] + f1_pts[i]) * (times_u_pts[i + 1] - times_u_pts[i]);
+
+      found_cut = found_cut || (f1_integrated_pts[i] != 0);
+      if (not found_cut) {
+        cut_index = i;
+      }
     }
 
-    f1_integrated_normalization = f1_integrated_pts[nr_sample_points - 1];
-
-    //#pragma omp parallel for
-    for (int i = 0; i < nr_sample_points; i++) {
-      f1_integrated_pts[i] *= codomain_l_max / f1_integrated_normalization;
-      f1_pts[i] *= codomain_l_max / f1_integrated_normalization;
+    if (not found_cut) {
+      TRIQS_RUNTIME_ERROR << "Model function is flat zero.";
     }
+
+    f1_integrated_normalization = -f1_integrated_pts[0]; // > 0
+
+    f1_integrated_pts() /= f1_integrated_normalization;
+    f1_pts /= f1_integrated_normalization;
+    f1_integrated_pts[0] = -1; // normalization seems to be approximate sometimes
+
+    assert(f1_integrated_pts[0] == -1);
+    assert(f1_integrated_pts[cut_index] == 0);
+    assert(f1_integrated_pts[nr_sample_points - 1] == 0);
+    assert(times_u_pts[0] == 0);
+    assert(times_u_pts[nr_sample_points - 1] == domain_u_max);
+
+    sp_f_integrated_inverse = {gsl_spline_alloc(gsl_interp_linear, cut_index + 1), gsl_spline_free};
 
     gsl_spline_init(sp_f_integrated.get(), times_u_pts.data_start(), f1_integrated_pts.data_start(), nr_sample_points);
     gsl_spline_init(sp_f_integrated_inverse.get(), f1_integrated_pts.data_start(), times_u_pts.data_start(),
-                    nr_sample_points);
+                    cut_index + 1);
   }
 
   // ****************************************
@@ -324,9 +353,10 @@ class warper_product_1d_simple_interp_hybrid_t {
  private:
   double f1_integrated_normalization = 1.0;
 
-  constexpr static double domain_u_min = 0.0; // alwyas start at 0.0
+  constexpr static double domain_u_min = 0.0; // always start at 0.0
   double domain_u_max = 1.0;                  // "t_max"
 
+  // the codomain is [0, 1], but internally this codomain is reversed onto [-1, 0]
   constexpr static double codomain_l_min = 0.0;
   constexpr static double codomain_l_max = 1.0;
 
@@ -343,9 +373,15 @@ class warper_product_1d_simple_interp_hybrid_t {
 
   std::function<double(double)> f1 = [](double u [[maybe_unused]]) { return 1.0; };
 
-  double f1_integrated(double u) const { return gsl_spline_eval(sp_f_integrated.get(), u, acc_f_integrated.get()); }
+  double f1_integrated(double u) const {
+    assert((domain_u_min <= u) && (u <= domain_u_max));
+    double l = gsl_spline_eval(sp_f_integrated.get(), u, acc_f_integrated.get());
+    return -l; // map [-1, 0] to [0, 1] without precision loss
+  }
 
   double f1_integrated_inverse(double l) const {
+    assert((codomain_l_min <= l) && (l <= codomain_l_max));
+    l = -l; // map [0, 1] to [-1, 0] without precision loss
     return gsl_spline_eval(sp_f_integrated_inverse.get(), l, acc_f_integrated_inverse.get());
   }
 
@@ -377,32 +413,52 @@ class warper_product_1d_simple_interp_hybrid_t {
     for (int i = 0; i < nr_sample_points; i++) {
       times_u_pts[i] = domain_u_min + delta * i;
     }
+    times_u_pts[nr_sample_points - 1] = domain_u_max; // avoid float operation inaccuracy
 
-    // Inetegrate function using Simpsons rule: Evaluate f1 two times for each output point
-    f1_integrated_pts[0] = 0.0;      // scale co-ordinates later
-    double f2d = f1_(times_u_pts[0]); // temp -- carry over
-    for (int i = 1; i < nr_sample_points; i++) {
+    int cut_index = nr_sample_points - 1;
+    bool found_cut = false;
+
+    // Integrate function using Simpsons rule: Evaluate f1 two times for each output point
+    f1_integrated_pts[nr_sample_points - 1] = 0.0;       // scale co-ordinates later
+    double f2d = f1_(times_u_pts[nr_sample_points - 1]); // temp -- carry over
+    for (int i = nr_sample_points - 2; i >= 0; i--) {
       double f0d = f2d;
-      double f1d = f1_(0.5 * (times_u_pts[i - 1] + times_u_pts[i]));
+      double f1d = f1_(0.5 * (times_u_pts[i + 1] + times_u_pts[i]));
       f2d = f1_(times_u_pts[i]);
-      f1_integrated_pts[i] = f1_integrated_pts[i - 1] + delta / 6. * (f0d + 4 * f1d + f2d);
+      double dl = delta / 6. * (f0d + 4 * f1d + f2d);
+      f1_integrated_pts[i] = f1_integrated_pts[i + 1] - dl;
+
+      if (dl < 1e-100) {
+        TRIQS_RUNTIME_ERROR << "dl=" << dl << " < 1e-100 is too small for a cubic interpolator in double precision.";
+      }
+
+      found_cut = found_cut || (f1_integrated_pts[i] != 0);
+      if (not found_cut) {
+        cut_index = i;
+      }
     }
 
-    f1_integrated_normalization = f1_integrated_pts[nr_sample_points - 1];
-
-    //#pragma omp parallel for
-    for (int i = 0; i < nr_sample_points; i++) {
-      f1_integrated_pts[i] = (f1_integrated_pts[i] / f1_integrated_normalization) * codomain_l_max;
+    if (not found_cut) {
+      TRIQS_RUNTIME_ERROR << "Model function is flat zero.";
     }
 
-    // Ensure that waf1_integrated_pts[i] == 1.0
+    f1_integrated_normalization = -f1_integrated_pts[0]; // > 0
 
-    long double total_normalization = codomain_l_max / f1_integrated_normalization;
-    f1 = [total_normalization, f1_](double u) { return f1_(u) * total_normalization; };
+    f1_integrated_pts /= f1_integrated_normalization;
+    f1_integrated_pts[0] = -1; // normalization seems to be approximate sometimes
+    f1 = [norm = f1_integrated_normalization, f1_](double u) { return f1_(u) / norm; };
+
+    assert(f1_integrated_pts[0] == -1);
+    assert(f1_integrated_pts[cut_index] == 0);
+    assert(f1_integrated_pts[nr_sample_points - 1] == 0);
+    assert(times_u_pts[0] == 0);
+    assert(times_u_pts[nr_sample_points - 1] == domain_u_max);
+
+    sp_f_integrated_inverse = {gsl_spline_alloc(gsl_interp_steffen, cut_index + 1), gsl_spline_free};
 
     gsl_spline_init(sp_f_integrated.get(), times_u_pts.data_start(), f1_integrated_pts.data_start(), nr_sample_points);
     gsl_spline_init(sp_f_integrated_inverse.get(), f1_integrated_pts.data_start(), times_u_pts.data_start(),
-                    nr_sample_points);
+                    cut_index + 1);
   }
 
   // ****************************************

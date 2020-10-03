@@ -3,15 +3,6 @@
 
 #include <triqs/test_tools/arrays.hpp>
 
-template <typename T, typename S>
-std::vector<T> operator/(std::vector<T> const vector, S const scalar) {
-  std::vector<T> output = {};
-  for (auto i = vector.begin(); i != vector.end(); ++i) {
-    output.push_back(*i / scalar);
-  }
-  return output;
-}
-
 using namespace keldy;
 using namespace keldy::warpers;
 
@@ -27,7 +18,7 @@ TEST(Product1DWarper, Default) { // NOLINT
   warper.emplace_back({const_function, t_max, 8});
 
   /// only order 1 exists
-  basic_test_warper_at_order_1(warper, t_max, 1e-14);
+  basic_test_warper_at_order_1(warper, t_max, 1e-14, true);
 }
 
 TEST(Product1DWarper, Identity) { // NOLINT
@@ -40,12 +31,12 @@ TEST(Product1DWarper, Identity) { // NOLINT
   warper.emplace_back({cst, t_max, int(1e2)});
   warper.emplace_back({cst, t_max, int(1e2)});
 
-  basic_test_warper_at_order_1(warper, t_max, 1e-14);
-  basic_test_warper_multidim(warper, t_max, 1e-14);
+  basic_test_warper_at_order_1(warper, t_max, 1e-14, true);
+  basic_test_warper_multidim(warper, t_max, 1e-14, true);
 
+  std::function<double(double)> l_from_u = [t_max](double const &ui) { return (t_max - ui) / t_max; };
   function_test_warper(
-     warper, t_max, []([[maybe_unused]] std::vector<double> const ui) -> double { return 1.; },
-     [t_max](std::vector<double> const ui) -> std::vector<double> { return ui / t_max; },
+     warper, t_max, []([[maybe_unused]] std::vector<double> const ui) -> double { return 1.; }, vectorize(l_from_u),
      [t_max](std::vector<double> const li) -> double { return std::pow(t_max, li.size()); });
 }
 
@@ -60,8 +51,8 @@ TEST(Product1DWarper, AlternateInverseAndCube) { // NOLINT
   warper.emplace_back({f1, t_max, int(1e5)});
   warper.emplace_back({f2, t_max, int(1e5)});
 
-  basic_test_warper_at_order_1(warper, t_max, 1e-9);
-  basic_test_warper_multidim(warper, t_max, 1e-9);
+  basic_test_warper_at_order_1(warper, t_max, 1e-9, true);
+  basic_test_warper_multidim(warper, t_max, 1e-9, true);
 
   auto f = [&f1, &f2](std::vector<double> const ui) -> double {
     double output = 1.;
@@ -78,9 +69,9 @@ TEST(Product1DWarper, AlternateInverseAndCube) { // NOLINT
     std::vector<double> output = {};
     for (size_t i = 0; i < ui.size(); ++i) {
       if (i % 2 == 0) {
-        output.push_back(std::log(1 + ui[i] / 2.) / norm1);
+        output.push_back((norm1 - std::log(1 + ui[i] / 2.)) / norm1);
       } else {
-        output.push_back((1. / ((3. + ui[i]) * (3. + ui[i])) - 1. / 9.) / norm2);
+        output.push_back((norm2 - 1. / ((3. + ui[i]) * (3. + ui[i])) + 1. / 9.) / norm2);
       }
     }
     return output;
@@ -90,9 +81,9 @@ TEST(Product1DWarper, AlternateInverseAndCube) { // NOLINT
     double output = 1.;
     for (size_t i = 0; i < li.size(); ++i) {
       if (i % 2 == 0) {
-        output *= 2. * norm1 * std::exp(li[i] * norm1);
+        output *= 2. * norm1 * std::exp((1 - li[i]) * norm1);
       } else {
-        output *= -norm2 / std::pow(li[i] * norm2 + 1. / 9., 1.5) / 2.;
+        output *= -norm2 / std::pow((1 - li[i]) * norm2 + 1. / 9., 1.5) / 2.;
       }
     }
     return output;
@@ -113,8 +104,8 @@ TEST(Product1DWarper, AlternateInverseAndCubeHybrid) { // NOLINT
   warper.emplace_back({f1, t_max, int(1e5)});
   warper.emplace_back({f2, t_max, int(1e5)});
 
-  basic_test_warper_at_order_1(warper, t_max, 1e-9);
-  basic_test_warper_multidim(warper, t_max, 1e-9);
+  basic_test_warper_at_order_1(warper, t_max, 1e-9, true);
+  basic_test_warper_multidim(warper, t_max, 1e-9, true);
 
   auto f = [&f1, &f2](std::vector<double> const ui) -> double {
     double output = 1.;
@@ -131,9 +122,9 @@ TEST(Product1DWarper, AlternateInverseAndCubeHybrid) { // NOLINT
     std::vector<double> output = {};
     for (size_t i = 0; i < ui.size(); ++i) {
       if (i % 2 == 0) {
-        output.push_back(std::log(1 + ui[i] / 2.) / norm1);
+        output.push_back((norm1 - std::log(1 + ui[i] / 2.)) / norm1);
       } else {
-        output.push_back((1. / ((3. + ui[i]) * (3. + ui[i])) - 1. / 9.) / norm2);
+        output.push_back((norm2 - 1. / ((3. + ui[i]) * (3. + ui[i])) + 1. / 9.) / norm2);
       }
     }
     return output;
@@ -143,9 +134,9 @@ TEST(Product1DWarper, AlternateInverseAndCubeHybrid) { // NOLINT
     double output = 1.;
     for (size_t i = 0; i < li.size(); ++i) {
       if (i % 2 == 0) {
-        output *= 2. * norm1 * std::exp(li[i] * norm1);
+        output *= 2. * norm1 * std::exp((1 - li[i]) * norm1);
       } else {
-        output *= -norm2 / std::pow(li[i] * norm2 + 1. / 9., 1.5) / 2.;
+        output *= -norm2 / std::pow((1 - li[i]) * norm2 + 1. / 9., 1.5) / 2.;
       }
     }
     return output;
