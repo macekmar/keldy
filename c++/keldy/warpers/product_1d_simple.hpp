@@ -216,39 +216,7 @@ class warper_product_1d_simple_interp_nearest_t {
     return gsl_spline_eval(sp_f_integrated_inverse.get(), l, acc_f_integrated_inverse.get());
   }
 
- public:
-  warper_product_1d_simple_interp_nearest_t()
-     : sp_f_integrated{gsl_spline_alloc(gsl_interp_linear, nr_sample_points), gsl_spline_free},
-       sp_f_integrated_inverse{gsl_spline_alloc(gsl_interp_linear, nr_sample_points), gsl_spline_free},
-       acc_f_integrated{gsl_interp_accel_alloc(), gsl_interp_accel_free},
-       acc_f_integrated_inverse{gsl_interp_accel_alloc(), gsl_interp_accel_free} {};
-
-  warper_product_1d_simple_interp_nearest_t(std::function<double(double)> const &f1_, double domain_u_max_,
-                                            int nr_sample_points_)
-     : domain_u_max{domain_u_max_},
-       nr_sample_points{nr_sample_points_},
-       times_u_pts(nr_sample_points),
-       f1_pts(nr_sample_points),
-       f1_integrated_pts(nr_sample_points),
-       sp_f_integrated{gsl_spline_alloc(gsl_interp_linear, nr_sample_points), gsl_spline_free},
-       sp_f_integrated_inverse{gsl_spline_alloc(gsl_interp_linear, nr_sample_points), gsl_spline_free},
-       acc_f_integrated{gsl_interp_accel_alloc(), gsl_interp_accel_free},
-       acc_f_integrated_inverse{gsl_interp_accel_alloc(), gsl_interp_accel_free} {
-
-    if (!(nr_sample_points >= 3)) {
-      TRIQS_RUNTIME_ERROR << "Expect nr_sample_points to be >= 3. Given was " << nr_sample_points;
-    }
-
-    // Just do naive linear interpolation on grid
-    //#pragma omp parallel for
-    for (int i = 0; i < nr_sample_points; i++) {
-      times_u_pts[i] = domain_u_min + static_cast<double>(i) / (nr_sample_points - 1) * (domain_u_max - domain_u_min);
-    }
-    times_u_pts[nr_sample_points - 1] = domain_u_max; // avoid float operation inaccuracy
-    for (int i = 0; i < nr_sample_points; i++) {
-      f1_pts[i] = f1_(times_u_pts[i]);
-    }
-
+  void integrate_and_inverse() {
     // integrate in the negative direction from u_max.
     int cut_index = nr_sample_points - 1;
     bool found_cut = false;
@@ -284,6 +252,67 @@ class warper_product_1d_simple_interp_nearest_t {
     gsl_spline_init(sp_f_integrated.get(), times_u_pts.data_start(), f1_integrated_pts.data_start(), nr_sample_points);
     gsl_spline_init(sp_f_integrated_inverse.get(), f1_integrated_pts.data_start(), times_u_pts.data_start(),
                     cut_index + 1);
+  }
+
+ public:
+  warper_product_1d_simple_interp_nearest_t()
+     : sp_f_integrated{gsl_spline_alloc(gsl_interp_linear, nr_sample_points), gsl_spline_free},
+       sp_f_integrated_inverse{gsl_spline_alloc(gsl_interp_linear, nr_sample_points), gsl_spline_free},
+       acc_f_integrated{gsl_interp_accel_alloc(), gsl_interp_accel_free},
+       acc_f_integrated_inverse{gsl_interp_accel_alloc(), gsl_interp_accel_free} {};
+
+  warper_product_1d_simple_interp_nearest_t(nda::vector<double> times_u_pts_, nda::vector<double> f1_pts_)
+     : domain_u_max{times_u_pts_[times_u_pts_.size() - 1]},
+       nr_sample_points{static_cast<int>(times_u_pts_.size())},
+       times_u_pts(std::move(times_u_pts_)),
+       f1_pts(std::move(f1_pts_)),
+       f1_integrated_pts(nr_sample_points),
+       sp_f_integrated{gsl_spline_alloc(gsl_interp_linear, nr_sample_points), gsl_spline_free},
+       sp_f_integrated_inverse{gsl_spline_alloc(gsl_interp_linear, nr_sample_points), gsl_spline_free},
+       acc_f_integrated{gsl_interp_accel_alloc(), gsl_interp_accel_free},
+       acc_f_integrated_inverse{gsl_interp_accel_alloc(), gsl_interp_accel_free} {
+
+    if (f1_pts.size() != nr_sample_points) {
+      TRIQS_RUNTIME_ERROR << "times_u_pts and f1_pts should have the same length.";
+    }
+    if (!(nr_sample_points >= 3)) {
+      TRIQS_RUNTIME_ERROR << "Expect nr_sample_points to be >= 3. Given was " << nr_sample_points;
+    }
+    if (times_u_pts[0] != 0.) {
+      TRIQS_RUNTIME_ERROR << "times_u_pts should start at 0";
+    }
+    ///TODO check strict increasing times_u_pts
+
+    integrate_and_inverse();
+  }
+
+  warper_product_1d_simple_interp_nearest_t(std::function<double(double)> const &f1_, double domain_u_max_,
+                                            int nr_sample_points_)
+     : domain_u_max{domain_u_max_},
+       nr_sample_points{nr_sample_points_},
+       times_u_pts(nr_sample_points),
+       f1_pts(nr_sample_points),
+       f1_integrated_pts(nr_sample_points),
+       sp_f_integrated{gsl_spline_alloc(gsl_interp_linear, nr_sample_points), gsl_spline_free},
+       sp_f_integrated_inverse{gsl_spline_alloc(gsl_interp_linear, nr_sample_points), gsl_spline_free},
+       acc_f_integrated{gsl_interp_accel_alloc(), gsl_interp_accel_free},
+       acc_f_integrated_inverse{gsl_interp_accel_alloc(), gsl_interp_accel_free} {
+
+    if (!(nr_sample_points >= 3)) {
+      TRIQS_RUNTIME_ERROR << "Expect nr_sample_points to be >= 3. Given was " << nr_sample_points;
+    }
+
+    // Just do naive linear interpolation on grid
+    //#pragma omp parallel for
+    for (int i = 0; i < nr_sample_points; i++) {
+      times_u_pts[i] = domain_u_min + static_cast<double>(i) / (nr_sample_points - 1) * (domain_u_max - domain_u_min);
+    }
+    times_u_pts[nr_sample_points - 1] = domain_u_max; // avoid float operation inaccuracy
+    for (int i = 0; i < nr_sample_points; i++) {
+      f1_pts[i] = f1_(times_u_pts[i]);
+    }
+
+    integrate_and_inverse();
   }
 
   // ****************************************
