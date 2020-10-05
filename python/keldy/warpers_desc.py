@@ -10,6 +10,7 @@ module.add_imports(*['keldy.binner', 'keldy.common', 'triqs.gf'])
 
 # Add here all includes
 module.add_include("keldy/warpers/warpers.hpp")
+module.add_include("keldy/warpers/make_warper_from_proj.hpp")
 
 # Add here anything to add in the C++ code at the start, e.g. namespace using
 module.add_preamble("""
@@ -455,6 +456,6 @@ module.add_function ("keldy::warpers::warper_product_1d_interp_nearest_t keldy::
 
 module.add_function ("keldy::warpers::warper_product_1d_interp_hybrid_t keldy::warpers::make_product_1d_inverse_cube_alternate_interp_hybrid (int order, double time, double warper_scale, int nr_sample_points_warper)", doc = r"""""")
 
-
+module.add_function ("keldy::warpers::warper_product_1d_interp_nearest_t keldy::warpers::make_warper_from_proj (std::function<dcomplex (std::vector<double>)> warped_integrand, int order, int num_bins, int nr_samples, double sigma)", doc = r"""""")
 
 module.generate_code()
