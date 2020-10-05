@@ -200,6 +200,14 @@ class warper_product_1d_interp_nearest_t {
   [[nodiscard]] double operator()(std::vector<double> const &ui_vec) const {
     return warper_1d_evalutate(warpers_dims, ui_vec);
   }
+
+  // get copy of the 1d warpers
+  warper_product_1d_simple_interp_nearest_t get_1d_warper(int axis) {
+    if ((axis < 0) or (axis >= warpers_dims.size())) {
+      TRIQS_RUNTIME_ERROR << "out of range axis";
+    }
+    return warpers_dims[axis];
+  }
 };
 
 class warper_product_1d_interp_hybrid_t {

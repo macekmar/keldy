@@ -282,6 +282,9 @@ c.add_method("""double operator() (std::vector<double> ui_vec)""",
              name = "__call__",
              doc = r"""""")
 
+c.add_method("""keldy::warpers::warper_product_1d_simple_interp_nearest_t get_1d_warper(int axis)""",
+             doc = r"""""")
+
 module.add_class(c)
 
 # The class warper_product_1d_interp_hybrid_t
