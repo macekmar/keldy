@@ -71,6 +71,7 @@ def integrand_warper_plot(computer, order, d, t_max, nr_times=100, plot_all=Fals
         _warper_prefactor *= _np.abs(integrand(u_crossing)[0])
 
     x_arr = _np.linspace(0., t_max, nr_times)
+    output = x_arr
 
     if axes is None:
         if plot_all:
@@ -89,14 +90,16 @@ def integrand_warper_plot(computer, order, d, t_max, nr_times=100, plot_all=Fals
         u_arr = _np.array([_warpers.ui_from_vi(t_max, v) for v in v_arr])
 
         try: # for kernel
-            values_v = [integrand(u)[0].sum_moduli() if is_u_valid(u) else _np.nan for u in u_arr]
+            values_f = [integrand(u)[0].sum_moduli() if is_u_valid(u) else _np.nan for u in u_arr]
         except AttributeError: # sum_weights not an attribute for non-kernel
-            values_v = [_np.abs(integrand(u)[0]) if is_u_valid(u) else _np.nan for u in u_arr]
+            values_f = [_np.abs(integrand(u)[0]) if is_u_valid(u) else _np.nan for u in u_arr]
 
-        _plt.plot(x_arr, values_v, '-', c=c, label='V=({})'.format(list2str(v_dir_int)))
+        _plt.plot(x_arr, values_f, '-', c=c, label='V=({})'.format(list2str(v_dir_int)))
 
-        values_v = [warper.jacobian_forward(u) if is_u_valid(u) else _np.nan for u in u_arr]
-        _plt.plot(x_arr, _warper_prefactor * _np.abs(values_v), '--', c=c)
+        values_p = _np.abs([_warper_prefactor * warper.jacobian_forward(u) if is_u_valid(u) else _np.nan for u in u_arr])
+        _plt.plot(x_arr,  values_p, '--', c=c)
+
+        output = _np.vstack((output, values_f, values_p))
 
     _plt.legend(loc=0)
     _plt.xlabel(r'v')
@@ -104,7 +107,7 @@ def integrand_warper_plot(computer, order, d, t_max, nr_times=100, plot_all=Fals
     _plt.title(r'Order n={}, shift d={}'.format(order, d))
     _plt.semilogy()
 
-    return x_arr
+    return output.T
 
 
 def projection_warper_plot(projection_warper, axis):
