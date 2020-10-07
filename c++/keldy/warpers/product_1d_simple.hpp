@@ -528,7 +528,7 @@ inline warper_product_1d_simple_t make_product_1d_simple_inverse_power(int power
   return {[power, w_scale, u_max](double t) -> double {
             long double norm =
                (power - 1) * std::pow(u_max + w_scale, power - 1) / (std::pow(u_max / w_scale + 1, power - 1) - 1);
-            return norm / (w_scale + t);
+            return norm / std::pow(w_scale + t, power);
           },
           [power, w_scale, u_max](double t) -> double {
             long double norm = std::pow(u_max + w_scale, power - 1) / (std::pow(u_max / w_scale + 1, power - 1) - 1);
