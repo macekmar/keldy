@@ -337,41 +337,41 @@ void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
       direc_2 /= std::abs(direc_2);
 
       // g_lesser:
-      auto integrand_dot_lesser = [t, model = this->model_omega](dcomplex omega) -> dcomplex {
-        return std::exp(-1.0i * omega * t) * model.g0_dot_lesser(omega) / (2 * pi);
+      auto g0_dot_lesser = [model = this->model_omega](dcomplex omega) -> dcomplex {
+        return model.g0_dot_lesser(omega);
       };
-
-      worker.integrate(integrand_dot_lesser, direc_1, direc_2);
-      g0_lesser_time[t](0, 0) = worker.get_result();
-      lesser_ft_error[t](0, 0) = worker.get_abserr();
+      //TODO: is there a better way to give a member function as argument?
+      worker.integrate(g0_dot_lesser, direc_1, direc_2, t);
+      g0_lesser_time[t](0, 0) = worker.get_result() / (2 * pi);
+      lesser_ft_error[t](0, 0) = worker.get_abserr() / (2 * pi);
 
       if (make_dot_lead) {
-        auto integrand_lead_lesser = [t, model = this->model_omega](dcomplex omega) -> dcomplex {
-          return std::exp(-1.0i * omega * t) * model.g0_rightlead_dot_lesser(omega) / (2 * pi);
+        auto g0_rightlead_dot_lesser = [model = this->model_omega](dcomplex omega) -> dcomplex {
+          return model.g0_rightlead_dot_lesser(omega);
         };
 
-        worker.integrate(integrand_lead_lesser, direc_1, direc_2);
-        g0_lesser_time[t](1, 0) = worker.get_result();
-        lesser_ft_error[t](1, 0) = worker.get_abserr();
+        worker.integrate(g0_rightlead_dot_lesser, direc_1, direc_2, t);
+        g0_lesser_time[t](1, 0) = worker.get_result() / (2 * pi);
+        lesser_ft_error[t](1, 0) = worker.get_abserr() / (2 * pi);
       }
 
       // g_greater
-      auto integrand_dot_greater = [t, model = this->model_omega](dcomplex omega) -> dcomplex {
-        return std::exp(-1.0i * omega * t) * model.g0_dot_greater(omega) / (2 * pi);
+      auto g0_dot_greater = [model = this->model_omega](dcomplex omega) -> dcomplex {
+        return model.g0_dot_greater(omega);
       };
 
-      worker.integrate(integrand_dot_greater, -std::conj(direc_2), -std::conj(direc_1));
-      g0_greater_time[t](0, 0) = worker.get_result();
-      greater_ft_error[t](0, 0) = worker.get_abserr();
+      worker.integrate(g0_dot_greater, -std::conj(direc_2), -std::conj(direc_1), t);
+      g0_greater_time[t](0, 0) = worker.get_result() / (2 * pi);
+      greater_ft_error[t](0, 0) = worker.get_abserr() / (2 * pi);
 
       if (make_dot_lead) {
-        auto integrand_lead_greater = [t, model = this->model_omega](dcomplex omega) -> dcomplex {
-          return std::exp(-1.0i * omega * t) * model.g0_rightlead_dot_greater(omega) / (2 * pi);
+        auto g0_rightlead_dot_greater = [model = this->model_omega](dcomplex omega) -> dcomplex {
+          return model.g0_rightlead_dot_greater(omega);
         };
 
-        worker.integrate(integrand_lead_greater, -std::conj(direc_2), -std::conj(direc_1));
-        g0_greater_time[t](1, 0) = worker.get_result();
-        greater_ft_error[t](1, 0) = worker.get_abserr();
+        worker.integrate(g0_rightlead_dot_greater, -std::conj(direc_2), -std::conj(direc_1), t);
+        g0_greater_time[t](1, 0) = worker.get_result() / (2 * pi);
+        greater_ft_error[t](1, 0) = worker.get_abserr() / (2 * pi);
       }
     }
 

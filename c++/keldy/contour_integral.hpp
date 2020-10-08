@@ -39,16 +39,14 @@ class CPP2PY_IGNORE contour_integration_t {
 
  private:
   details::gsl_integration_wrapper worker;
-  double const abstol = 1e-14;
-  double const reltol = 1e-8;
   double const left_turn_pt;
   double const right_turn_pt;
   dcomplex result = 0;
   dcomplex abserr = 0;
 
  public:
-  contour_integration_t(double left_turn_pt_, double right_turn_pt_)
-     : worker{1000}, left_turn_pt(left_turn_pt_), right_turn_pt(right_turn_pt_) {
+  contour_integration_t(double left_turn_pt_, double right_turn_pt_, size_t nr_intervals = 1000)
+     : worker{nr_intervals}, left_turn_pt(left_turn_pt_), right_turn_pt(right_turn_pt_) {
     if (not(left_turn_pt < right_turn_pt)) {
       TRIQS_RUNTIME_ERROR << "The order left_turn_pt(" << left_turn_pt << ") < right_turn_pt(" << right_turn_pt
                           << ") should be respected.";
@@ -58,23 +56,24 @@ class CPP2PY_IGNORE contour_integration_t {
   dcomplex get_result() const { return result; };
   dcomplex get_abserr() const { return abserr; };
 
-  void integrate(std::function<dcomplex(dcomplex)> func, dcomplex left_dir, dcomplex right_dir) {
+  void integrate(std::function<dcomplex(dcomplex)> func, dcomplex left_dir, dcomplex right_dir, double const t,
+                 double const abstol = 1e-14, double const reltol = 1e-8) {
 
     // left tail
     auto f1 = [&](double x) -> dcomplex {
       dcomplex omega = left_dir * x + left_turn_pt;
-      return -left_dir * func(omega);
+      return -left_dir * std::exp(-1.i * omega * t) * func(omega);
     };
     auto [result_1, abserr_1] = worker.qag_si(f1, 0, std::numeric_limits<double>::infinity(), abstol, reltol);
 
     // middle segment
-    auto f2 = [&](double x) -> dcomplex { return func(x); };
+    auto f2 = [&](double x) -> dcomplex { return std::exp(-1.i * x * t) * func(x); };
     auto [result_2, abserr_2] = worker.qag(f2, left_turn_pt, right_turn_pt, abstol, reltol, GSL_INTEG_GAUSS61);
 
     // right tail
     auto f3 = [&](double x) -> dcomplex {
       dcomplex omega = right_turn_pt + right_dir * x;
-      return right_dir * func(omega);
+      return right_dir * std::exp(-1.i * omega * t) * func(omega);
     };
     auto [result_3, abserr_3] = worker.qag_si(f3, 0, std::numeric_limits<double>::infinity(), abstol, reltol);
 
