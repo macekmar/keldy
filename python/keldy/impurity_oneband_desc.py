@@ -208,6 +208,9 @@ c.add_method("""std::pair<keldy::impurity_oneband::integrand_g_direct::result_t,
              name = "__call__",
              doc = r"""Returns integrand for the specified times""")
 
+c.add_method("""std::pair<keldy::impurity_oneband::integrand_g_direct::result_t, int> eval_no_det (std::vector<double> times, bool keep_u_hypercube = true)""",
+             doc = r"""Returns integrand for the specified times""")
+
 module.add_class(c)
 
 # The class integrand_g_direct_time

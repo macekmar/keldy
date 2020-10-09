@@ -58,6 +58,10 @@ class integrand_g_direct {
       TRIQS_RUNTIME_ERROR << "Need g0_model with make_dot_lead == true to calculate off_diagonal gf.";
     }
   };
+
+  /// evaluate by summing connected diagrams (no determinant)
+  [[nodiscard]] std::pair<result_t, int> eval_no_det(std::vector<double> const &times,
+                                                     bool const keep_u_hypercube = true) const;
 };
 
 } // namespace keldy::impurity_oneband

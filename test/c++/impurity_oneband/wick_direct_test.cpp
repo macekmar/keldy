@@ -63,7 +63,7 @@ TEST(integrand_direct, Order_1) { // NOLINT
   params.bath_type = "flatband";
   g0_model g0{g0_model_omega{params}, false};
   g0_keldysh_contour_t g0_k{g0};
-  auto external_A = gf_index_t{5.0, up, forward};
+  auto external_A = gf_index_t{4.0, up, forward};
   auto external_B = gf_index_t{5.0, up, forward};
   integrand_g_direct integrand(g0_k, external_A, external_B);
 
@@ -79,15 +79,40 @@ TEST(integrand_direct, Order_1) { // NOLINT
   }
 
   auto [computed_val, in_domain] = integrand(std::vector<double>{1.0});
+  auto [computed_val_no_det, in_domain_no_det] = integrand.eval_no_det(std::vector<double>{1.0});
 
   EXPECT_COMPLEX_NEAR(expected_val, computed_val, 1e-17);
+  EXPECT_EQ(in_domain, in_domain_no_det);
+  EXPECT_EQ(expected_val, computed_val_no_det);
+}
+
+TEST(integrand_direct, Order_1_alpha) { // NOLINT
+  model_param_t params;
+  params.bath_type = "semicircle";
+  params.eps_d = 0.3;
+  params.alpha = 0.8;
+  g0_model g0{g0_model_omega{params}, true};
+  g0_keldysh_contour_t g0_k{g0};
+  auto external_A = gf_index_t{4.0, up, forward, 0, 0};
+  auto external_B = gf_index_t{5.0, up, forward, 0, 1}; // different orbital
+  integrand_g_direct integrand(g0_k, external_A, external_B);
+
+  for (double t : {0., 0.1, 1., 5., 10.}) {
+    auto [val, in_domain] = integrand(std::vector<double>{t});
+    auto [val_no_det, in_domain_no_det] = integrand.eval_no_det(std::vector<double>{t});
+
+    std::cout << "value: " << val << std::endl;
+    std::cout << "value: " << val_no_det << std::endl;
+    EXPECT_COMPLEX_NEAR(val, val_no_det, 1e-16);
+    EXPECT_EQ(in_domain, in_domain_no_det);
+  }
 }
 
 TEST(integrand_direct, Order_2) { // NOLINT
   model_param_t params;
   g0_model g0{g0_model_omega{params}, true};
   g0_keldysh_contour_t g0_k{g0};
-  auto external_A = gf_index_t{5.0, up, forward};
+  auto external_A = gf_index_t{4.0, up, forward};
   auto external_B = gf_index_t{5.0, up, forward};
   integrand_g_direct integrand(g0_k, external_A, external_B);
 
@@ -140,8 +165,44 @@ TEST(integrand_direct, Order_2) { // NOLINT
   }
 
   auto [computed_val, in_domain] = integrand(std::vector<double>{1.0, 2.0});
+  auto [computed_val_no_det, in_domain_no_det] = integrand.eval_no_det(std::vector<double>{1.0, 2.0});
 
+  std::cout << "value: " << expected_val << std::endl;
+  std::cout << "value: " << computed_val << std::endl;
   EXPECT_COMPLEX_NEAR(expected_val, computed_val, 1e-16); // real part very close to 0
+  EXPECT_EQ(in_domain, in_domain_no_det);
+  EXPECT_EQ(expected_val, computed_val_no_det);
+}
+
+TEST(integrand_direct, Order_2_alpha) { // NOLINT
+  model_param_t params;
+  params.bath_type = "semicircle";
+  params.eps_d = 0.3;
+  params.alpha = 0.8;
+  params.time_max = 10.;
+  g0_model g0{g0_model_omega{params}, true};
+  g0_keldysh_contour_t g0_k{g0};
+  auto external_A = gf_index_t{4.0, up, forward, 0, 0};
+  auto external_B = gf_index_t{5.0, up, forward, 0, 1}; // different orbital
+  integrand_g_direct integrand(g0_k, external_A, external_B);
+
+  for (double t : {0., 0.1, 1., 5., 10.}) {
+    auto [val, in_domain] = integrand(std::vector<double>{1., t});
+    auto [val_no_det, in_domain_no_det] = integrand.eval_no_det(std::vector<double>{1., t});
+
+    std::cout << "value: " << val << std::endl;
+    std::cout << "value: " << val_no_det << std::endl;
+    EXPECT_COMPLEX_NEAR(val, val_no_det, 1e-17);
+    EXPECT_EQ(in_domain, in_domain_no_det);
+
+    std::tie(val, in_domain) = integrand(std::vector<double>{t, 1.});
+    std::tie(val_no_det, in_domain_no_det) = integrand.eval_no_det(std::vector<double>{t, 1.});
+
+    std::cout << "value: " << val << std::endl;
+    std::cout << "value: " << val_no_det << std::endl;
+    EXPECT_COMPLEX_NEAR(val, val_no_det, 1e-17);
+    EXPECT_EQ(in_domain, in_domain_no_det);
+  }
 }
 
 MAKE_MAIN // NOLINT

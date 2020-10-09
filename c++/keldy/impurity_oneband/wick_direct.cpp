@@ -155,6 +155,76 @@ std::pair<dcomplex, int> integrand_g_direct::operator()(std::vector<double> cons
   return std::make_pair(integrand_result, 1);
 }
 
+/// evaluate by summing connected diagrams (no determinant)
+[[nodiscard]] std::pair<dcomplex, int> integrand_g_direct::eval_no_det(std::vector<double> const &times,
+                                                                       bool const keep_u_hypercube) const {
+
+  // Model is diagonal in spin
+  if (external_A.spin != external_B.spin) {
+    return std::make_pair(0.0, 0);
+  }
+
+  // Interaction starts a t = 0
+  if (keep_u_hypercube) {
+    if (std::any_of(times.cbegin(), times.cend(), [](double t) { return t < 0.0; })) {
+      return std::make_pair(0.0, 0);
+    }
+  }
+
+  int order_n = times.size();
+
+  // copy for now since we change time-splitting
+  auto a = external_A;
+  auto b = external_B;
+  // define time-splitting for external-points
+  a.contour.timesplit_n = order_n;
+  b.contour.timesplit_n = order_n;
+
+  if (order_n == 0) {
+    return std::make_pair(g0(a, b, false), 1);
+  }
+
+  dcomplex integrand_result = 0.0;
+
+  if (order_n == 1) {
+    for (keldysh_idx_t kidx_0 : {forward, backward}) {
+      auto point = [&](spin_t sp) -> gf_index_t { return {times[0], sp, kidx_0, 0}; };
+      int sign = (kidx_0 == 0) ? 1 : -1;
+      integrand_result += -sign * g0(point(down), point(down)) * g0(a, point(up)) * g0(point(up), b);
+    }
+
+  } else if (order_n == 2) {
+
+    for (keldysh_idx_t kidx_0 : {forward, backward}) {
+      for (keldysh_idx_t kidx_1 : {forward, backward}) {
+        auto point = [&](int i, spin_t sp) -> gf_index_t { return {times[i], sp, (i == 0) ? kidx_0 : kidx_1, i}; };
+        int sign = (((kidx_0 + kidx_1) % 2) == 0) ? 1 : -1;
+        integrand_result += sign
+           * (g0(point(0, up), point(0, up)) * g0(a, point(1, up)) * g0(point(1, up), b)
+              + g0(a, point(0, up)) * g0(point(1, up), point(1, up)) * g0(point(0, up), b))
+           * g0(point(1, down), point(0, down)) * g0(point(0, down), point(1, down));
+        integrand_result += sign
+           * (g0(a, point(0, up)) * g0(point(0, up), point(1, up)) * g0(point(1, up), b)
+              + g0(point(1, up), point(0, up)) * g0(a, point(1, up)) * g0(point(0, up), b))
+
+           * (g0(point(0, down), point(0, down)) * g0(point(1, down), point(1, down))
+              - g0(point(1, down), point(0, down)) * g0(point(0, down), point(1, down)));
+      }
+    }
+
+  } else {
+    TRIQS_RUNTIME_ERROR << "Not supported for order > 2";
+  }
+
+  // apply cutoff
+  if (std::abs(integrand_result) < cutoff) {
+    integrand_result = 0.;
+  }
+
+  // Multiply by overall factors (-1j) * (j)^n * (-1j)^n ?? FIXME
+  return std::make_pair(integrand_result, 1);
+};
+
 // *******************************************************
 
 // Old Method Based on Sequential Constructions
