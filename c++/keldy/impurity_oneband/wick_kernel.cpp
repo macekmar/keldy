@@ -121,6 +121,7 @@ std::pair<binner::sparse_binner_t<1, 1>, int> integrand_g_kernel::operator()(std
         g_mat_s1(i, j) = wick_matrix_s1(col_pick_s1[i], col_pick_s1[j]);
       }
     }
+    g_mat_s1(order_n, order_n) = 0; // cancelled by Keldysh indices
 
     auto x_minors = first_row_expansion(g_mat_s1).first;
 

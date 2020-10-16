@@ -141,6 +141,9 @@ std::pair<binner::sparse_binner_t<1>, int> integrand_g_direct_time::operator()(s
         tmp_mat_s1(i, j) = wick_matrix_s1(col_pick_s1[i], col_pick_s1[j]);
       }
     }
+
+    tmp_mat_s1(order_n, order_n) = 0; // cancelled by Keldysh indices
+
     for (int i = 0; i < order_n; ++i) {
       for (int j = 0; j < order_n; ++j) {
         tmp_mat_s2(i, j) = wick_matrix_s2(col_pick_s2[i], col_pick_s2[j]);
