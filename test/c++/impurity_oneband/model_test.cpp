@@ -167,4 +167,73 @@ TEST(g0_keldysh_adaptor, WithoutAlpha) { // NOLINT
   EXPECT_COMPLEX_NEAR(g0_k(A, B), g0.g0_lesser[up](0.0)(0, 1), tol);
 }
 
+// -------- t <-> -t symmetry -------------
+
+void do_green_function_sym_test(g0_keldysh_contour_t const &g0_k, double tol) {
+  if (tol == 0) {
+    tol = std::nextafter(double(0.), double(1.));
+  }
+  for (auto kidx_0 : {forward, backward}) {
+    for (auto kidx_1 : {forward, backward}) {
+      for (int orb : {0, 1}) {
+        gf_index_t A = {2.0, up, kidx_0, 0, orb};
+        gf_index_t B = {3.0, up, kidx_1, 0, 0};
+        gf_index_t Ai = {2.0, up, 1 - kidx_0, 0, orb}; // inverted Keldysh index
+        gf_index_t Bi = {3.0, up, 1 - kidx_1, 0, 0};
+
+        std::cout << std::abs(g0_k(A, B) + std::conj(g0_k(Bi, Ai))) << std::endl;
+        EXPECT_COMPLEX_NEAR(g0_k(A, B), -std::conj(g0_k(Bi, Ai)), tol);
+        EXPECT_COMPLEX_NEAR(g0_k(B, A), -std::conj(g0_k(Ai, Bi)), tol);
+      }
+
+      for (int timesplit : {0, 1}) {
+        gf_index_t A = {2.0, up, kidx_0, timesplit, 0};
+        gf_index_t B = {2.0, up, kidx_1, 0, 0};
+        gf_index_t Ai = {2.0, up, 1 - kidx_0, timesplit, 0};
+        gf_index_t Bi = {2.0, up, 1 - kidx_1, 0, 0};
+        EXPECT_COMPLEX_NEAR(g0_k(A, B), -std::conj(g0_k(Bi, Ai)), tol);
+        EXPECT_COMPLEX_NEAR(g0_k(B, A), -std::conj(g0_k(Ai, Bi)), tol);
+        EXPECT_COMPLEX_NEAR(std::real(g0_k(A, B)), 0, tol);
+        EXPECT_COMPLEX_NEAR(std::real(g0_k(B, A)), 0, tol);
+      }
+    }
+  }
+};
+
+TEST(g0_keldysh_adaptor, GreenFunctionSymmetry_FFT) { // NOLINT
+  model_param_t params;
+  params.bath_type = "semicircle";
+  params.eps_d = 0.3;
+  params.alpha = 0.5;
+  params.ft_method = "fft";
+  g0_model g0{g0_model_omega{params}, true};
+  g0_keldysh_contour_t g0_k{g0};
+
+  do_green_function_sym_test(g0_k, 1e-12);
+}
+
+TEST(g0_keldysh_adaptor, GreenFunctionSymmetry_FiniteContour) { // NOLINT
+  model_param_t params;
+  params.bath_type = "semicircle";
+  params.eps_d = 0.3;
+  params.alpha = 0.5;
+  params.ft_method = "contour";
+  g0_model g0{g0_model_omega{params}, false};
+  g0_keldysh_contour_t g0_k{g0};
+
+  do_green_function_sym_test(g0_k, 0);
+}
+
+TEST(g0_keldysh_adaptor, GreenFunctionSymmetry_Contour) { // NOLINT
+  model_param_t params;
+  params.bath_type = "flatband";
+  params.eps_d = 0.3;
+  params.alpha = 0.5;
+  params.ft_method = "contour";
+  g0_model g0{g0_model_omega{params}, false};
+  g0_keldysh_contour_t g0_k{g0};
+
+  do_green_function_sym_test(g0_k, 0);
+}
+
 MAKE_MAIN // NOLINT

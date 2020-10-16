@@ -101,10 +101,14 @@ class g0_model_omega {
     auto bath_hybrid_left = bath_hybrid_R_left(omega) - bath_hybrid_A_left(omega);
     auto bath_hybrid_right = bath_hybrid_R_right(omega) - bath_hybrid_A_right(omega);
     int sign = 2 * static_cast<int>(is_lesser) - 1; // +1 if lesser, -1 if greater
-    return -sign * g0_dot_R(omega)
+    dcomplex out = -sign * g0_dot_R(omega)
        * (n_fermi(sign * (omega - mu_left()), param_.beta) * bath_hybrid_left
           + n_fermi(sign * (omega - mu_right()), param_.beta) * bath_hybrid_right)
        * g0_dot_A(omega);
+    if (std::imag(omega) == 0) {
+      return 1.i * std::imag(out);
+    }
+    return out;
   }
 
   dcomplex g0_rightlead_dot(dcomplex omega, bool is_lesser) const {

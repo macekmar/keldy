@@ -191,8 +191,8 @@ void g0_model::make_g0_by_fft() {
   for (auto omega : freq_mesh) {
     dcomplex omegaj = omega + 0.0i;
 
-    g0_lesser_omega[omega](0, 0) = model_omega.g0_dot_lesser(omegaj);
-    g0_greater_omega[omega](0, 0) = model_omega.g0_dot_greater(omegaj);
+    g0_lesser_omega[omega](0, 0) = 1.i * std::imag(model_omega.g0_dot_lesser(omegaj));
+    g0_greater_omega[omega](0, 0) = 1.i * std::imag(model_omega.g0_dot_greater(omegaj));
 
     if (make_dot_lead) {
       /// right lead only
@@ -248,13 +248,15 @@ void g0_model::make_g0_by_finite_contour(std::vector<double> pts) {
     for (const auto t : itertools::omp_chunk(time_mesh)) {
 
       // g_lesser:
-      auto integrand_dot_lesser = [t, model = this->model_omega](double omega) -> dcomplex {
-        return std::exp(-1.0i * omega * t) * model.g0_dot_lesser(omega) / (2 * pi);
-      };
+      if (t >= 0) {
+        auto integrand_dot_lesser = [t, model = this->model_omega](double omega) -> dcomplex {
+          return std::exp(-1.0i * omega * t) * model.g0_dot_lesser(omega) / (2 * pi);
+        };
 
-      std::tie(result, abserr) = worker.qagp(integrand_dot_lesser, pts, abstol, reltol);
-      g0_lesser_time[t](0, 0) = result;
-      lesser_ft_error[t](0, 0) = abserr;
+        std::tie(result, abserr) = worker.qagp(integrand_dot_lesser, pts, abstol, reltol);
+        g0_lesser_time[t](0, 0) = result;
+        lesser_ft_error[t](0, 0) = abserr;
+      }
 
       if (make_dot_lead) {
         auto integrand_lead_lesser = [t, model = this->model_omega](double omega) -> dcomplex {
@@ -267,13 +269,15 @@ void g0_model::make_g0_by_finite_contour(std::vector<double> pts) {
       }
 
       // g_greater
-      auto integrand_dot_greater = [t, model = this->model_omega](double omega) -> dcomplex {
-        return std::exp(-1.0i * omega * t) * model.g0_dot_greater(omega) / (2 * pi);
-      };
+      if (t >= 0) {
+        auto integrand_dot_greater = [t, model = this->model_omega](double omega) -> dcomplex {
+          return std::exp(-1.0i * omega * t) * model.g0_dot_greater(omega) / (2 * pi);
+        };
 
-      std::tie(result, abserr) = worker.qagp(integrand_dot_greater, pts, abstol, reltol);
-      g0_greater_time[t](0, 0) = result;
-      greater_ft_error[t](0, 0) = abserr;
+        std::tie(result, abserr) = worker.qagp(integrand_dot_greater, pts, abstol, reltol);
+        g0_greater_time[t](0, 0) = result;
+        greater_ft_error[t](0, 0) = abserr;
+      }
 
       if (make_dot_lead) {
         auto integrand_lead_greater = [t, model = this->model_omega](double omega) -> dcomplex {
@@ -286,7 +290,6 @@ void g0_model::make_g0_by_finite_contour(std::vector<double> pts) {
       }
     }
 
-    // TODO: make use of t <-> -t symmetry to reduce calculations
   }
 
   // GSL error estimations
@@ -295,6 +298,20 @@ void g0_model::make_g0_by_finite_contour(std::vector<double> pts) {
 
   // reset default GSL error handler
   gsl_set_error_handler(gsl_default_handler);
+
+  auto L = time_mesh.size();
+  for (gf_mesh<retime>::index_t i = 0; i < L; i++) {
+    auto t = time_mesh[i];
+    auto ti = time_mesh[L - i - 1];
+    if (t < 0) {
+      g0_lesser_time[t](0, 0) = -std::conj(g0_lesser_time[ti](0, 0));
+      g0_greater_time[t](0, 0) = -std::conj(g0_greater_time[ti](0, 0));
+    }
+    if (make_dot_lead) {
+      g0_lesser_time[t](0, 1) = -std::conj(g0_lesser_time[ti](1, 0));
+      g0_greater_time[t](0, 1) = -std::conj(g0_greater_time[ti](1, 0));
+    }
+  }
 
   // Spin up and down are currently identical
   g0_lesser = make_block_gf<retime, matrix_valued>({"up", "down"}, {g0_lesser_time, g0_lesser_time});
@@ -331,19 +348,22 @@ void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
     contour_integration_t worker(left_turn_pt, right_turn_pt);
 
     for (const auto t : itertools::omp_chunk(time_mesh)) {
+
       int sign_of_t = (t > 0) - (t < 0);
       dcomplex direc_1 = (t == 0) ? -1 : -1.0i * sign_of_t;
       dcomplex direc_2 = (param_.beta == std::numeric_limits<double>::infinity()) ? 1. : param_.beta - t * 1.0i;
       direc_2 /= std::abs(direc_2);
 
       // g_lesser:
-      auto g0_dot_lesser = [model = this->model_omega](dcomplex omega) -> dcomplex {
-        return model.g0_dot_lesser(omega);
-      };
-      //TODO: is there a better way to give a member function as argument?
-      worker.integrate(g0_dot_lesser, direc_1, direc_2, t);
-      g0_lesser_time[t](0, 0) = worker.get_result() / (2 * pi);
-      lesser_ft_error[t](0, 0) = worker.get_abserr() / (2 * pi);
+      if (t >= 0) {
+        auto g0_dot_lesser = [model = this->model_omega](dcomplex omega) -> dcomplex {
+          return model.g0_dot_lesser(omega);
+        };
+        //TODO: is there a better way to give a member function as argument?
+        worker.integrate(g0_dot_lesser, direc_1, direc_2, t);
+        g0_lesser_time[t](0, 0) = worker.get_result() / (2 * pi);
+        lesser_ft_error[t](0, 0) = worker.get_abserr() / (2 * pi);
+      }
 
       if (make_dot_lead) {
         auto g0_rightlead_dot_lesser = [model = this->model_omega](dcomplex omega) -> dcomplex {
@@ -356,13 +376,15 @@ void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
       }
 
       // g_greater
-      auto g0_dot_greater = [model = this->model_omega](dcomplex omega) -> dcomplex {
-        return model.g0_dot_greater(omega);
-      };
+      if (t >= 0) {
+        auto g0_dot_greater = [model = this->model_omega](dcomplex omega) -> dcomplex {
+          return model.g0_dot_greater(omega);
+        };
 
-      worker.integrate(g0_dot_greater, -std::conj(direc_2), -std::conj(direc_1), t);
-      g0_greater_time[t](0, 0) = worker.get_result() / (2 * pi);
-      greater_ft_error[t](0, 0) = worker.get_abserr() / (2 * pi);
+        worker.integrate(g0_dot_greater, -std::conj(direc_2), -std::conj(direc_1), t);
+        g0_greater_time[t](0, 0) = worker.get_result() / (2 * pi);
+        greater_ft_error[t](0, 0) = worker.get_abserr() / (2 * pi);
+      }
 
       if (make_dot_lead) {
         auto g0_rightlead_dot_greater = [model = this->model_omega](dcomplex omega) -> dcomplex {
@@ -375,7 +397,6 @@ void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
       }
     }
 
-    // TODO: make use of t <-> -t symmetry to reduce calculations
   }
 
   // GSL error estimations
@@ -384,6 +405,20 @@ void g0_model::make_g0_by_contour(double left_turn_pt, double right_turn_pt) {
 
   // reset default GSL error handler
   gsl_set_error_handler(gsl_default_handler);
+
+  auto L = time_mesh.size();
+  for (gf_mesh<retime>::index_t i = 0; i < L; i++) {
+    auto t = time_mesh[i];
+    auto ti = time_mesh[L - i - 1];
+    if (t < 0) {
+      g0_lesser_time[t](0, 0) = -std::conj(g0_lesser_time[ti](0, 0));
+      g0_greater_time[t](0, 0) = -std::conj(g0_greater_time[ti](0, 0));
+    }
+    if (make_dot_lead) {
+      g0_lesser_time[t](0, 1) = -std::conj(g0_lesser_time[ti](1, 0));
+      g0_greater_time[t](0, 1) = -std::conj(g0_greater_time[ti](1, 0));
+    }
+  }
 
   // Spin up and down are currently identical
   g0_lesser = make_block_gf<retime, matrix_valued>({"up", "down"}, {g0_lesser_time, g0_lesser_time});

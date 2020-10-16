@@ -47,6 +47,12 @@ TEST(g0_model, Semicirc_fft) { // NOLINT
   EXPECT_COMPLEX_NEAR(-0.23107349410223865 + 0.13213346415985422i, g0.g0_lesser[up](1.0)(0, 0), 1e-3);
   EXPECT_COMPLEX_NEAR(0.17154101374667907 + 0.13375649387573293i, g0.g0_lesser[up](1.0)(0, 1), 1e-3);
   EXPECT_COMPLEX_NEAR(-0.0066645142937036958 + 0.12215571972575601i, g0.g0_lesser[up](1.0)(1, 0), 1e-3);
+
+  /// check t <-> -t symmetry
+  EXPECT_COMPLEX_NEAR(g0.g0_lesser[up](1.0)(0, 0), -std::conj(g0.g0_lesser[up](-1.0)(0, 0)), 1e-8);
+  EXPECT_COMPLEX_NEAR(g0.g0_lesser[up](1.0)(0, 1), -std::conj(g0.g0_lesser[up](-1.0)(1, 0)), 1e-8);
+  EXPECT_COMPLEX_NEAR(g0.g0_greater[up](1.0)(0, 0), -std::conj(g0.g0_greater[up](-1.0)(0, 0)), 1e-8);
+  EXPECT_COMPLEX_NEAR(g0.g0_greater[up](1.0)(0, 1), -std::conj(g0.g0_greater[up](-1.0)(1, 0)), 1e-8);
 }
 
 /*
@@ -70,8 +76,14 @@ TEST(g0_model, Semicirc_contour) { // NOLINT
 
   /// values from ctint_keldysh
   EXPECT_COMPLEX_NEAR(-0.23107349410223865 + 0.13213346415985422i, g0.g0_lesser[up](1.0)(0, 0), 1e-3);
-  //EXPECT_COMPLEX_NEAR(0.17154101374667907 + 0.13375649387573293i, g0.g0_lesser[up](1.0)(0, 1), 1e-3);
+  EXPECT_COMPLEX_NEAR(0.17154101374667907 + 0.13375649387573293i, g0.g0_lesser[up](1.0)(0, 1), 1e-3);
   EXPECT_COMPLEX_NEAR(-0.0066645142937036958 + 0.12215571972575601i, g0.g0_lesser[up](1.0)(1, 0), 1e-3);
+
+  /// check t <-> -t symmetry
+  EXPECT_COMPLEX_NEAR(g0.g0_lesser[up](1.0)(0, 0), -std::conj(g0.g0_lesser[up](-1.0)(0, 0)), 1e-8);
+  EXPECT_COMPLEX_NEAR(g0.g0_lesser[up](1.0)(0, 1), -std::conj(g0.g0_lesser[up](-1.0)(1, 0)), 1e-8);
+  EXPECT_COMPLEX_NEAR(g0.g0_greater[up](1.0)(0, 0), -std::conj(g0.g0_greater[up](-1.0)(0, 0)), 1e-8);
+  EXPECT_COMPLEX_NEAR(g0.g0_greater[up](1.0)(0, 1), -std::conj(g0.g0_greater[up](-1.0)(1, 0)), 1e-8);
 }
 
 /// Difference between consecutive elements of a 1D array
