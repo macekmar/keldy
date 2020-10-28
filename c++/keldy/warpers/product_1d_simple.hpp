@@ -94,7 +94,9 @@ class warper_product_1d_simple_t {
       // f1_integrated & f1_integrated_inverse are inverses
 
       // check consistency of functions provided
-      for (double l_prime : {0., 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1.}) {
+      for (double l_prime : {0., 1e-6, 1e-4, 1e-2, 
+                             0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 
+                             1-1e-2, 1-1e-4, 1-1e-6, 1.}) {
         if (std::abs(f1_integrated(f1_integrated_inverse(l_prime)) - l_prime) > 1e-12) {
           TRIQS_RUNTIME_ERROR
              << "Inconsistent functions: f1_integrated_inverse should be the inverse of f1_integrated ("
@@ -482,8 +484,8 @@ inline warper_product_1d_simple_t make_product_1d_simple_exponential(double doma
             return -std::expm1(-t / w_scale) / norm;
           },
           [w_scale, domain_u_max](double l) -> double {
-            long double norm = -std::expm1(-static_cast<long double>(domain_u_max) / w_scale);
-            return -w_scale * std::log1p(-l * norm);
+            long double norm1m = std::exp(-static_cast<long double>(domain_u_max) / w_scale);
+            return -w_scale * std::log( (1 - l) + l * norm1m);
           },
           domain_u_max};
 }
