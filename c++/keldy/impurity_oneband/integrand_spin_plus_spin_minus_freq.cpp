@@ -38,6 +38,44 @@ inline int GetBitParity(unsigned int in) { return 1 - 2 * __builtin_parity(in); 
 
 namespace keldy::impurity_oneband {
 
+/// Returns the first row of the comatrix of `mat`.
+// transpose matrix first to get column expansion.
+// Strategy: Do row expansion by solving linear equation for cofactors.
+// TODO: Do we want to go to full pivoting rather than partial pivoting for LU decomposition?
+// TODO: Consider checking Condition Number via LAPACK_zgecon
+// TODO: Consider ZGEEQU for equilibiration (scaling of rows / columns for better conditioning)
+inline mda::vector<dcomplex> first_row_expansion(mda::matrix<dcomplex> &mat) {
+  // Calculate LU decomposition with partial pivoting
+  mda::vector<int> pivot_index_array(first_dim(mat));
+  int info = mda::lapack::getrf(mat, pivot_index_array, true);
+  if (info != 0) {
+    TRIQS_RUNTIME_ERROR << "lapack::getrf failed with code " << info;
+  }
+
+  // Extract det from LU decompositon (note permutations)
+  dcomplex mat_det = 1.0;
+  int det_flip = 1;
+  for (int i = 0; i < first_dim(mat); i++) {
+    mat_det *= mat(i, i);
+    if (pivot_index_array(i) != i + 1) { // TODO: check +1 from fortran index
+      det_flip = -det_flip;
+    }
+  }
+  mat_det *= det_flip;
+
+  // Find cofactors by solving linear equation Ax = e1 * det(A)
+  mda::matrix<dcomplex> x_minors(first_dim(mat), 1, FORTRAN_LAYOUT);
+  x_minors() = 0;
+  x_minors(0, 0) = mat_det;
+
+  info = mda::lapack::getrs(mat, x_minors, pivot_index_array);
+  if (info != 0) {
+    TRIQS_RUNTIME_ERROR << "lapack::getrs failed with code " << info;
+  }
+
+  return x_minors(mda::range(), 0);
+}
+
 // TODO: Where is sorting of times done?
 // TODO: Efficnencies for spin symmetric case.
 
@@ -59,98 +97,88 @@ std::pair<array<dcomplex, 1>, int> integrand_spin_plus_spin_minus_freq::operator
 
   // TODO: if order_n == 0
 
-  auto a = g_idx_X; // This is now a dummy index
-  auto b = g_idx_X;
+  auto a_up = g_idx_X; // This is now a dummy index
+  auto a_do = g_idx_X;
+  a_do.spin = down;
   // define time-splitting for external-points
-  a.contour.timesplit_n = order_n;
-  b.contour.timesplit_n = order_n;
+  a_up.contour.timesplit_n = order_n;
+  a_do.contour.timesplit_n = order_n;
 
-  // Pre-Comute Large Matrix.
-  // "s1": Same spin as external indices / "s2": Opposite spin
-  matrix<dcomplex> wick_matrix_s1(2 * order_n + 1, 2 * order_n + 1);
-  matrix<dcomplex> wick_matrix_s2(2 * order_n, 2 * order_n);
+  // Pre-Compute Large Matrix.
+  matrix<dcomplex> wick_matrix_up(2 * order_n + 1, 2 * order_n + 1);
+  matrix<dcomplex> wick_matrix_do(2 * order_n + 1, 2 * order_n + 1);
 
   // Vector of indices for Green functions
-  std::vector<gf_index_t> all_config_1(1 + 2 * order_n);
-  std::vector<gf_index_t> all_config_2(2 * order_n);
+  std::vector<gf_index_t> all_config_up(2 * order_n + 1);
+  std::vector<gf_index_t> all_config_do(2 * order_n + 1);
   for (int i = 0; i < order_n; i++) {
-    all_config_1[i] = gf_index_t{times[i], a.spin, forward, i};
-    all_config_1[i + order_n] = gf_index_t{times[i], a.spin, backward, i};
-    all_config_2[i] = gf_index_t{times[i], spin_t(1 - a.spin), forward, i};
-    all_config_2[i + order_n] = gf_index_t{times[i], spin_t(1 - a.spin), backward, i};
+    all_config_up[i] = gf_index_t{times[i], up, forward, i};
+    all_config_up[i + order_n] = gf_index_t{times[i], up, backward, i};
+    all_config_do[i] = gf_index_t{times[i], down, forward, i};
+    all_config_do[i + order_n] = gf_index_t{times[i], down, backward, i};
   }
-  all_config_1[2 * order_n] = g_idx_X;
+  all_config_up[2 * order_n] = a_up;
+  all_config_do[2 * order_n] = a_do;
 
   // Index for external index in s1
   int external_idx = 2 * order_n;
 
-  wick_matrix_s1(external_idx, external_idx) = g0(a, b, false);
   // #pragma omp parallel for
-  for (int i = 0; i < 2 * order_n; i++) {
-    wick_matrix_s1(external_idx, i) = g0(a, all_config_1[i]);
-    wick_matrix_s1(i, external_idx) = g0(all_config_1[i], b);
-    for (int j = 0; j < 2 * order_n; j++) {
-      wick_matrix_s1(i, j) = g0(all_config_1[i], all_config_1[j]);
-      wick_matrix_s2(i, j) = g0(all_config_2[i], all_config_2[j]);
+  for (int i = 0; i < 2 * order_n + 1; i++) {
+    for (int j = 0; j < 2 * order_n + 1; j++) {
+      wick_matrix_up(i, j) = g0(all_config_up[i], all_config_up[j]);
+      wick_matrix_do(i, j) = g0(all_config_do[i], all_config_do[j]);
     }
   }
 
   uint64_t nr_keldysh_configs = (uint64_t(1) << order_n);
 
+  std::vector<int> col_pick_up(order_n + 1);
+  std::vector<int> col_pick_do(order_n + 1);
+  matrix<dcomplex> g_mat_up(order_n + 1, order_n + 1, FORTRAN_LAYOUT);
+  matrix<dcomplex> g_mat_do(order_n + 1, order_n + 1, FORTRAN_LAYOUT);
+
   // Iterate over other Keldysh index configurations. Splict smaller determinant from precomuted matrix
   // #pragma omp parallel for reduce(+: integrand_result)
   for (uint64_t idx_kel = 0; idx_kel < nr_keldysh_configs; idx_kel++) {
     // Indices of Rows / Cols to pick. Cycle through and shift by (0/1) * order_n depending on idx_kel configuration
-    std::vector<int> col_pick_s1(order_n + 1);
-    std::vector<int> col_pick_s2(order_n);
-
-    col_pick_s1[0] = external_idx;
+    col_pick_up[0] = external_idx;
+    col_pick_do[0] = external_idx;
     for (int i = 0; i < order_n; i++) {
-      col_pick_s1[i + 1] = i + GetBit(idx_kel, i) * order_n;
-      col_pick_s2[i] = col_pick_s1[i + 1];
+      col_pick_up[i + 1] = i + GetBit(idx_kel, i) * order_n;
+      col_pick_do[i + 1] = i + GetBit(idx_kel, i) * order_n;
     }
 
     // Extract data into temporary matrices
-    matrix<dcomplex> g_mat_s1(order_n + 1, order_n + 1, FORTRAN_LAYOUT);
-    matrix<dcomplex> g_mat_s2(order_n, order_n, FORTRAN_LAYOUT);
-
-    for (int i = 0; i < order_n; ++i) {
-      for (int j = 0; j < order_n; ++j) {
-        g_mat_s2(i, j) = wick_matrix_s2(col_pick_s2[i], col_pick_s2[j]);
-      }
-    }
-
     for (int i = 0; i < order_n + 1; ++i) {
       for (int j = 0; j < order_n + 1; ++j) {
-        g_mat_s1(i, j) = wick_matrix_s1(col_pick_s1[i], col_pick_s1[j]);
+        g_mat_up(i, j) = wick_matrix_up(col_pick_up[i], col_pick_up[j]);
+        g_mat_do(j, i) = wick_matrix_do(col_pick_do[i], col_pick_do[j]); // transposed
       }
     }
 
-    // Strategy: Do row expansion by solving linear equation for cofactors.
-    // TODO: Do we want to go to full pivoting rather than partial pivoting for LU decomposition?
-    // TODO: Consider checking Condition Number via LAPACK_zgecon
-    // TODO: Consider ZGEEQU for equilibiration (scaling of rows / columns for better conditioning)
-
-    auto worker = det_and_inverse_worker(g_mat_s1);
-    matrix<dcomplex> cofactors_tr; // transposed of cofactor matrix, includes sign
-    cofactors_tr = worker.inverse() * worker.det();
+    auto cofactors_up = first_row_expansion(g_mat_up);
+    auto cofactors_do = first_row_expansion(g_mat_do);
 
     array<dcomplex, 1> result_tmp(g0.get_nr_omegas());
     result_tmp() = 0;
 
+    int sign = 1;
     for (int k = 0; k < order_n + 1; ++k) {
-      auto ind_k = all_config_1[col_pick_s1[k]];
+      sign = -sign;
+      auto ind_k = all_config_up[col_pick_up[k]];
       for (int l = 0; l < order_n + 1; ++l) {
+        sign = -sign;
         if (k == 0 && l == 0) {
-          continue;
+          continue; // vaccum diagrams
         }
-        auto ind_l = all_config_1[col_pick_s1[l]];
-        result_tmp += -g0.chi(ind_k, ind_l, b.contour.time) * cofactors_tr(l, k);
+        auto ind_l = all_config_do[col_pick_do[l]];
+        result_tmp += sign * g0.chi(ind_k, ind_l, g_idx_X.contour.time) * cofactors_up(k) * cofactors_do(l);
       }
     }
 
-    // Multiply by Keldysh index parity & other spin determinant:
-    result_tmp *= GetBitParity(idx_kel) * determinant(g_mat_s2);
+    // Multiply by Keldysh index parity
+    result_tmp *= GetBitParity(idx_kel);
     result += result_tmp;
   }
   return std::make_pair(result, 1);
