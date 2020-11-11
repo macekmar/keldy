@@ -430,36 +430,4 @@ void g0_model::make_flat_band_analytic() {
   g0_greater = make_block_gf<retime, matrix_valued>({"up", "down"}, {g0_greater_up, g0_greater_up});
 }
 
-void g0_model::make_chi(array<double, 1> omegas_array, gf_index_t const &a) {
-  auto param = model_omega.get_param();
-  keldysh_idx_t const a_idx = a.contour.k_idx;
-
-  if (a.orbital != 0) {
-    TRIQS_RUNTIME_ERROR << "`a` should have orbital 0. Other orbitals not supported.";
-  }
-
-  chi_spin = a.spin;
-  omegas = std::move(omegas_array);
-  int const N = omegas.size();
-
-  auto time_mesh = gf_mesh<retime>({-param.time_max, param.time_max, param.nr_time_points_gf});
-  auto omega_mesh = make_adjoint_mesh(time_mesh);
-  gf<refreq, tensor_valued<3>> chi_omega{omega_mesh, {N, 2, 2}}; // Keldysh matrix, not supporting orbitals yet
-  for (auto [i, w0] : itertools::enumerate(omegas_array)) {
-
-    for (auto w : omega_mesh) {
-      chi_omega[w](i, 0, 0) =
-         model_omega.g0_dot_keldysh(a_idx, forward, w + w0) * model_omega.g0_dot_keldysh(forward, a_idx, w + 0.);
-      chi_omega[w](i, 0, 1) =
-         model_omega.g0_dot_keldysh(a_idx, forward, w + w0) * model_omega.g0_dot_keldysh(backward, a_idx, w + 0.);
-      chi_omega[w](i, 1, 0) =
-         model_omega.g0_dot_keldysh(a_idx, backward, w + w0) * model_omega.g0_dot_keldysh(forward, a_idx, w + 0.);
-      chi_omega[w](i, 1, 1) =
-         model_omega.g0_dot_keldysh(a_idx, backward, w + w0) * model_omega.g0_dot_keldysh(backward, a_idx, w + 0.);
-    }
-  }
-
-  chi = make_gf_from_fourier(chi_omega, time_mesh);
-}
-
 } // namespace keldy::impurity_oneband

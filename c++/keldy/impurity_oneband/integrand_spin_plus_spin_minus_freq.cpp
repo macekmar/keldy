@@ -83,7 +83,7 @@ std::pair<array<dcomplex, 1>, int> integrand_spin_plus_spin_minus_freq::operator
                                                                                    bool const keep_u_hypercube) const {
   using namespace triqs::arrays;
 
-  array<dcomplex, 1> result(g0.get_nr_omegas());
+  array<dcomplex, 1> result(chi.get_nr_omegas());
   result() = 0;
 
   // Interaction starts a t = 0
@@ -99,6 +99,7 @@ std::pair<array<dcomplex, 1>, int> integrand_spin_plus_spin_minus_freq::operator
 
   auto a_up = g_idx_X; // This is now a dummy index
   auto a_do = g_idx_X;
+  a_up.spin = up;
   a_do.spin = down;
   // define time-splitting for external-points
   a_up.contour.timesplit_n = order_n;
@@ -160,7 +161,7 @@ std::pair<array<dcomplex, 1>, int> integrand_spin_plus_spin_minus_freq::operator
     auto cofactors_up = first_row_expansion(g_mat_up);
     auto cofactors_do = first_row_expansion(g_mat_do);
 
-    array<dcomplex, 1> result_tmp(g0.get_nr_omegas());
+    array<dcomplex, 1> result_tmp(chi.get_nr_omegas());
     result_tmp() = 0;
 
     int sign = 1;
@@ -173,7 +174,7 @@ std::pair<array<dcomplex, 1>, int> integrand_spin_plus_spin_minus_freq::operator
           continue; // vaccum diagrams
         }
         auto ind_l = all_config_do[col_pick_do[l]];
-        result_tmp += sign * g0.chi(ind_k, ind_l, g_idx_X.contour.time) * cofactors_up(k) * cofactors_do(l);
+        result_tmp += sign * chi(ind_k, ind_l) * cofactors_up(k) * cofactors_do(l);
       }
     }
 

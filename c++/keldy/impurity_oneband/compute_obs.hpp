@@ -144,14 +144,16 @@ array<dcomplex, 1> zero_array(int size) {
 // cannot be constructed from params only, as make_chi must be called manually
 class compute_spin_plus_spin_minus_freq : public integrator<array<dcomplex, 1>, integrand_spin_plus_spin_minus_freq> {
  public:
-  compute_spin_plus_spin_minus_freq(g0_model model, double time, int order)
-     : integrator{
-        zero_array(model.omegas.size()),
-        integrand_spin_plus_spin_minus_freq{g0_keldysh_contour_t{std::move(model)}, gf_index_t{time, up, forward}},
-        {},
-        order,
-        "sobol_unshifted",
-        0} {}
+  compute_spin_plus_spin_minus_freq(g0_model model, double time, mda::array<double, 1> omegas, int order)
+     : integrator{zero_array(omegas.size()),
+                  integrand_spin_plus_spin_minus_freq{g0_keldysh_contour_t{std::move(model)}, time, omegas},
+                  {},
+                  order,
+                  "sobol_unshifted",
+                  0} {}
+
+  compute_spin_plus_spin_minus_freq(model_param_t params, double time, mda::array<double, 1> omegas, int order)
+     : compute_spin_plus_spin_minus_freq{g0_model{g0_model_omega{params}, false}, time, omegas, order} {}
 };
 
 } // namespace keldy::impurity_oneband

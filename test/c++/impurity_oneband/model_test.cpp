@@ -46,18 +46,6 @@ TEST(g0_model, MiddleTimePoint2) { // NOLINT
   expect_contain(g0.g0_greater[up].mesh(), 0.);
 }
 
-TEST(g0_model_chi, Initialize) { // NOLINT
-  model_param_t params;
-  g0_model g0{g0_model_omega{params}, false};
-  mda::array<double, 1> omegas = {0., 0.5, 1.0};
-  g0.make_chi(omegas, gf_index_t{10., up, forward});
-  g0_keldysh_contour_t g0_k{g0};
-
-  std::cout << g0_k.chi(gf_index_t{5.0, up, backward}, gf_index_t{3.0, up, forward}, 10.) << std::endl;
-
-  EXPECT_EQ(g0_k.get_nr_omegas(), 3);
-}
-
 TEST(g0_keldysh_adaptor, Initialize) { // NOLINT
   model_param_t params;
   g0_model g0{g0_model_omega{params}, true};
