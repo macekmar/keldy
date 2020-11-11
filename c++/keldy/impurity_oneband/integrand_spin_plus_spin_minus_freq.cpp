@@ -22,11 +22,9 @@
 
 #include "integrand_spin_plus_spin_minus_freq.hpp"
 #include <triqs/utility/exceptions.hpp>
+#include "../det_expansion.hpp"
 #include <triqs/arrays.hpp>
 #include <triqs/arrays/matrix.hpp>
-
-#include <triqs/arrays/blas_lapack/tools.hpp>
-#include <triqs/arrays/blas_lapack/getrs.hpp>
 
 namespace {
 
@@ -38,43 +36,7 @@ inline int GetBitParity(unsigned int in) { return 1 - 2 * __builtin_parity(in); 
 
 namespace keldy::impurity_oneband {
 
-/// Returns the first row of the comatrix of `mat`.
-// transpose matrix first to get column expansion.
-// Strategy: Do row expansion by solving linear equation for cofactors.
-// TODO: Do we want to go to full pivoting rather than partial pivoting for LU decomposition?
-// TODO: Consider checking Condition Number via LAPACK_zgecon
-// TODO: Consider ZGEEQU for equilibiration (scaling of rows / columns for better conditioning)
-inline nda::vector<dcomplex> first_row_expansion(nda::matrix<dcomplex> &mat) {
-  // Calculate LU decomposition with partial pivoting
-  nda::vector<int> pivot_index_array(first_dim(mat));
-  int info = nda::lapack::getrf(mat, pivot_index_array, true);
-  if (info != 0) {
-    TRIQS_RUNTIME_ERROR << "lapack::getrf failed with code " << info;
-  }
-
-  // Extract det from LU decompositon (note permutations)
-  dcomplex mat_det = 1.0;
-  int det_flip = 1;
-  for (int i = 0; i < first_dim(mat); i++) {
-    mat_det *= mat(i, i);
-    if (pivot_index_array(i) != i + 1) { // TODO: check +1 from fortran index
-      det_flip = -det_flip;
-    }
-  }
-  mat_det *= det_flip;
-
-  // Find cofactors by solving linear equation Ax = e1 * det(A)
-  nda::matrix<dcomplex> x_minors(first_dim(mat), 1, FORTRAN_LAYOUT);
-  x_minors() = 0;
-  x_minors(0, 0) = mat_det;
-
-  info = nda::lapack::getrs(mat, x_minors, pivot_index_array);
-  if (info != 0) {
-    TRIQS_RUNTIME_ERROR << "lapack::getrs failed with code " << info;
-  }
-
-  return x_minors(nda::range(), 0);
-}
+namespace nda = triqs::arrays;
 
 // TODO: Where is sorting of times done?
 // TODO: Efficnencies for spin symmetric case.
@@ -83,7 +45,7 @@ std::pair<nda::array<dcomplex, 1>, int>
 integrand_spin_plus_spin_minus_freq::operator()(std::vector<double> const &times, bool const keep_u_hypercube) const {
   using namespace triqs::arrays;
 
-  nda::array<dcomplex, 1> result(chi.get_nr_omegas());
+  array<dcomplex, 1> result(chi.get_nr_omegas());
   result() = 0;
 
   // Interaction starts a t = 0
@@ -161,7 +123,7 @@ integrand_spin_plus_spin_minus_freq::operator()(std::vector<double> const &times
     auto cofactors_up = first_row_expansion(g_mat_up);
     auto cofactors_do = first_row_expansion(g_mat_do);
 
-    nda::array<dcomplex, 1> result_tmp(chi.get_nr_omegas());
+    array<dcomplex, 1> result_tmp(chi.get_nr_omegas());
     result_tmp() = 0;
 
     int sign = 1;

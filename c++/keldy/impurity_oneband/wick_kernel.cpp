@@ -21,12 +21,10 @@
  ******************************************************************************/
 
 #include "wick_kernel.hpp"
+#include "../det_expansion.hpp"
 #include <triqs/utility/exceptions.hpp>
 #include <triqs/arrays.hpp>
 #include <triqs/arrays/matrix.hpp>
-
-#include <triqs/arrays/blas_lapack/tools.hpp>
-#include <triqs/arrays/blas_lapack/getrs.hpp>
 
 namespace {
 
@@ -124,38 +122,7 @@ std::pair<binner::sparse_binner_t<1, 1>, int> integrand_g_kernel::operator()(std
       }
     }
 
-    // Strategy: Do row expansion by solving linear equation for cofactors.
-    // TODO: Do we want to go to full pivoting rather than partial pivoting for LU decomposition?
-    // TODO: Consider checking Condition Number via LAPACK_zgecon
-    // TODO: Consider ZGEEQU for equilibiration (scaling of rows / columns for better conditioning)
-
-    // Calculate LU decomposition with partial pivoting
-    triqs::arrays::vector<int> pivot_index_array(first_dim(g_mat_s1));
-    int info = triqs::arrays::lapack::getrf(g_mat_s1, pivot_index_array, true);
-    if (info != 0) {
-      TRIQS_RUNTIME_ERROR << "lapack::getrf failed with code " << info;
-    }
-
-    // Extract det from LU decompositon (note permutations)
-    dcomplex g_mat_s1_det = 1.0;
-    int det_flip = 1;
-    for (int i = 0; i < first_dim(g_mat_s1); i++) {
-      g_mat_s1_det *= g_mat_s1(i, i);
-      if (pivot_index_array(i) != i + 1) { // TODO: check +1 from fortran index
-        det_flip = -det_flip;
-      }
-    }
-    g_mat_s1_det *= det_flip;
-
-    // Find cofactors by solving linear equation Ax = e1 * det(A)
-    matrix<dcomplex> x_minors(first_dim(g_mat_s1), 1, FORTRAN_LAYOUT);
-    x_minors() = 0;
-    x_minors(0, 0) = g_mat_s1_det;
-
-    info = triqs::arrays::lapack::getrs(g_mat_s1, x_minors, pivot_index_array);
-    if (info != 0) {
-      TRIQS_RUNTIME_ERROR << "lapack::getrs failed with code " << info;
-    }
+    auto x_minors = first_row_expansion(g_mat_s1);
 
     // Multiply by Keldysh index parity & other spin determinant:
     x_minors *= GetBitParity(idx_kel) * determinant(g_mat_s2);
@@ -163,7 +130,7 @@ std::pair<binner::sparse_binner_t<1, 1>, int> integrand_g_kernel::operator()(std
     // Bin: Find gf_index to bin to. We leave out first element, which connects external verticies only
     for (int i = 1; i < x_minors.size(); i++) {
       auto ind = all_config_1[col_pick_s1[i]];
-      result.accumulate(x_minors(i, 0), ind.contour.time, ind.contour.k_idx);
+      result.accumulate(x_minors(i), ind.contour.time, ind.contour.k_idx);
     }
   }
   return std::make_pair(result, 1);
