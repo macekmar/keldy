@@ -32,7 +32,7 @@
 
 namespace keldy::binner {
 
-namespace mda = triqs::arrays;
+namespace nda = triqs::arrays;
 
 using cont_coord_t = double;
 using disc_coord_t = long;
@@ -150,13 +150,13 @@ class binner_t {
   using coord_arr_t = std::pair<std::array<cont_coord_t, N>, std::array<disc_coord_t, M>>;
 
  private:
-  mda::array<data_t, N + M> _data;
-  mda::array_view<data_t, 1> data_flat_view;
+  nda::array<data_t, N + M> _data;
+  nda::array_view<data_t, 1> data_flat_view;
   std::array<continuous_axis_t, N> continuous_axes;
   std::array<discreet_axis_t, M> discreet_axes;
 
-  mda::array<long, N + M> _nr_values_added;
-  mda::array_view<long, 1> nr_values_flat_view;
+  nda::array<long, N + M> _nr_values_added;
+  nda::array_view<long, 1> nr_values_flat_view;
 
   /// Find bin index from a coordinate on a given axis.
   template <size_t axis, typename T>
@@ -228,13 +228,13 @@ class binner_t {
       shape[N + k] = n;
     }
 
-    _data = mda::array<data_t, N + M>(shape);
+    _data = nda::array<data_t, N + M>(shape);
     _data() = 0;
-    data_flat_view.rebind(mda::array_view<data_t, 1>({mda::make_shape(_data.size())}, _data.storage()));
-    _nr_values_added = mda::array<long, N + M>(shape);
+    data_flat_view.rebind(nda::array_view<data_t, 1>({nda::make_shape(_data.size())}, _data.storage()));
+    _nr_values_added = nda::array<long, N + M>(shape);
     _nr_values_added() = 0;
     nr_values_flat_view.rebind(
-       mda::array_view<long, 1>({mda::make_shape(_nr_values_added.size())}, _nr_values_added.storage()));
+       nda::array_view<long, 1>({nda::make_shape(_nr_values_added.size())}, _nr_values_added.storage()));
   };
 
   /// Small object containing ref to a binner_t and to a particular bin
@@ -267,8 +267,8 @@ class binner_t {
     return {*this, -1};
   }
 
-  mda::array_view<data_t, N + M> data() const { return _data; };
-  mda::array_view<long, N + M> nr_values_added() const { return _nr_values_added; };
+  nda::array_view<data_t, N + M> data() const { return _data; };
+  nda::array_view<long, N + M> nr_values_added() const { return _nr_values_added; };
   [[nodiscard]] auto const &get_data() const { return _data; };
   [[nodiscard]] auto const &get_nr_values_added() const { return _nr_values_added; };
   [[nodiscard]] auto const &get_nr_values_dropped() const { return nr_values_dropped; };
@@ -286,7 +286,7 @@ class binner_t {
       TRIQS_RUNTIME_ERROR << "Axis " << axis << " is larger than the number of dimensions.";
     }
     auto ax = continuous_axes[axis];
-    mda::array<double, 1> bin_coord(ax.nr_bins);
+    nda::array<double, 1> bin_coord(ax.nr_bins);
     for (int i = 0; i < ax.nr_bins; ++i) {
       bin_coord(i) = ax.xmin + (i + 0.5) * ax.bin_size;
     }

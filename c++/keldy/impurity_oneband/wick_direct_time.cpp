@@ -26,7 +26,7 @@
 #include <tuple>
 #include <utility>
 
-#pragma omp declare reduction(+ : dcomplex : omp_out += omp_in)
+#pragma omp declare reduction(+ : keldy::dcomplex : omp_out += omp_in)
 
 namespace {
 

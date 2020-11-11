@@ -135,15 +135,16 @@ class compute_gf_kernel_single_omega : public integrator<dcomplex, integrand_g_k
 // ****************************************************************************
 // <sigma^+ sigma^-> correlator
 
-array<dcomplex, 1> zero_array(int size) {
-  array<dcomplex, 1> out(size);
+nda::array<dcomplex, 1> zero_array(int size) {
+  nda::array<dcomplex, 1> out(size);
   out() = 0;
   return out;
 };
 
-class compute_spin_plus_spin_minus_freq : public integrator<array<dcomplex, 1>, integrand_spin_plus_spin_minus_freq> {
+class compute_spin_plus_spin_minus_freq
+   : public integrator<nda::array<dcomplex, 1>, integrand_spin_plus_spin_minus_freq> {
  public:
-  compute_spin_plus_spin_minus_freq(g0_model model, double time, mda::array<double, 1> omegas, int order)
+  compute_spin_plus_spin_minus_freq(g0_model model, double time, nda::array<double, 1> omegas, int order)
      : integrator{zero_array(omegas.size()),
                   integrand_spin_plus_spin_minus_freq{g0_keldysh_contour_t{std::move(model)}, time, omegas},
                   {},
@@ -151,7 +152,7 @@ class compute_spin_plus_spin_minus_freq : public integrator<array<dcomplex, 1>, 
                   "sobol_unshifted",
                   0} {}
 
-  compute_spin_plus_spin_minus_freq(model_param_t params, double time, mda::array<double, 1> omegas, int order)
+  compute_spin_plus_spin_minus_freq(model_param_t params, double time, nda::array<double, 1> omegas, int order)
      : compute_spin_plus_spin_minus_freq{g0_model{g0_model_omega{params}, false}, time, omegas, order} {}
 };
 

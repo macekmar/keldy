@@ -64,8 +64,8 @@ for N, M in [(1, 0), (1, 1), (2, 0), (2, 1)]:
 
         c.add_method_copy()
 
-        c.add_method("mda::array<{}, {}> const& get_data()".format(data_t, N + M))
-        c.add_method("mda::array<long, {}> const& get_nr_values_added()".format(N + M))
+        c.add_method("nda::array<{}, {}> const& get_data()".format(data_t, N + M))
+        c.add_method("nda::array<long, {}> const& get_nr_values_added()".format(N + M))
         c.add_method("auto const& get_nr_values_dropped()")
         c.add_method("auto const& get_continuous_axes()")
         c.add_method("auto const& get_discreet_axes()")

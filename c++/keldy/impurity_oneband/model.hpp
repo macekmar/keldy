@@ -30,10 +30,9 @@
 #include <variant>
 #include <vector>
 
-using namespace triqs::gfs;
-namespace mda = triqs::arrays;
-
 namespace keldy::impurity_oneband {
+
+using namespace triqs::gfs;
 
 class CPP2PY_IGNORE model_param_t {
  public:

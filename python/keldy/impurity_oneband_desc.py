@@ -499,9 +499,9 @@ c.add_member(c_name = "warper",
              read_only= False,
              doc = r"""""")
 
-c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, mda::array<double, 1> omegas, int order)""", doc = r"""""")
+c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, nda::array<double, 1> omegas, int order)""", doc = r"""""")
 
-c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, mda::array<double, 1> omegas, int order)""", doc = r"""""")
+c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, nda::array<double, 1> omegas, int order)""", doc = r"""""")
 
 c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_spin_plus_spin_minus_freq::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec, int start_domain_nr, bool keep_u_hypercube = true)""",
              doc = r"""""")

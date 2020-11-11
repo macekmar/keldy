@@ -44,10 +44,10 @@ namespace keldy::impurity_oneband {
 // TODO: Do we want to go to full pivoting rather than partial pivoting for LU decomposition?
 // TODO: Consider checking Condition Number via LAPACK_zgecon
 // TODO: Consider ZGEEQU for equilibiration (scaling of rows / columns for better conditioning)
-inline mda::vector<dcomplex> first_row_expansion(mda::matrix<dcomplex> &mat) {
+inline nda::vector<dcomplex> first_row_expansion(nda::matrix<dcomplex> &mat) {
   // Calculate LU decomposition with partial pivoting
-  mda::vector<int> pivot_index_array(first_dim(mat));
-  int info = mda::lapack::getrf(mat, pivot_index_array, true);
+  nda::vector<int> pivot_index_array(first_dim(mat));
+  int info = nda::lapack::getrf(mat, pivot_index_array, true);
   if (info != 0) {
     TRIQS_RUNTIME_ERROR << "lapack::getrf failed with code " << info;
   }
@@ -64,26 +64,26 @@ inline mda::vector<dcomplex> first_row_expansion(mda::matrix<dcomplex> &mat) {
   mat_det *= det_flip;
 
   // Find cofactors by solving linear equation Ax = e1 * det(A)
-  mda::matrix<dcomplex> x_minors(first_dim(mat), 1, FORTRAN_LAYOUT);
+  nda::matrix<dcomplex> x_minors(first_dim(mat), 1, FORTRAN_LAYOUT);
   x_minors() = 0;
   x_minors(0, 0) = mat_det;
 
-  info = mda::lapack::getrs(mat, x_minors, pivot_index_array);
+  info = nda::lapack::getrs(mat, x_minors, pivot_index_array);
   if (info != 0) {
     TRIQS_RUNTIME_ERROR << "lapack::getrs failed with code " << info;
   }
 
-  return x_minors(mda::range(), 0);
+  return x_minors(nda::range(), 0);
 }
 
 // TODO: Where is sorting of times done?
 // TODO: Efficnencies for spin symmetric case.
 
-std::pair<array<dcomplex, 1>, int> integrand_spin_plus_spin_minus_freq::operator()(std::vector<double> const &times,
-                                                                                   bool const keep_u_hypercube) const {
+std::pair<nda::array<dcomplex, 1>, int>
+integrand_spin_plus_spin_minus_freq::operator()(std::vector<double> const &times, bool const keep_u_hypercube) const {
   using namespace triqs::arrays;
 
-  array<dcomplex, 1> result(chi.get_nr_omegas());
+  nda::array<dcomplex, 1> result(chi.get_nr_omegas());
   result() = 0;
 
   // Interaction starts a t = 0
@@ -161,7 +161,7 @@ std::pair<array<dcomplex, 1>, int> integrand_spin_plus_spin_minus_freq::operator
     auto cofactors_up = first_row_expansion(g_mat_up);
     auto cofactors_do = first_row_expansion(g_mat_do);
 
-    array<dcomplex, 1> result_tmp(chi.get_nr_omegas());
+    nda::array<dcomplex, 1> result_tmp(chi.get_nr_omegas());
     result_tmp() = 0;
 
     int sign = 1;

@@ -33,6 +33,8 @@
 
 namespace keldy {
 
+namespace nda = triqs::arrays;
+
 template <typename T>
 constexpr bool is_binned_variable = false;
 // if (is_binned_variable<R>) {}

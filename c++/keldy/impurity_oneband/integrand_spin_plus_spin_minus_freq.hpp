@@ -38,16 +38,16 @@
 
 namespace keldy::impurity_oneband {
 
-using namespace triqs::arrays;
+namespace nda = triqs::arrays;
 using namespace triqs::gfs;
 
 class chi_function_t {
-  mda::array<double, 1> const omegas;
+  nda::array<double, 1> const omegas;
   double const time;
   gf<retime, tensor_valued<3>> chi;
 
  public:
-  chi_function_t(g0_model_omega const &model_omega, mda::array<double, 1> omegas_, double time_, keldysh_idx_t a)
+  chi_function_t(g0_model_omega const &model_omega, nda::array<double, 1> omegas_, double time_, keldysh_idx_t a)
      : omegas(std::move(omegas_)), time(time_) {
     auto param = model_omega.get_param();
     int const N = omegas.size();
@@ -74,13 +74,13 @@ class chi_function_t {
 
   /// returns ......
   // alpha not supported yet
-  mda::array<dcomplex, 1> operator()(gf_index_t const &a, gf_index_t const &b) const {
+  nda::array<dcomplex, 1> operator()(gf_index_t const &a, gf_index_t const &b) const {
     if (a.spin == b.spin) {
       TRIQS_RUNTIME_ERROR << "a and b should have opposite spins.";
     }
 
-    return mda::exp(1.0i * omegas * (a.contour.time - time))
-       * chi(b.contour.time - a.contour.time)(mda::range(), a.contour.k_idx, b.contour.k_idx);
+    return nda::exp(1.0i * omegas * (a.contour.time - time))
+       * chi(b.contour.time - a.contour.time)(nda::range(), a.contour.k_idx, b.contour.k_idx);
   };
 
   int get_nr_omegas() const { return omegas.size(); };
@@ -93,11 +93,11 @@ class integrand_spin_plus_spin_minus_freq {
 
  public:
   /// Returns integrand for the specified times
-  using result_t = array<dcomplex, 1>;
+  using result_t = nda::array<dcomplex, 1>;
   [[nodiscard]] std::pair<result_t, int> operator()(std::vector<double> const &times,
                                                     bool const keep_u_hypercube = true) const;
 
-  integrand_spin_plus_spin_minus_freq(g0_keldysh_contour_t g0_, double time, mda::array<double, 1> const &omegas)
+  integrand_spin_plus_spin_minus_freq(g0_keldysh_contour_t g0_, double time, nda::array<double, 1> const &omegas)
      : g0(std::move(g0_)), g_idx_X{time, up, forward}, chi(g0.model.model_omega, omegas, time, backward){};
 };
 
