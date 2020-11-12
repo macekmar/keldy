@@ -141,7 +141,6 @@ array<dcomplex, 1> zero_array(int size) {
   return out;
 };
 
-// cannot be constructed from params only, as make_chi must be called manually
 class compute_spin_plus_spin_minus_freq : public integrator<array<dcomplex, 1>, integrand_spin_plus_spin_minus_freq> {
  public:
   compute_spin_plus_spin_minus_freq(g0_model model, double time, mda::array<double, 1> omegas, int order)

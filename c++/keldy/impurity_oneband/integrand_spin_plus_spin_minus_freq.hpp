@@ -47,7 +47,7 @@ class chi_function_t {
   gf<retime, tensor_valued<3>> chi;
 
  public:
-  chi_function_t(g0_model_omega &model_omega, mda::array<double, 1> omegas_, double time_, keldysh_idx_t a)
+  chi_function_t(g0_model_omega const &model_omega, mda::array<double, 1> omegas_, double time_, keldysh_idx_t a)
      : omegas(std::move(omegas_)), time(time_) {
     auto param = model_omega.get_param();
     int const N = omegas.size();
@@ -77,20 +77,18 @@ class chi_function_t {
   mda::array<dcomplex, 1> operator()(gf_index_t const &a, gf_index_t const &b) const {
     if (a.spin == b.spin) {
       TRIQS_RUNTIME_ERROR << "a and b should have opposite spins.";
-      //return 0.0 * model.omegas;
     }
 
-    auto out = chi(b.contour.time - a.contour.time)(mda::range(), static_cast<int>(a.contour.k_idx),
-                                                    static_cast<int>(b.contour.k_idx));
-    return mda::exp(1.0i * omegas * (a.contour.time - time)) * out;
+    return mda::exp(1.0i * omegas * (a.contour.time - time))
+       * chi(b.contour.time - a.contour.time)(mda::range(), a.contour.k_idx, b.contour.k_idx);
   };
 
   int get_nr_omegas() const { return omegas.size(); };
 };
 
 class integrand_spin_plus_spin_minus_freq {
-  g0_keldysh_contour_t g0;
-  gf_index_t g_idx_X; // Fixed Point
+  g0_keldysh_contour_t const g0;
+  gf_index_t const g_idx_X; // Fixed Point
   chi_function_t const chi;
 
  public:
