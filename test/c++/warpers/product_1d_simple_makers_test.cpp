@@ -18,6 +18,9 @@ TEST(SimpleProduct1DWarperMaker, Exponential) { // NOLINT
   basic_test_warper_multidim(warper_1, 10.0, tol);
   basic_test_warper_multidim(warper_2, 1.0, tol);
   basic_test_warper_multidim(warper_3, 20.0, tol);
+
+  EXPECT_DOUBLE_EQ(warper_1.jacobian_forward({2., 4.}) / warper_1.jacobian_forward({3., 4.}),
+                   std::exp((3. - 2.) / 1.5));
 }
 
 TEST(SimpleProduct1DWarperMaker, Inverse) { // NOLINT
@@ -33,6 +36,8 @@ TEST(SimpleProduct1DWarperMaker, Inverse) { // NOLINT
   basic_test_warper_multidim(warper_1, 10.0, tol);
   basic_test_warper_multidim(warper_2, 1.0, tol);
   basic_test_warper_multidim(warper_3, 20.0, tol);
+
+  EXPECT_DOUBLE_EQ(warper_1.jacobian_forward({2., 4.}) / warper_1.jacobian_forward({3., 4.}), (3. + 1.5) / (2. + 1.5));
 }
 
 TEST(SimpleProduct1DWarperMaker, InverseSquare) { // NOLINT
@@ -48,6 +53,9 @@ TEST(SimpleProduct1DWarperMaker, InverseSquare) { // NOLINT
   basic_test_warper_multidim(warper_1, 10.0, tol);
   basic_test_warper_multidim(warper_2, 1.0, tol);
   basic_test_warper_multidim(warper_3, 20.0, tol);
+
+  EXPECT_DOUBLE_EQ(warper_1.jacobian_forward({2., 4.}) / warper_1.jacobian_forward({3., 4.}),
+                   std::pow((3. + 1.5) / (2. + 1.5), 2));
 }
 
 TEST(SimpleProduct1DWarperMaker, InversePower) { // NOLINT
@@ -63,6 +71,13 @@ TEST(SimpleProduct1DWarperMaker, InversePower) { // NOLINT
   basic_test_warper_multidim(warper_1, 10.0, tol);
   basic_test_warper_multidim(warper_2, 1.0, tol);
   basic_test_warper_multidim(warper_3, 20.0, tol);
+
+  EXPECT_DOUBLE_EQ(warper_1.jacobian_forward({2., 4.}) / warper_1.jacobian_forward({3., 4.}),
+                   std::pow((3. + 1.5) / (2. + 1.5), 2));
+  EXPECT_DOUBLE_EQ(warper_2.jacobian_forward({0.2, 0.4}) / warper_2.jacobian_forward({0.3, 0.4}),
+                   std::pow((0.3 + 1.8) / (0.2 + 1.8), 3));
+  EXPECT_DOUBLE_EQ(warper_3.jacobian_forward({2., 4.}) / warper_3.jacobian_forward({3., 4.}),
+                   std::pow((3. + 1.1) / (2. + 1.1), 4));
 }
 
 MAKE_MAIN // NOLINT
