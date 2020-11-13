@@ -11,16 +11,25 @@ TEST(SimpleProduct1DWarperMaker, Exponential) { // NOLINT
   auto warper_3 = make_product_1d_simple_exponential(20.0, 1.1);
 
   double const tol = 1e-8;
-  basic_test_warper_at_order_1(warper_1, 10.0, tol);
-  basic_test_warper_at_order_1(warper_2, 1.0, tol);
-  basic_test_warper_at_order_1(warper_3, 20.0, tol);
+  basic_test_warper_at_order_1(warper_1, 10.0, tol, true);
+  basic_test_warper_at_order_1(warper_2, 1.0, tol, true);
+  basic_test_warper_at_order_1(warper_3, 20.0, tol, true);
 
-  basic_test_warper_multidim(warper_1, 10.0, tol);
-  basic_test_warper_multidim(warper_2, 1.0, tol);
-  basic_test_warper_multidim(warper_3, 20.0, tol);
+  basic_test_warper_multidim(warper_1, 10.0, tol, true);
+  basic_test_warper_multidim(warper_2, 1.0, tol, true);
+  basic_test_warper_multidim(warper_3, 20.0, tol, true);
 
   EXPECT_DOUBLE_EQ(warper_1.jacobian_forward({2., 4.}) / warper_1.jacobian_forward({3., 4.}),
                    std::exp((3. - 2.) / 1.5));
+}
+
+TEST(SimpleProduct1DWarperMaker, ExponentialStressTest) { // NOLINT
+  double const tmax = 700.;                               // largest tmax reachable
+  auto warper_1 = make_product_1d_simple_exponential(tmax, 1.);
+
+  double const tol = 1e-9;
+  basic_test_warper_at_order_1(warper_1, tmax, tol, true);
+  basic_test_warper_multidim(warper_1, tmax, tol, true);
 }
 
 TEST(SimpleProduct1DWarperMaker, Inverse) { // NOLINT

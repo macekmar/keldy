@@ -563,14 +563,16 @@ inline warper_product_1d_simple_t make_product_1d_simple_exponential(double doma
             return std::exp(-t / w_scale) / (w_scale * norm);
           },
           [w_scale, domain_u_max](double t) -> double {
-            long double norm = -std::expm1(-static_cast<long double>(domain_u_max) / w_scale);
-            return -std::expm1(-t / w_scale) / norm;
+            return std::expm1((domain_u_max - t) / w_scale) / std::expm1(domain_u_max / w_scale);
+            //long double norm = -std::expm1(-static_cast<long double>(domain_u_max) / w_scale);
+            //return -std::expm1(-t / w_scale) / norm;
           },
           [w_scale, domain_u_max](double l) -> double {
-            long double norm = -std::expm1(-static_cast<long double>(domain_u_max) / w_scale);
-            return -w_scale * std::log1p(-l * norm);
+            return domain_u_max - w_scale * std::log1p(std::expm1(domain_u_max / w_scale) * l);
+            //long double norm = -std::expm1(-static_cast<long double>(domain_u_max) / w_scale);
+            //return -w_scale * std::log1p(-l * norm);
           },
-          domain_u_max};
+          domain_u_max, false};
 }
 
 inline warper_product_1d_simple_t make_product_1d_simple_inverse(double domain_u_max, double w_scale) {
