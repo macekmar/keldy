@@ -243,6 +243,8 @@ c.add_method("""std::pair<keldy::impurity_oneband::integrand_g_kernel::result_t,
              name = "__call__",
              doc = r"""""")
 
+module.add_class(c)
+
 # The class integrand_g_kernel_single_omega
 c = class_(
         py_type = "IntegrandGKernelSingleOmega",  # name of the python class
