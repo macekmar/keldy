@@ -39,6 +39,61 @@ inline int GetBitParity(unsigned int in) { return 1 - 2 * __builtin_parity(in); 
 
 namespace keldy::impurity_oneband {
 
+void green_function_config (std::vector<double> const &times, spin_t const spin, std::vector<gf_index_t> &config) {
+
+  int order = times.size();
+  assert (config.size() == 2 * order);
+
+  for (int i = 0; i < order; i++) {
+    config[i] = gf_index_t{times[i], spin, forward, i};
+    config[i + order] = gf_index_t{times[i], spin, backward, i};
+  }
+}
+
+
+template <typename T>
+void reorder_matrix (T const &mat_in, T &mat_out, std::vector<int> const &ordering) {
+
+  int size = ordering.size();
+  // check matrix size;
+
+  for (int i = 0; i < size; ++i) {
+    for (int j = 0; j < size; ++j) {
+      mat_out(i, j) = mat_in(ordering[i], ordering[j]);
+    }
+  }
+}
+
+
+template <typename T>
+void calc_wick_matrix (g0_keldysh_contour_t g0, std::vector<gf_index_t> const &config, T &wickmat, int ext_idx=-1, gf_index_t a=gf_index_t(), gf_index_t b=gf_index_t()) {
+
+  int size = config.size();
+
+  if (ext_idx != -1) {
+    wickmat(ext_idx, ext_idx) = g0(a, b, false);
+    #pragma omp parallel for
+    for (int i = 0; i < size; i++) {
+      wickmat(ext_idx, i) = g0(a, config[i]);
+      wickmat(i, ext_idx) = g0(config[i], b);
+    }
+  }
+  for (int i = 0; i < size; i++) {
+    for (int j = 0; j < 2 * size; j++) {
+      wickmat(i, j) = g0(config[i], config[j]);
+    }
+  }
+}
+
+
+void calc_ordering_vector(int const keldish_idx, int const order, std::vector<int> &ordering){
+  assert (ordering.size() == order);
+  for (int i = 0; i < order; i++) {
+    ordering[i] = i + GetBit(keldish_idx, i) * order;
+  }
+}
+
+
 // should we sort times?
 std::pair<dcomplex, int> integrand_g_direct::operator()(std::vector<double> const &times,
                                                         bool const keep_u_hypercube) const {
@@ -78,27 +133,34 @@ std::pair<dcomplex, int> integrand_g_direct::operator()(std::vector<double> cons
   std::vector<gf_index_t> all_config_1(2 * order_n);
   std::vector<gf_index_t> all_config_2(2 * order_n);
 
-#pragma omp parallel for
-  for (int i = 0; i < order_n; i++) {
-    all_config_1[i] = gf_index_t{times[i], a.spin, forward, i};
-    all_config_1[i + order_n] = gf_index_t{times[i], a.spin, backward, i};
-    all_config_2[i] = gf_index_t{times[i], spin_t(1 - a.spin), forward, i};
-    all_config_2[i + order_n] = gf_index_t{times[i], spin_t(1 - a.spin), backward, i};
-  }
+  green_function_config(times, a.spin, all_config_1);
+  green_function_config(times, spin_t(1 - a.spin), all_config_2);
+
+//#pragma omp parallel for
+//  for (int i = 0; i < order_n; i++) {
+//    all_config_1[i] = gf_index_t{times[i], a.spin, forward, i};
+//    all_config_1[i + order_n] = gf_index_t{times[i], a.spin, backward, i};
+//    all_config_2[i] = gf_index_t{times[i], spin_t(1 - a.spin), forward, i};
+//    all_config_2[i + order_n] = gf_index_t{times[i], spin_t(1 - a.spin), backward, i};
+//  }
 
   // Index for external index in s1
   int external_idx = 2 * order_n;
 
-  wick_matrix_s1(external_idx, external_idx) = g0(a, b, false);
-#pragma omp parallel for
-  for (int i = 0; i < 2 * order_n; i++) {
-    wick_matrix_s1(external_idx, i) = g0(a, all_config_1[i]);
-    wick_matrix_s1(i, external_idx) = g0(all_config_1[i], b);
-    for (int j = 0; j < 2 * order_n; j++) {
-      wick_matrix_s1(i, j) = g0(all_config_1[i], all_config_1[j]);
-      wick_matrix_s2(i, j) = g0(all_config_2[i], all_config_2[j]);
-    }
-  }
+  calc_wick_matrix<matrix<dcomplex>>(g0, all_config_1, wick_matrix_s1, external_idx, a, b);
+  calc_wick_matrix<matrix<dcomplex>>(g0, all_config_2, wick_matrix_s2);
+
+
+//  wick_matrix_s1(external_idx, external_idx) = g0(a, b, false);
+//#pragma omp parallel for
+//  for (int i = 0; i < 2 * order_n; i++) {
+//    wick_matrix_s1(external_idx, i) = g0(a, all_config_1[i]);
+//    wick_matrix_s1(i, external_idx) = g0(all_config_1[i], b);
+//    for (int j = 0; j < 2 * order_n; j++) {
+//      wick_matrix_s1(i, j) = g0(all_config_1[i], all_config_1[j]);
+//      wick_matrix_s2(i, j) = g0(all_config_2[i], all_config_2[j]);
+//    }
+//  }
   // std::cout << wick_matrix_s1 << std::endl;
   // std::cout << wick_matrix_s2 << std::endl;
 
@@ -110,12 +172,18 @@ std::pair<dcomplex, int> integrand_g_direct::operator()(std::vector<double> cons
 #pragma omp parallel for reduction(+ : integrand_result)
   for (uint64_t idx_kel = 0; idx_kel < nr_keldysh_configs; idx_kel++) {
     // Indices of Rows / Cols to pick. Cycle through and shift by (0/1) * order_n depending on idx_kel configuration
+
     std::vector<int> col_pick_s2(order_n);
-    for (int i = 0; i < order_n; i++) {
-      col_pick_s2[i] = i + GetBit(idx_kel, i) * order_n;
-    }
+    calc_ordering_vector(idx_kel, order_n, col_pick_s2);
     std::vector<int> col_pick_s1 = col_pick_s2;
     col_pick_s1.push_back(external_idx);
+
+
+//    for (int i = 0; i < order_n; i++) {
+//      col_pick_s2[i] = i + GetBit(idx_kel, i) * order_n;
+//    }
+//    std::vector<int> col_pick_s1 = col_pick_s2;
+//    col_pick_s1.push_back(external_idx);
 
     // Extract data into temporary matrices
     matrix<dcomplex> tmp_mat_s1(order_n + 1, order_n + 1);
@@ -133,16 +201,20 @@ std::pair<dcomplex, int> integrand_g_direct::operator()(std::vector<double> cons
     //   std::cout << x << std::endl;
     // }
 
-    for (int i = 0; i < order_n + 1; ++i) {
-      for (int j = 0; j < order_n + 1; ++j) {
-        tmp_mat_s1(i, j) = wick_matrix_s1(col_pick_s1[i], col_pick_s1[j]);
-      }
-    }
-    for (int i = 0; i < order_n; ++i) {
-      for (int j = 0; j < order_n; ++j) {
-        tmp_mat_s2(i, j) = wick_matrix_s2(col_pick_s2[i], col_pick_s2[j]);
-      }
-    }
+    //for (int i = 0; i < order_n + 1; ++i) {
+    //  for (int j = 0; j < order_n + 1; ++j) {
+    //    tmp_mat_s1(i, j) = wick_matrix_s1(col_pick_s1[i], col_pick_s1[j]);
+    //  }
+    //}
+    //for (int i = 0; i < order_n; ++i) {
+    //  for (int j = 0; j < order_n; ++j) {
+    //    tmp_mat_s2(i, j) = wick_matrix_s2(col_pick_s2[i], col_pick_s2[j]);
+    //  }
+    //}
+
+    reorder_matrix<matrix<dcomplex>> (wick_matrix_s1, tmp_mat_s1, col_pick_s1);
+    reorder_matrix<matrix<dcomplex>> (wick_matrix_s2, tmp_mat_s2, col_pick_s2);
+
     integrand_result += GetBitParity(idx_kel) * determinant(tmp_mat_s1) * determinant(tmp_mat_s2);
   }
 
