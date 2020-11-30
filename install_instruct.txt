@@ -1,3 +1,6 @@
 - install triqs with the install script
 - there is a problem with the triqs tests, so ``make test`` has been removed.
 - to install keldy, the tests have been disabled as well, as they took too long.
+
+- put into bashrc: 
+source keldy.install/share/keldyvars.sh
