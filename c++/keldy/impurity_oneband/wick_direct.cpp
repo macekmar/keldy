@@ -86,10 +86,10 @@ void calc_wick_matrix (g0_keldysh_contour_t g0, std::vector<gf_index_t> const &c
 }
 
 
-void calc_ordering_vector(int const keldish_idx, int const order, std::vector<int> &ordering){
+void calc_ordering_vector(int const keldysh_idx, int const order, std::vector<int> &ordering){
   assert (ordering.size() == order);
   for (int i = 0; i < order; i++) {
-    ordering[i] = i + GetBit(keldish_idx, i) * order;
+    ordering[i] = i + GetBit(keldysh_idx, i) * order;
   }
 }
 
@@ -104,6 +104,8 @@ class WickMatrix {
 
  public:
 
+  uint64_t max_keldysh_configs;
+
   WickMatrix(std::vector<double> const & _times, g0_keldysh_contour_t _g0, gf_index_t _a, gf_index_t _b) : 
   times{_times}, g0{_g0}, a{_a}, b{_b} {
 
@@ -111,7 +113,7 @@ class WickMatrix {
   assert (order != 0);
   size = 2 * order;
 
-  max_keldish_configs = (uint64_t(1) << order);
+  max_keldysh_configs = (uint64_t(1) << order);
   external_idx = size;
 
   config1.resize(size);
@@ -132,34 +134,34 @@ class WickMatrix {
 
   }
 
-  dcomplex determinant(int keldish_idx){
+  dcomplex determinant(int keldysh_idx){
   // Calculate the determinant of the Wick matrix.
-    assert (keldish_idx >= _0);
-    assert (keldish_idx < max_keldish_configs);
+    assert (keldysh_idx >= _0);
+    assert (keldysh_idx < max_keldysh_configs);
 
-    permutation(keldish_idx);
-    return GetBitParity(keldish_idx) * triqs::arrays::determinant(wick_mat_reord_1) * triqs::arrays::determinant(wick_mat_reord_2);
+    permutation(keldysh_idx);
+    return GetBitParity(keldysh_idx) * triqs::arrays::determinant(wick_mat_reord_1) * triqs::arrays::determinant(wick_mat_reord_2);
   }
 
-  dcomplex permanent(int keldish_idx){
+  dcomplex permanent(int keldysh_idx){
   // Calculate the permanent of the Wick matrix.
   return 0.;
   }
 
-  dcomplex kernel(int keldish_idx){
+  dcomplex kernel(int keldysh_idx){
   // Calculate the kernel of the Wick matrix.
   return 0.;
   }
 
   private:
 
-  void permutation(int keldish_idx){
+  void permutation(int keldysh_idx){
   // Perform a permutation of the Wick matrix.
-    assert (keldish_idx >= _0);
-    assert (keldish_idx < max_keldish_configs);
+    assert (keldysh_idx >= _0);
+    assert (keldysh_idx < max_keldysh_configs);
 
-    calc_ordering_vector(keldish_idx, order, ordering_2);
-    ordering_1 = ordering_2;
+    calc_ordering_vector(keldysh_idx, order, ordering_2);
+    ordering_1 = ordering_2; // TODO
     ordering_1[order + 1] = external_idx;
 
     reorder_matrix<T> (wick_mat_1, wick_mat_reord_1, ordering_1);
@@ -167,7 +169,6 @@ class WickMatrix {
   }
 
 
-  int max_keldish_configs;
   int external_idx;
   int size;
   std::vector<gf_index_t> config1;
@@ -187,8 +188,6 @@ class WickMatrix {
 // should we sort times?
 std::pair<dcomplex, int> integrand_g_direct::operator()(std::vector<double> const &times,
                                                         bool const keep_u_hypercube) const {
-  using namespace triqs::arrays;
-
   // Model is diagonal in spin
   if (external_A.spin != external_B.spin) {
     return std::make_pair(0.0, 0);
@@ -216,51 +215,11 @@ std::pair<dcomplex, int> integrand_g_direct::operator()(std::vector<double> cons
 
   auto wick_matrix = WickMatrix<triqs::arrays::matrix<dcomplex>> (times, g0, a, b);
 
-  // Pre-Comute Large Matrix.
-  // "s1": Same spin as external indices / "s2": Opposite spin
-  matrix<dcomplex> wick_matrix_s1(2 * order_n + 1, 2 * order_n + 1);
-  //matrix<dcomplex> wick_matrix_s2(2 * order_n, 2 * order_n);
 
-  matrix<dcomplex> wick_matrix_s2;
-  wick_matrix_s2.resize(2 * order_n, 2 * order_n);
-
-  // Vector of indices for Green functions
-  std::vector<gf_index_t> all_config_1(2 * order_n);
-  std::vector<gf_index_t> all_config_2(2 * order_n);
-
-  green_function_config(times, a.spin, all_config_1);
-  green_function_config(times, spin_t(1 - a.spin), all_config_2);
-
-  // Index for external index in s1
-  int external_idx = 2 * order_n;
-
-  calc_wick_matrix<matrix<dcomplex>>(g0, all_config_1, wick_matrix_s1, external_idx, a, b);
-  calc_wick_matrix<matrix<dcomplex>>(g0, all_config_2, wick_matrix_s2);
-
-
+  // Iterate over other Keldysh index configurations.
   dcomplex integrand_result = 0.0;
-  uint64_t nr_keldysh_configs = (uint64_t(1) << order_n);
-
-  // Iterate over other Keldysh index configurations. Splict smaller determinant from precomuted matrix
-
-#pragma omp parallel for reduction(+ : integrand_result)
-  for (uint64_t idx_kel = 0; idx_kel < nr_keldysh_configs; idx_kel++) {
-    // Indices of Rows / Cols to pick. Cycle through and shift by (0/1) * order_n depending on idx_kel configuration
-
-    std::vector<int> col_pick_s2(order_n);
-    calc_ordering_vector(idx_kel, order_n, col_pick_s2);
-    std::vector<int> col_pick_s1 = col_pick_s2;
-    col_pick_s1.push_back(external_idx);
-
-
-    // Extract data into temporary matrices
-    matrix<dcomplex> tmp_mat_s1(order_n + 1, order_n + 1);
-    matrix<dcomplex> tmp_mat_s2(order_n, order_n);
-
-    reorder_matrix<matrix<dcomplex>> (wick_matrix_s1, tmp_mat_s1, col_pick_s1);
-    reorder_matrix<matrix<dcomplex>> (wick_matrix_s2, tmp_mat_s2, col_pick_s2);
-
-    //integrand_result += GetBitParity(idx_kel) * triqs::arrays::determinant(tmp_mat_s1) * triqs::arrays::determinant(tmp_mat_s2);
+  #pragma omp parallel for reduction(+ : integrand_result)
+  for (uint64_t idx_kel = 0; idx_kel < wick_matrix.max_keldysh_configs; idx_kel++) {
     integrand_result += wick_matrix.determinant(idx_kel);
   }
 
