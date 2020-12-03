@@ -57,7 +57,7 @@ template <typename T>
 void reorder_matrix (T const &mat_in, T &mat_out, std::vector<int> const &ordering) {
 
   int size = ordering.size();
-  // check matrix size;
+  assert (mat_out.size() == size * size);
 
   for (int i = 0; i < size; ++i) {
     for (int j = 0; j < size; ++j) {
@@ -73,12 +73,16 @@ void calc_wick_matrix (g0_keldysh_contour_t g0, std::vector<gf_index_t> const &c
   int size = config.size();
 
   if (ext_idx != -1) {
+    assert (wickmat.size() == (size + 1) * (size + 1));
     wickmat(ext_idx, ext_idx) = g0(a, b, false);
     #pragma omp parallel for
     for (int i = 0; i < size; i++) {
       wickmat(ext_idx, i) = g0(a, config[i]);
       wickmat(i, ext_idx) = g0(config[i], b);
     }
+  }
+  else{
+    assert (wickmat.size() == size * size);
   }
   for (int i = 0; i < size; i++) {
     for (int j = 0; j < size; j++) {
@@ -90,6 +94,7 @@ void calc_wick_matrix (g0_keldysh_contour_t g0, std::vector<gf_index_t> const &c
 
 
 void calc_ordering_vector(int const keldysh_idx, int const order, std::vector<int> &ordering){
+
   assert (ordering.size() == order);
   for (int i = 0; i < order; i++) {
     ordering[i] = i + GetBit(keldysh_idx, i) * order;
@@ -101,13 +106,12 @@ void calc_ordering_vector(int const keldysh_idx, int const order, std::vector<in
 template <typename T>
 class WickMatrix {
 
+ public:
+
   std::vector<double> times;
   int order;
   gf_index_t a, b;
   g0_keldysh_contour_t g0;
-
- public:
-
   uint64_t max_keldysh_configs;
 
   WickMatrix(std::vector<double> const & _times, g0_keldysh_contour_t _g0, gf_index_t _a, gf_index_t _b) : 
@@ -122,18 +126,13 @@ class WickMatrix {
 
   config1.resize(size);
   config2.resize(size);
-  ordering_1.resize(size + 1);
-  ordering_2.resize(size);
-
-    for (int i = 0; i < order; i++) {
-      ordering_2[i] = 42;
-    }
-
+  ordering_1.resize(order + 1);
+  ordering_2.resize(order);
 
   wick_mat_1.resize(size + 1, size + 1);
   wick_mat_2.resize(size, size);
-  wick_mat_reord_1.resize(size + 1, size + 1);
-  wick_mat_reord_2.resize(size, size);
+  wick_mat_reord_1.resize(order + 1, order + 1);
+  wick_mat_reord_2.resize(order, order);
 
   green_function_config(times, a.spin, config1);
   green_function_config(times, spin_t(1 - a.spin), config2);
@@ -145,7 +144,7 @@ class WickMatrix {
 
   dcomplex determinant(int keldysh_idx){
   // Calculate the determinant of the Wick matrix.
-    assert (keldysh_idx >= _0);
+    assert (keldysh_idx >= 0);
     assert (keldysh_idx < max_keldysh_configs);
 
     permutation(keldysh_idx);
@@ -162,48 +161,22 @@ class WickMatrix {
   return 0.;
   }
 
-  std::vector<int> get_ordering2(int keldysh_idx){
-
-    assert (keldysh_idx >= _0);
-    assert (keldysh_idx < max_keldysh_configs);
-
-    std::vector<int> xx(order);
-
-    for (int i = 0; i < order; i++) {
-        xx[i] = i + GetBit(keldysh_idx, i) * order;
-     };
-    return xx;
-  }
+ private:
 
   void permutation(int keldysh_idx){
   // Perform a permutation of the Wick matrix.
-    assert (keldysh_idx >= _0);
+    assert (keldysh_idx >= 0);
     assert (keldysh_idx < max_keldysh_configs);
 
-    std::vector<int> xx(order);
-
-
-    //calc_ordering_vector(keldysh_idx, order, ordering_2);
-
+    calc_ordering_vector(keldysh_idx, order, ordering_2);
     for (int i = 0; i < order; i++) {
-       // std::cout << "inside i: " << i << std::endl;
-       // std::cout << "inside routine: " << ordering_2[i] << "  " << i + GetBit(keldysh_idx, i) * order << std::endl;
-        xx[i] = i + GetBit(keldysh_idx, i) * order;
-        ordering_2[i] = xx[i];
+        ordering_1[i] = ordering_2[i];
      };
+    ordering_1[order] = external_idx;
 
-      std::cout << "inside routine: " << ordering_2[0] << std::endl;
-      std::cout << std::flush;
-
-//    for (int i = 0; i < order; i++) {
-//      ordering_1[i] = ordering_2[i];
-//    }
-//    ordering_1[order + 1] = external_idx;
-
-//    reorder_matrix<T> (wick_mat_1, wick_mat_reord_1, ordering_1);
-//    reorder_matrix<T> (wick_mat_2, wick_mat_reord_2, ordering_2);
+    reorder_matrix<T> (wick_mat_1, wick_mat_reord_1, ordering_1);
+    reorder_matrix<T> (wick_mat_2, wick_mat_reord_2, ordering_2);
   }
-
 
   int external_idx;
   int size;
@@ -211,6 +184,7 @@ class WickMatrix {
   std::vector<gf_index_t> config2;
   std::vector<int> ordering_1;
   std::vector<int> ordering_2;
+
   T wick_mat_1;
   T wick_mat_2;
   T wick_mat_reord_1;
@@ -260,96 +234,12 @@ std::pair<dcomplex, int> integrand_g_direct::operator()(std::vector<double> cons
 
   auto wick_matrix = WickMatrix<triqs::arrays::matrix<dcomplex>> (times, g0, a, b);
 
-
-  // Pre-Comute Large Matrix.
-  // "s1": Same spin as external indices / "s2": Opposite spin
-//  matrix<dcomplex> wick_matrix_s1(2 * order_n + 1, 2 * order_n + 1);
-//  matrix<dcomplex> wick_matrix_s2(2 * order_n, 2 * order_n);
-
-  // Vector of indices for Green functions
-//  std::vector<gf_index_t> all_config_1(2 * order_n);
-//  std::vector<gf_index_t> all_config_2(2 * order_n);
-
-//  green_function_config(times, a.spin, all_config_1);
-//  green_function_config(times, spin_t(1 - a.spin), all_config_2);
-
-  // Index for external index in s1
-  int external_idx = 2 * order_n;
-
-//  calc_wick_matrix<matrix<dcomplex>>(g0, all_config_1, wick_matrix_s1, external_idx, a, b);
-//  calc_wick_matrix<matrix<dcomplex>>(g0, all_config_2, wick_matrix_s2);
-
-  auto wick_matrix_s1 = wick_matrix.wick_mat_1;
-  auto wick_matrix_s2 = wick_matrix.wick_mat_2;
-
+  // Iterate over other Keldysh index configurations.
   dcomplex integrand_result = 0.0;
-  uint64_t nr_keldysh_configs = (uint64_t(1) << order_n);
-
-  // Iterate over other Keldysh index configurations. Splict smaller determinant from precomuted matrix
-
 #pragma omp parallel for reduction(+ : integrand_result)
   for (uint64_t idx_kel = 0; idx_kel < wick_matrix.max_keldysh_configs; idx_kel++) {
-    // Indices of Rows / Cols to pick. Cycle through and shift by (0/1) * order_n depending on idx_kel configuration
 
-    std::vector<int> col_pick_s2(order_n);
-    calc_ordering_vector(idx_kel, order_n, col_pick_s2);
-    std::vector<int> col_pick_s1 = col_pick_s2;
-    col_pick_s1.push_back(external_idx);
-
-//    col_pick_s1 = wick_matrix.ordering_1;
-    wick_matrix.permutation(idx_kel);
-    //auto order2 = wick_matrix.ordering_2;
-
-
-
-    int i = 1;
-
-        wick_matrix.permutation(idx_kel);
-          auto elem = wick_matrix.ordering_2[i];
-        wick_matrix.permutation(idx_kel);
-          auto elem1 = wick_matrix.ordering_2;
-        wick_matrix.permutation(idx_kel);
-          auto elem2 = wick_matrix.ordering_2;
-        wick_matrix.permutation(idx_kel);
-          auto elem3 = wick_matrix.ordering_2;
-        wick_matrix.permutation(idx_kel);
-          auto elem4 = wick_matrix.ordering_2;
-
-          auto elem5 = wick_matrix.get_ordering2(idx_kel);
-
-      if (elem != col_pick_s2[i]){
-        std::cout << "error detected " << wick_matrix.ordering_2[i] << " " << col_pick_s2[i] <<std::endl;
-      std::cout << std::flush;
-        //print<int>(col_pick_s2);
-        std::cout << "elem1: " << elem1 << std::endl;
-        std::cout << "elem2: " << elem2 << std::endl;
-        std::cout << "elem3: " << elem3 << std::endl;
-        std::cout << "elem4: " << elem4 << std::endl;
-        //std::cout << "elem5: " << elem5 << std::endl;
-        std::cout << "i: " << i << std::endl;
-        std::cout << "kel_idx: " << idx_kel << std::endl;
-      std::cout << std::flush;
-//        wick_matrix.permutation(idx_kel);
-        std::cout << "is: " << wick_matrix.ordering_2[i] << std::endl;
-        std::cout << "ref: " << col_pick_s2[i] << std::endl;
-        std::cout << "ref2: " <<i + GetBit(idx_kel, i) * order_n << std::endl;
-        std::cout << "error abort " << wick_matrix.ordering_2[i] << " " << col_pick_s2[i] << std::endl;
-        std::cout << std::flush;
-        abort();
-        //};
-      //std::cout << "i: " << i << " ismref: " << order2[i] - col_pick_s2[i] << std::endl;
-    }
-
-    // Extract data into temporary matrices
-    matrix<dcomplex> tmp_mat_s1(order_n + 1, order_n + 1);
-    matrix<dcomplex> tmp_mat_s2(order_n, order_n);
-
-
-    reorder_matrix<matrix<dcomplex>> (wick_matrix_s1, tmp_mat_s1, col_pick_s1);
-    reorder_matrix<matrix<dcomplex>> (wick_matrix_s2, tmp_mat_s2, col_pick_s2);
-
-    integrand_result += GetBitParity(idx_kel) * determinant(tmp_mat_s1) * determinant(tmp_mat_s2);
-    //integrand_result += wick_matrix.determinant(idx_kel);
+    integrand_result += wick_matrix.determinant(idx_kel);
 
   }
 
