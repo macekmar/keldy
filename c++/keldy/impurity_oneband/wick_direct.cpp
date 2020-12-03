@@ -23,6 +23,7 @@
  ******************************************************************************/
 
 #include "wick_direct.hpp"
+#include "keldy/common.hpp"
 #include <complex>
 #include <tuple>
 #include <utility>
@@ -252,6 +253,63 @@ std::pair<dcomplex, int> integrand_g_direct::operator()(std::vector<double> cons
   return std::make_pair(integrand_result, 1);
 }
 
+
+// should we sort times?
+std::pair<binner::sparse_binner_t<1>, int> integrand_g_direct_time::operator()(std::vector<double> const &times,
+                                                                               bool const keep_u_hypercube) const {
+  using namespace triqs::arrays;
+
+  int order_n = times.size();
+  if (order_n == 0) {
+    TRIQS_RUNTIME_ERROR << "Order 0 is not implemented";
+  }
+
+  double time_binner = *std::min_element(times.cbegin(), times.cend());
+  binner::sparse_binner_t<1> result;
+
+  // Model is diagonal in spin
+  if (external_A.spin != external_B.spin) {
+    result.accumulate(0, time_binner);
+    return std::make_pair(result, 0);
+  }
+
+  if (keep_u_hypercube) {
+    // Integration starts a t = 0
+    if (std::any_of(times.cbegin(), times.cend(), [](double t) { return t < 0.0; })) {
+      result.accumulate(0, time_binner);
+      return std::make_pair(result, 0);
+    }
+  }
+
+  // copy for now since we change time-splitting
+  auto a = external_A;
+  auto b = external_B;
+  // define time-splitting for external-points
+  a.contour.timesplit_n = order_n;
+  b.contour.timesplit_n = order_n;
+
+  auto wick_matrix = WickMatrix<triqs::arrays::matrix<dcomplex>> (times, g0, a, b);
+
+  // Iterate over other Keldysh index configurations.
+  dcomplex integrand_result = 0.0;
+#pragma omp parallel for reduction(+ : integrand_result)
+  for (uint64_t idx_kel = 0; idx_kel < wick_matrix.max_keldysh_configs; idx_kel++) {
+
+    integrand_result += wick_matrix.determinant(idx_kel);
+
+  }
+
+  // apply cutoff
+  if (std::abs(integrand_result) < cutoff) {
+    integrand_result = 0.;
+  }
+
+  // Multiply by overall factors (-1j) * (j)^n * (-1j)^n ?? FIXME
+  result.accumulate(integrand_result, time_binner);
+  return std::make_pair(result, 1);
+}
+
+
 // *******************************************************
 
 // Old Method Based on Sequential Constructions
@@ -340,5 +398,7 @@ dcomplex integrand_g_direct_grey(gf_index_t a, gf_index_t b, g0_keldysh_contour_
   }
   return integrand_result;
 }
+
+
 
 } // namespace keldy::impurity_oneband

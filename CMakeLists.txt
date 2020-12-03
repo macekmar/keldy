@@ -20,6 +20,8 @@
 #
 ################################################################################
 
+#set(CMAKE_CXX_FLAGS "-Wall -fsanitize=address")
+
 cmake_minimum_required(VERSION 3.10.0 FATAL_ERROR)
 cmake_policy(VERSION 3.3.2)
 if(POLICY CMP0074)
