@@ -1,5 +1,4 @@
 #include <keldy/common.hpp>
-#include <keldy/impurity_oneband/wick_kernel_single_omega.hpp>
 #include <keldy/impurity_oneband/wick_direct.hpp>
 #include <triqs/test_tools/gfs.hpp>
 

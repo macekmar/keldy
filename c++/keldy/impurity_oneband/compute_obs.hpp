@@ -28,9 +28,6 @@
 #include "keldy/warpers/product_1d_simple.hpp"
 #include "model.hpp"
 #include "wick_direct.hpp"
-#include "wick_direct_time.hpp"
-#include "wick_kernel.hpp"
-#include "wick_kernel_single_omega.hpp"
 
 #include "../common.hpp"
 #include "../integrator.hpp"

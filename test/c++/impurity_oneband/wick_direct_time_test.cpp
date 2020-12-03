@@ -3,7 +3,6 @@
 #include <gtest/gtest.h>
 #include <keldy/common.hpp>
 #include <keldy/impurity_oneband/compute_obs.hpp>
-#include <keldy/impurity_oneband/wick_direct_time.hpp>
 #include <keldy/impurity_oneband/wick_direct.hpp>
 #include <triqs/test_tools/arrays.hpp>
 #include <triqs/test_tools/gfs.hpp>
