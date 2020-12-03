@@ -93,5 +93,42 @@ class integrand_g_direct_time {
   };
 };
 
+using namespace triqs::arrays;
+using namespace triqs::gfs;
+
+class integrand_g_kernel {
+  g0_keldysh_contour_t g0;
+  gf_index_t g_idx_X; // Fixed Point in Kernal
+
+  // bool expand_col = true; // expand_row = false
+  // double condition_numebr_tol;
+
+ public:
+  /// Returns integrand for the specified times
+  using result_t = binner::sparse_binner_t<1, 1>;
+  [[nodiscard]] std::pair<result_t, int> operator()(std::vector<double> const &times,
+                                                    bool const keep_u_hypercube = true) const;
+
+  integrand_g_kernel(g0_keldysh_contour_t g0_, gf_index_t g_idx_X_) : g0(std::move(g0_)), g_idx_X(g_idx_X_){};
+};
+
+
+class integrand_g_kernel_single_omega {
+  g0_keldysh_contour_t g0;
+  gf_index_t g_idx_X; // Fixed Point in Kernal
+  double const omega;
+
+  // bool expand_col = true; // expand_row = false
+  // double condition_numebr_tol;
+
+ public:
+  /// Returns integrand for the specified times
+  using result_t = dcomplex;
+  [[nodiscard]] std::pair<result_t, int> operator()(std::vector<double> const &times,
+                                                    bool const keep_u_hypercube = true) const;
+
+  integrand_g_kernel_single_omega(g0_keldysh_contour_t g0_, gf_index_t g_idx_X_, double omega_)
+     : g0(std::move(g0_)), g_idx_X(g_idx_X_), omega(omega_){};
+};
 
 } // namespace keldy::impurity_oneband
