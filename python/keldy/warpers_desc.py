@@ -132,6 +132,8 @@ c.add_constructor("""()""", doc = r"""""")
 
 c.add_constructor("""(std::function<double (double)> f1_, double domain_u_max_, int nr_sample_points_)""", doc = r"""""")
 
+c.add_constructor("""(nda::vector<double> times_u_pts_, nda::vector<double> f1_pts_)""", doc = r"""""")
+
 c.add_method("""std::pair<std::vector<double>, double> map_reverse (std::vector<double> li_vec)""",
              doc = r"""""")
 
