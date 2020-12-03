@@ -93,8 +93,6 @@ class integrand_g_direct_time {
   };
 };
 
-using namespace triqs::arrays;
-using namespace triqs::gfs;
 
 class integrand_g_kernel {
   g0_keldysh_contour_t g0;

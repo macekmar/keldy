@@ -262,8 +262,6 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T> &input)
 // should we sort times?
 std::pair<dcomplex, int> integrand_g_direct::operator()(std::vector<double> const &times,
                                                         bool const keep_u_hypercube) const {
-  using namespace triqs::arrays;
-
   // Model is diagonal in spin
   if (external_A.spin != external_B.spin) {
     return std::make_pair(0.0, 0);
@@ -313,8 +311,6 @@ std::pair<dcomplex, int> integrand_g_direct::operator()(std::vector<double> cons
 // should we sort times?
 std::pair<binner::sparse_binner_t<1>, int> integrand_g_direct_time::operator()(std::vector<double> const &times,
                                                                                bool const keep_u_hypercube) const {
-  using namespace triqs::arrays;
-
   int order_n = times.size();
   if (order_n == 0) {
     TRIQS_RUNTIME_ERROR << "Order 0 is not implemented";
@@ -372,8 +368,6 @@ std::pair<binner::sparse_binner_t<1>, int> integrand_g_direct_time::operator()(s
 
 std::pair<binner::sparse_binner_t<1, 1>, int> integrand_g_kernel::operator()(std::vector<double> const &times,
                                                                              bool const keep_u_hypercube) const {
-  using namespace triqs::arrays;
-
   // Interaction starts a t = 0
   if (keep_u_hypercube) {
     if (std::any_of(times.cbegin(), times.cend(), [](double t) { return t < 0.0; })) {
@@ -416,9 +410,6 @@ std::pair<binner::sparse_binner_t<1, 1>, int> integrand_g_kernel::operator()(std
 
 std::pair<dcomplex, int> integrand_g_kernel_single_omega::operator()(std::vector<double> const &times,
                                                                      bool const keep_u_hypercube) const {
-  using namespace triqs::arrays;
-  using namespace std::complex_literals;
-
   // Interaction starts a t = 0
   if (keep_u_hypercube) {
     if (std::any_of(times.cbegin(), times.cend(), [](double t) { return t < 0.0; })) {
@@ -467,7 +458,6 @@ dcomplex integrand_g_direct_grey(gf_index_t a, gf_index_t b, g0_keldysh_contour_
 
   // TODO: should we sort times?
 
-  using namespace triqs::arrays;
   int order_n = times.size();
 
   // copy for now since we change time-splitting
@@ -489,8 +479,8 @@ dcomplex integrand_g_direct_grey(gf_index_t a, gf_index_t b, g0_keldysh_contour_
   }
 
   // must allow to be flippable
-  matrix<dcomplex> wick_matrix_s1(order_n + 1, order_n + 1);
-  matrix<dcomplex> wick_matrix_s2(order_n, order_n);
+  triqs::arrays::matrix<dcomplex> wick_matrix_s1(order_n + 1, order_n + 1);
+  triqs::arrays::matrix<dcomplex> wick_matrix_s2(order_n, order_n);
 
   // Construct for initial configuration (all forward contour):
 
@@ -542,7 +532,7 @@ dcomplex integrand_g_direct_grey(gf_index_t a, gf_index_t b, g0_keldysh_contour_
       wick_matrix_s2(nlc, i) = g0(current_config_2[nlc], current_config_2[i]);
     }
 
-    integrand_result += parity * determinant(wick_matrix_s1) * determinant(wick_matrix_s2);
+    integrand_result += parity * triqs::arrays::determinant(wick_matrix_s1) * triqs::arrays::determinant(wick_matrix_s2);
   }
   return integrand_result;
 }
