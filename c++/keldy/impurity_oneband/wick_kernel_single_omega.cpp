@@ -123,7 +123,7 @@ std::pair<dcomplex, int> integrand_g_kernel_single_omega::operator()(std::vector
       }
     }
 
-    auto x_minors = first_row_expansion(g_mat_s1);
+    auto x_minors = first_row_expansion(g_mat_s1).first;
 
     // Multiply by Keldysh index parity & other spin determinant:
     x_minors *= GetBitParity(idx_kel) * determinant(g_mat_s2);

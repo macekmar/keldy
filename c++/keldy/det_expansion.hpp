@@ -41,7 +41,7 @@ namespace nda = triqs::arrays;
  * TODO: Consider checking Condition Number via LAPACK_zgecon
  * TODO: Consider ZGEEQU for equilibiration (scaling of rows / columns for better conditioning)
  */
-inline nda::vector<dcomplex> first_row_expansion(nda::matrix<dcomplex> &mat) {
+inline std::pair<nda::vector<dcomplex>, dcomplex> first_row_expansion(nda::matrix<dcomplex> &mat) {
   // Calculate LU decomposition with partial pivoting
   nda::vector<int> pivot_index_array(first_dim(mat));
   int info = nda::lapack::getrf(mat, pivot_index_array, true);
@@ -70,7 +70,7 @@ inline nda::vector<dcomplex> first_row_expansion(nda::matrix<dcomplex> &mat) {
     TRIQS_RUNTIME_ERROR << "lapack::getrs failed with code " << info;
   }
 
-  return x_minors(nda::range(), 0);
+  return {x_minors(nda::range(), 0), mat_det};
 }
 
 } // namespace keldy

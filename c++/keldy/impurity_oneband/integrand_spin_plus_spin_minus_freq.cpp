@@ -120,8 +120,8 @@ integrand_spin_plus_spin_minus_freq::operator()(std::vector<double> const &times
       }
     }
 
-    auto cofactors_up = first_row_expansion(g_mat_up);
-    auto cofactors_do = first_row_expansion(g_mat_do);
+    auto cofactors_up = first_row_expansion(g_mat_up).first;
+    auto cofactors_do = first_row_expansion(g_mat_do).first;
 
     array<dcomplex, 1> result_tmp(chi.get_nr_omegas());
     result_tmp() = 0;
