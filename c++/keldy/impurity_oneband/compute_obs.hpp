@@ -31,7 +31,7 @@
 #include "wick_direct_time.hpp"
 #include "wick_kernel.hpp"
 #include "wick_kernel_single_omega.hpp"
-#include "integrand_spin_plus_spin_minus_freq.hpp"
+//#include "integrand_spin_plus_spin_minus_freq.hpp"
 
 #include "../common.hpp"
 #include "../integrator.hpp"
@@ -134,7 +134,7 @@ class compute_gf_kernel_single_omega : public integrator<dcomplex, integrand_g_k
 
 // ****************************************************************************
 // <sigma^+ sigma^-> correlator
-
+/*
 nda::array<dcomplex, 1> zero_array(int size) {
   nda::array<dcomplex, 1> out(size);
   out() = 0;
@@ -155,5 +155,5 @@ class compute_spin_plus_spin_minus_freq
   compute_spin_plus_spin_minus_freq(model_param_t params, double time, nda::array<double, 1> omegas, int order)
      : compute_spin_plus_spin_minus_freq{g0_model{g0_model_omega{params}, false}, time, omegas, order} {}
 };
-
+*/
 } // namespace keldy::impurity_oneband

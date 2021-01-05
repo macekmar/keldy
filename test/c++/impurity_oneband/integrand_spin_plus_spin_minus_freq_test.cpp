@@ -1,4 +1,4 @@
-#include "keldy/common.hpp"
+/*#include "keldy/common.hpp"
 #include <keldy/impurity_oneband/compute_obs.hpp>
 #include <triqs/arrays.hpp>
 
@@ -41,3 +41,4 @@ TEST(SpinPlusSpinMinus, Initialization) { //NOLINT
 }
 
 MAKE_MAIN // NOLINT
+*/

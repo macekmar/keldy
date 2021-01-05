@@ -492,85 +492,85 @@ c.add_method("""keldy::warpers::warper_train_t get_warper ()""",
 module.add_class(c)
 
 # The class compute_spin_plus_spin_minus_freq
-c = class_(
-        py_type = "ComputeSpinPlusSpinMinusFreq",  # name of the python class
-        c_type = "keldy::impurity_oneband::compute_spin_plus_spin_minus_freq",   # name of the C++ class
-        doc = r"""""",   # doc of the C++ class
-        hdf5 = False,
-)
+#c = class_(
+#        py_type = "ComputeSpinPlusSpinMinusFreq",  # name of the python class
+#        c_type = "keldy::impurity_oneband::compute_spin_plus_spin_minus_freq",   # name of the C++ class
+#        doc = r"""""",   # doc of the C++ class
+#        hdf5 = False,
+#)
 
-c.add_member(c_name = "warper",
-             c_type = "keldy::warpers::warper_train_t",
-             read_only= False,
-             doc = r"""""")
+#c.add_member(c_name = "warper",
+#             c_type = "keldy::warpers::warper_train_t",
+#             read_only= False,
+#             doc = r"""""")
 
-c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, nda::array<double, 1> omegas, int order)""", doc = r"""""")
+#c.add_constructor("""(keldy::impurity_oneband::g0_model model, double time, nda::array<double, 1> omegas, int order)""", doc = r"""""")
 
-c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, nda::array<double, 1> omegas, int order)""", doc = r"""""")
+#c.add_constructor("""(keldy::impurity_oneband::model_param_t params, double time, nda::array<double, 1> omegas, int order)""", doc = r"""""")
 
-c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_spin_plus_spin_minus_freq::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec, int start_domain_nr, bool keep_u_hypercube = true)""",
-             doc = r"""""")
+#c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_spin_plus_spin_minus_freq::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec, int start_domain_nr, bool keep_u_hypercube = true)""",
+#             doc = r"""""")
 
-c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_spin_plus_spin_minus_freq::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec)""",
-             doc = r"""""")
+#c.add_method("""std::pair<typename keldy::impurity_oneband::integrand_spin_plus_spin_minus_freq::result_t, double> evaluate_warped_integrand (std::vector<double> li_vec)""",
+#             doc = r"""""")
 
-c.add_method("""void run (int nr_steps)""",
-             doc = r"""""")
+#c.add_method("""void run (int nr_steps)""",
+#             doc = r"""""")
 
-c.add_method("""void reset_rng (std::string rng_name, int rng_state_seed, bool do_shift = false, bool do_scramble = false, int rng_seed_shift = 0)""",
-             doc = r"""""")
+#c.add_method("""void reset_rng (std::string rng_name, int rng_state_seed, bool do_shift = false, bool do_scramble = false, int rng_seed_shift = 0)""",
+#             doc = r"""""")
 
-c.add_method("""keldy::impurity_oneband::integrand_spin_plus_spin_minus_freq::result_t reduce_result ()""",
-             doc = r"""""")
+#c.add_method("""keldy::impurity_oneband::integrand_spin_plus_spin_minus_freq::result_t reduce_result ()""",
+#             doc = r"""""")
 
-c.add_method("""uint64_t reduce_nr_points_run ()""",
-             doc = r"""""")
+#c.add_method("""uint64_t reduce_nr_points_run ()""",
+#             doc = r"""""")
 
-c.add_method("""uint64_t reduce_nr_points_in_domain ()""",
-             doc = r"""""")
+#c.add_method("""uint64_t reduce_nr_points_in_domain ()""",
+#             doc = r"""""")
 
-c.add_method("""keldy::impurity_oneband::integrand_spin_plus_spin_minus_freq get_integrand ()""",
-             doc = r"""""")
+#c.add_method("""keldy::impurity_oneband::integrand_spin_plus_spin_minus_freq get_integrand ()""",
+#             doc = r"""""")
 
-c.add_method("""keldy::warpers::warper_train_t get_warper ()""",
-             doc = r"""""")
+#c.add_method("""keldy::warpers::warper_train_t get_warper ()""",
+#             doc = r"""""")
 
-module.add_class(c)
+#module.add_class(c)
 
-module.add_function ("void keldy::impurity_oneband::fake (**keldy::impurity_oneband::model_param_t)", doc = r"""
+#module.add_function ("void keldy::impurity_oneband::fake (**keldy::impurity_oneband::model_param_t)", doc = r"""
 
 
 
-+-------------------+-------------+--------------+---------------+
-| Parameter Name    | Type        | Default      | Documentation |
-+===================+=============+==============+===============+
-| beta              | double      | 1.0          |               |
-+-------------------+-------------+--------------+---------------+
-| bias_V            | double      | 0.0          |               |
-+-------------------+-------------+--------------+---------------+
-| eps_d             | double      | 0.0          |               |
-+-------------------+-------------+--------------+---------------+
-| Gamma             | double      | 1.0          |               |
-+-------------------+-------------+--------------+---------------+
-| alpha             | double      | 0.0          |               |
-+-------------------+-------------+--------------+---------------+
-| half_bandwidth    | double      | 2.           |               |
-+-------------------+-------------+--------------+---------------+
-| bath_type         | std::string | "semicircle" |               |
-+-------------------+-------------+--------------+---------------+
-| time_max          | double      | +100.0       |               |
-+-------------------+-------------+--------------+---------------+
-| nr_time_points_gf | int         | 1000         |               |
-+-------------------+-------------+--------------+---------------+
-| ft_method         | std::string | "fft"        |               |
-+-------------------+-------------+--------------+---------------+
-""")
+#+-------------------+-------------+--------------+---------------+
+#| Parameter Name    | Type        | Default      | Documentation |
+#+===================+=============+==============+===============+
+#| beta              | double      | 1.0          |               |
+#+-------------------+-------------+--------------+---------------+
+#| bias_V            | double      | 0.0          |               |
+#+-------------------+-------------+--------------+---------------+
+#| eps_d             | double      | 0.0          |               |
+#+-------------------+-------------+--------------+---------------+
+#| Gamma             | double      | 1.0          |               |
+#+-------------------+-------------+--------------+---------------+
+#| alpha             | double      | 0.0          |               |
+#+-------------------+-------------+--------------+---------------+
+#| half_bandwidth    | double      | 2.           |               |
+#+-------------------+-------------+--------------+---------------+
+#| bath_type         | std::string | "semicircle" |               |
+#+-------------------+-------------+--------------+---------------+
+#| time_max          | double      | +100.0       |               |
+#+-------------------+-------------+--------------+---------------+
+#| nr_time_points_gf | int         | 1000         |               |
+#+-------------------+-------------+--------------+---------------+
+#| ft_method         | std::string | "fft"        |               |
+#+-------------------+-------------+--------------+---------------+
+#""")
 
-module.add_function ("void keldy::impurity_oneband::h5_write (h5::group h5group, std::string subgroup_name, keldy::impurity_oneband::model_param_t c)", doc = r"""""")
+#module.add_function ("void keldy::impurity_oneband::h5_write (h5::group h5group, std::string subgroup_name, keldy::impurity_oneband::model_param_t c)", doc = r"""""")
 
-module.add_function ("void keldy::impurity_oneband::h5_read (h5::group h5group, std::string subgroup_name, keldy::impurity_oneband::model_param_t c)", doc = r"""""")
+#module.add_function ("void keldy::impurity_oneband::h5_read (h5::group h5group, std::string subgroup_name, keldy::impurity_oneband::model_param_t c)", doc = r"""""")
 
-module.add_function ("bool keldy::impurity_oneband::equivalent_without_timesplit (keldy::impurity_oneband::gf_index_t lhs, keldy::impurity_oneband::gf_index_t rhs)", doc = r"""""")
+#module.add_function ("bool keldy::impurity_oneband::equivalent_without_timesplit (keldy::impurity_oneband::gf_index_t lhs, keldy::impurity_oneband::gf_index_t rhs)", doc = r"""""")
 
 
 # Converter for model_param_t

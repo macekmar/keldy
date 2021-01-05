@@ -19,7 +19,7 @@
  * keldy. If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-
+/*
 #include "integrand_spin_plus_spin_minus_freq.hpp"
 #include <triqs/utility/exceptions.hpp>
 #include "../det_expansion.hpp"
@@ -148,3 +148,4 @@ integrand_spin_plus_spin_minus_freq::operator()(std::vector<double> const &times
 }
 
 } // namespace keldy::impurity_oneband
+*/

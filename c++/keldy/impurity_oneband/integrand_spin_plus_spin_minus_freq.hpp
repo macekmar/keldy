@@ -19,7 +19,7 @@
  * keldy. If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-
+/*
 #pragma once
 
 #include "../common.hpp"
@@ -102,3 +102,4 @@ class integrand_spin_plus_spin_minus_freq {
 };
 
 } // namespace keldy::impurity_oneband
+*/
